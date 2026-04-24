@@ -1,4 +1,4 @@
-import React, { type SVGProps } from 'react'
+import { type SVGProps } from 'react'
 
 function IconGoogle({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
