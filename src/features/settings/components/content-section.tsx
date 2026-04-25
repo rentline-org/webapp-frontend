@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 
 type ContentSectionProps = {
@@ -6,6 +7,7 @@ type ContentSectionProps = {
   desc: string
   children: React.JSX.Element
   actions?: ReactNode
+  fullWidth?: boolean
 }
 
 export function ContentSection({
@@ -13,6 +15,7 @@ export function ContentSection({
   desc,
   children,
   actions,
+  fullWidth = false,
 }: ContentSectionProps) {
   return (
     <div className='flex w-full flex-1 flex-col'>
@@ -26,7 +29,14 @@ export function ContentSection({
       </div>
       <Separator className='my-4 flex-none' />
       <div className='faded-bottom h-full w-full overflow-y-auto scroll-smooth pe-4 pb-12'>
-        <div className='-mx-1 px-1.5 lg:max-w-xl'>{children}</div>
+        <div
+          className={cn(
+            '-mx-1 px-1.5',
+            fullWidth ? 'lg:w-full' : 'lg:max-w-xl'
+          )}
+        >
+          {children}
+        </div>
       </div>
     </div>
   )

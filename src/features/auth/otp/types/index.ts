@@ -1,6 +1,6 @@
 import z from 'zod'
 import type { DeviceType } from '@/lib/utils'
-import type { User } from '@/features/users/types'
+import type { IUserProfileData } from '@/features/settings/profile/types'
 import type { AuthErrorCodes } from '../../types'
 
 export const otpFormSchema = z.object({
@@ -19,7 +19,7 @@ export interface IVerifyOtpRequest {
 }
 
 export interface IVerifyOtpResponseData {
-  user: User
+  user: IUserProfileData
   token: string
   status: AuthErrorCodes
   message: string

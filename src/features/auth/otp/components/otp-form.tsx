@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,6 +32,8 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
   const { isPending, mutate } = useVerifyOtpMutation()
   const { email } = routeApi.useSearch()
 
+  const { setUser, setAccessToken } = useAuthStore((s) => s.auth)
+
   const form = useForm<TOtpFormSchema>({
     resolver: zodResolver(otpFormSchema),
     defaultValues: { otp: '' },
@@ -44,16 +47,20 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
       { email, schema },
       {
         onSuccess: (data) => {
-          if (data?.user.active_organization === null) {
-            navigate({
-              to: '/onboarding',
-              replace: true,
-            })
+          if (data?.user) {
+            setUser(data.user)
+            setAccessToken(data.token)
+
+            if (data?.user.active_organization === null) {
+              navigate({
+                to: '/onboarding',
+                replace: true,
+              })
+
+              toast.success('OTP verified successfully!')
+              navigate({ to: '/', replace: true })
+            }
           }
-
-          toast.success('OTP verified successfully!')
-
-          if (data?.user) navigate({ to: '/', replace: true })
         },
       }
     )

@@ -2,15 +2,38 @@ import z from 'zod'
 
 export interface IOrganizationData {
   id: number
+
   title: string
-  description: string
-  address: string
-  phone: string
+  description: string | null
+
+  phone: string | null
   email: string
-  number_of_properties: number
-  created_at: string
-  updated_at: string
-  avatar: string
+  website: string | null
+
+  owner_id: number
+
+  country: string
+  state: string | null
+  city: string
+  postal_code: string
+  address_line: string
+
+  currency: string
+  timezone: string
+
+  tax_id: string
+  tax_id_type: 'cpf' | 'cnpj' | 'vat'
+
+  plan: 'trial' | 'starter' | 'pro' | 'enterprise'
+  is_plan_active: boolean
+
+  data_retention_until: string | null
+  is_active: boolean
+
+  settings: Record<string, unknown> | null
+
+  trial_ends_at: string
+  avatar: string | null
 }
 
 export interface IActiveOrganization extends IOrganizationData {
