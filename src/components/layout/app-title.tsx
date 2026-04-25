@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { cn } from '@/lib/utils'
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -7,9 +8,10 @@ import {
 } from '@/components/ui/sidebar'
 
 export function AppTitle() {
-  const { setOpenMobile } = useSidebar()
+  const { setOpenMobile, open } = useSidebar()
+
   return (
-    <SidebarMenu>
+    <SidebarMenu className={cn(!open ? 'hidden' : '')}>
       <SidebarMenuItem>
         <SidebarMenuButton
           size='lg'

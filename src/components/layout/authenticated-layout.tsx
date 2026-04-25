@@ -6,6 +6,11 @@ import { SearchProvider } from '@/context/search-provider'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { SkipToMain } from '@/components/skip-to-main'
+import NotificationsPanel from '@/features/notifications/components/notifications-panel'
+import { ConfigDrawer } from '../config-drawer'
+import { Search } from '../search'
+import { ThemeSwitch } from '../theme-switch'
+import { Header } from './header'
 
 type AuthenticatedLayoutProps = {
   children?: React.ReactNode
@@ -34,6 +39,13 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
               'peer-data-[variant=inset]:has-data-[layout=fixed]:h-[calc(100svh-(var(--spacing)*4))]'
             )}
           >
+            <Header>
+              <Search className='me-auto' />
+              <ThemeSwitch />
+              <NotificationsPanel />
+              <ConfigDrawer />
+              {/* <ProfileDropdown /> */}
+            </Header>
             {children ?? <Outlet />}
           </SidebarInset>
         </SidebarProvider>
