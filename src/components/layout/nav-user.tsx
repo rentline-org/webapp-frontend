@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   BadgeCheck,
@@ -25,38 +26,59 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { SignOutDialog } from '@/components/sign-out-dialog'
+import type { IUserProfileData } from '@/features/settings/profile/types'
+import { Skeleton } from '../ui/skeleton'
 
 type NavUserProps = {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
+  user: IUserProfileData | null | undefined
+  isLoading: boolean
+  isFetching: boolean
 }
 
-export function NavUser({ user }: NavUserProps) {
+export function NavUser({ user, isLoading, isFetching }: NavUserProps) {
   const { isMobile } = useSidebar()
   const [open, setOpen] = useDialogState()
+
+  const showLoadingSkeleton = useMemo(
+    () => isLoading || isFetching,
+    [isLoading, isFetching]
+  )
 
   return (
     <>
       <SidebarMenu>
         <SidebarMenuItem>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger
+              asChild
+              disabled={!user || showLoadingSkeleton}
+            >
               <SidebarMenuButton
                 size='lg'
                 className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
               >
-                <Avatar className='h-8 w-8 rounded-lg'>
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className='rounded-lg'>SN</AvatarFallback>
-                </Avatar>
-                <div className='grid flex-1 text-start text-sm leading-tight'>
-                  <span className='truncate font-semibold'>{user.name}</span>
-                  <span className='truncate text-xs'>{user.email}</span>
-                </div>
-                <ChevronsUpDown className='ms-auto size-4' />
+                {showLoadingSkeleton ? (
+                  <div className='h-10 w-full'>
+                    <Skeleton className='h-10 w-full rounded-md' />
+                  </div>
+                ) : (
+                  <>
+                    <Avatar className='h-8 w-8 rounded-lg'>
+                      <AvatarImage src={user?.photo} alt={user!.name} />
+                      <AvatarFallback className='rounded-lg'>
+                        {user!.first_name!.charAt(0) +
+                          user!.last_name!.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className='grid flex-1 text-start text-sm leading-tight'>
+                      <span className='truncate font-semibold'>
+                        {user!.name}
+                      </span>
+                      <span className='truncate text-xs'>{user!.email}</span>
+                    </div>
+                    <ChevronsUpDown className='ms-auto size-4' />
+                  </>
+                )}
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -68,12 +90,15 @@ export function NavUser({ user }: NavUserProps) {
               <DropdownMenuLabel className='p-0 font-normal'>
                 <div className='flex items-center gap-2 px-1 py-1.5 text-start text-sm'>
                   <Avatar className='h-8 w-8 rounded-lg'>
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarImage
+                      src={user?.photo ?? '/avatars/shadcn.jpg'}
+                      alt={user!.name}
+                    />
                     <AvatarFallback className='rounded-lg'>SN</AvatarFallback>
                   </Avatar>
                   <div className='grid flex-1 text-start text-sm leading-tight'>
-                    <span className='truncate font-semibold'>{user.name}</span>
-                    <span className='truncate text-xs'>{user.email}</span>
+                    <span className='truncate font-semibold'>{user!.name}</span>
+                    <span className='truncate text-xs'>{user!.email}</span>
                   </div>
                 </div>
               </DropdownMenuLabel>

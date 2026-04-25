@@ -18,28 +18,32 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  invalidateUserProfile,
-  useUserProfileQuery,
-} from '@/features/settings/profile/query'
+import { invalidateUserProfile } from '@/features/settings/profile/query'
+import type { IUserProfileData } from '@/features/settings/profile/types'
 import type { IOrganizationData } from '../types'
 import { useHandleSelectOrganization } from './query'
 
-export function OrgSwitcher() {
+type Props = {
+  userProfile: IUserProfileData | null | undefined
+  isLoading: boolean
+  isFetching: boolean
+}
+
+export function OrgSwitcher({ userProfile, isLoading, isFetching }: Props) {
   const queryClient = useQueryClient()
-  const { data, isLoading, isFetching } = useUserProfileQuery()
+
   const { mutate, isPending } = useHandleSelectOrganization()
   const { isMobile } = useSidebar()
 
   const organizationList = useMemo(() => {
-    if (data) {
-      const { active_organization, organizations } = data
+    if (userProfile) {
+      const { active_organization, organizations } = userProfile
 
       return organizations.filter((o) => o.id !== active_organization.id)
     }
 
     return []
-  }, [data])
+  }, [userProfile])
 
   const handleSelectOrg = (org: IOrganizationData) => {
     mutate(org.id, {
@@ -77,15 +81,15 @@ export function OrgSwitcher() {
                   <div className='flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
                     {/* <activeTeam.logo className='size-4' />
                      */}
-                    {data?.active_organization?.avatar ? (
-                      <img src={data!.active_organization.avatar} />
+                    {userProfile?.active_organization?.avatar ? (
+                      <img src={userProfile!.active_organization.avatar} />
                     ) : (
                       <Building2 className='size-4' />
                     )}
                   </div>
                   <div className='grid flex-1 text-start text-sm leading-tight'>
                     <span className='truncate font-semibold'>
-                      {data!.active_organization.title}
+                      {userProfile!.active_organization.title}
                     </span>
                     <span className='truncate text-xs'>
                       {/* {activeOrganization.} */}
