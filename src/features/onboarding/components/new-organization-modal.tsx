@@ -27,11 +27,7 @@ const NewOrganizationModal = () => {
           <DialogTitle>New Organization</DialogTitle>
           <DialogDescription>Enter your information below</DialogDescription>
         </DialogHeader>
-        <CreateOrganizationForm
-          isTrial
-          modalOpen={!!open}
-          setModalOpen={setOpen}
-        />
+        <CreateOrganizationForm modalOpen={!!open} setModalOpen={setOpen} />
       </DialogContent>
     </Dialog>
   )
