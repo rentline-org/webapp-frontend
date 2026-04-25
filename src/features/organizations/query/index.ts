@@ -25,7 +25,9 @@ async function handleCreateOrganization(
   const response = await handlePost<
     IOrganizationMutationResponse,
     IOrganizationMutationRequest
-  >(CREATE_ORGANIZATION_ENDPOINT, payload)
+  >(CREATE_ORGANIZATION_ENDPOINT, {
+    ...payload,
+  })
 
   return response.data
 }
