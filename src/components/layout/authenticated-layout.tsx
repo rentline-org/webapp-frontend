@@ -7,7 +7,6 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { SkipToMain } from '@/components/skip-to-main'
 import NotificationsPanel from '@/features/notifications/components/notifications-panel'
-import { ConfigDrawer } from '../config-drawer'
 import { Search } from '../search'
 import { ThemeSwitch } from '../theme-switch'
 import { Header } from './header'
@@ -41,10 +40,8 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
           >
             <Header>
               <Search className='me-auto' />
-              <ThemeSwitch />
               <NotificationsPanel />
-              <ConfigDrawer />
-              {/* <ProfileDropdown /> */}
+              <ThemeSwitch />
             </Header>
             {children ?? <Outlet />}
           </SidebarInset>
