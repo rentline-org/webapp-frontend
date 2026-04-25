@@ -94,7 +94,9 @@ export function NavUser({ user, isLoading, isFetching }: NavUserProps) {
                       src={user?.photo ?? '/avatars/shadcn.jpg'}
                       alt={user!.name}
                     />
-                    <AvatarFallback className='rounded-lg'>SN</AvatarFallback>
+                    <AvatarFallback className='rounded-lg'>
+                      {user!.first_name!.charAt(0) + user!.last_name!.charAt(0)}
+                    </AvatarFallback>
                   </Avatar>
                   <div className='grid flex-1 text-start text-sm leading-tight'>
                     <span className='truncate font-semibold'>{user!.name}</span>
