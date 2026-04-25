@@ -8,18 +8,6 @@ export interface IUserProfileData extends User {
   }[]
   roleNames: string[]
   organizations: IOrganizationData[]
-  active_organization: {
-    id: number
-    title: string
-    description: string
-    address: string
-    phone: string
-    email: string
-    website: string | null
-    number_of_properties: number
-    created_at: string
-    updated_at: string
-  } | null
 }
 
 export interface IUserProfileResponse {
