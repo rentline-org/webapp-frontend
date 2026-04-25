@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-type DeviceType = 'mobile' | 'tablet' | 'desktop'
+export type DeviceType = 'mobile' | 'tablet' | 'desktop'
 
 export const getDeviceType = (): DeviceType => {
   const ua = navigator.userAgent

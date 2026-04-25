@@ -1,5 +1,3 @@
-import { useState } from 'react'
-import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from '@tanstack/react-router'
@@ -8,7 +6,7 @@ import { toast } from 'sonner'
 import { IconFacebook } from '@/assets/brand-icons'
 import IconGoogle from '@/assets/brand-icons/icon-google'
 import { useAuthStore } from '@/stores/auth-store'
-import { sleep, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -20,16 +18,8 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
-
-const formSchema = z.object({
-  email: z.email({
-    error: (iss) => (iss.input === '' ? 'Please enter your email.' : undefined),
-  }),
-  password: z
-    .string()
-    .min(1, 'Please enter your password.')
-    .min(7, 'Password must be at least 7 characters long.'),
-})
+import { useHandleSignIn } from '../query'
+import { signInFormSchema, type TSignInFormSchema } from '../types'
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
   redirectTo?: string
@@ -40,45 +30,47 @@ export function UserAuthForm({
   redirectTo,
   ...props
 }: UserAuthFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { auth } = useAuthStore()
+  const { mutate, isPending } = useHandleSignIn()
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<TSignInFormSchema>({
+    resolver: zodResolver(signInFormSchema),
     defaultValues: {
       email: '',
       password: '',
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true)
+  function onSubmit(data: TSignInFormSchema) {
+    mutate(data, {
+      onSuccess(result) {
+        if (!result?.token) {
+          auth.setUser(result!.user)
 
-    toast.promise(sleep(2000), {
-      loading: 'Signing in...',
-      success: () => {
-        setIsLoading(false)
-
-        // Mock successful authentication with expiry computed at success time
-        const mockUser = {
-          accountNo: 'ACC001',
-          email: data.email,
-          role: ['user'],
-          exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
+          return navigate({
+            to: '/otp',
+            search: {
+              email: result!.user!.email,
+            },
+          })
         }
 
-        // Set user and access token
-        auth.setUser(mockUser)
-        auth.setAccessToken('mock-access-token')
+        auth.setUser(result!.user)
+        auth.setAccessToken(result!.token)
 
-        // Redirect to the stored location or default to dashboard
-        const targetPath = redirectTo || '/'
+        toast.success('Successfully Signed in!')
+
+        if (result!.user.active_organization === null) {
+          navigate({
+            to: '/onboarding',
+            replace: true,
+          })
+        }
+
+        const targetPath = redirectTo?.startsWith('/') ? redirectTo : '/'
         navigate({ to: targetPath, replace: true })
-
-        return `Welcome back, ${data.email}!`
       },
-      error: 'Error',
     })
   }
 
@@ -121,8 +113,8 @@ export function UserAuthForm({
             </FormItem>
           )}
         />
-        <Button className='mt-2' disabled={isLoading}>
-          {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
+        <Button className='mt-2' disabled={isPending}>
+          {isPending ? <Loader2 className='animate-spin' /> : <LogIn />}
           Sign in
         </Button>
 
@@ -138,10 +130,10 @@ export function UserAuthForm({
         </div>
 
         <div className='grid grid-cols-2 gap-2'>
-          <Button variant='outline' type='button' disabled={isLoading}>
+          <Button variant='outline' type='button' disabled={isPending}>
             <IconGoogle className='h-4 w-4' /> Google
           </Button>
-          <Button variant='outline' type='button' disabled={isLoading}>
+          <Button variant='outline' type='button' disabled={isPending}>
             <IconFacebook className='h-4 w-4' /> Facebook
           </Button>
         </div>

@@ -1,6 +1,3 @@
-/* eslint-disable no-console */
-import { useState } from 'react'
-import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { getRouteApi } from '@tanstack/react-router'
@@ -8,7 +5,7 @@ import { Loader2, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { IconFacebook } from '@/assets/brand-icons'
 import IconGoogle from '@/assets/brand-icons/icon-google'
-import { sleep, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Field,
@@ -28,37 +25,19 @@ import {
 import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { PasswordInput } from '@/components/password-input'
+import { useSignUpMutation } from '../query'
+import { SignUpFormSchema, type TSignUpFormSchema } from '../types'
 
 const routeApi = getRouteApi('/(auth)/sign-up')
-
-const formSchema = z
-  .object({
-    firstName: z.string().min(1, 'Please enter your first name.'),
-    lastName: z.string().min(1, 'Please enter your last name.'),
-    email: z.email({
-      error: (iss) =>
-        iss.input === '' ? 'Please enter your email.' : undefined,
-    }),
-    role: z.enum(['landlord', 'tenant']),
-    password: z
-      .string()
-      .min(1, 'Please enter your password.')
-      .min(7, 'Password must be at least 7 characters long.'),
-    confirmPassword: z.string().min(1, 'Please confirm your password.'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match.",
-    path: ['confirmPassword'],
-  })
 
 export function SignUpForm({
   className,
   ...props
 }: React.HTMLAttributes<HTMLFormElement>) {
-  const [isLoading, setIsLoading] = useState(false)
+  const { mutate, isPending } = useSignUpMutation()
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<TSignUpFormSchema>({
+    resolver: zodResolver(SignUpFormSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -71,25 +50,18 @@ export function SignUpForm({
 
   const navigate = routeApi.useNavigate()
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-    console.log(data)
-
-    toast.promise(sleep(2000), {
-      loading: 'Creating account...',
-      success: () => {
-        setIsLoading(false)
+  function onSubmit(data: TSignUpFormSchema) {
+    mutate(data, {
+      onSuccess: (result) => {
+        toast.success('Account created successfully!')
 
         navigate({
           to: '/otp',
-          params: { email: data.email },
+          search: {
+            email: result!.user.email,
+          },
         })
-        // routeApi.redirect({
-        //   to: '/otp',
-        //   params: { email: data.email },
-        // })
       },
-      error: 'Error',
     })
   }
 
@@ -207,8 +179,8 @@ export function SignUpForm({
             </FormItem>
           )}
         />
-        <Button className='mt-2' disabled={isLoading}>
-          {isLoading ? <Loader2 className='animate-spin' /> : <UserPlus />}
+        <Button className='mt-2' disabled={isPending}>
+          {isPending ? <Loader2 className='animate-spin' /> : <UserPlus />}
           Create Account
         </Button>
 
@@ -228,7 +200,7 @@ export function SignUpForm({
             variant='outline'
             className='w-full'
             type='button'
-            disabled={isLoading}
+            disabled={isPending}
           >
             <IconGoogle className='h-4 w-4' /> Google
           </Button>
@@ -236,7 +208,7 @@ export function SignUpForm({
             variant='outline'
             className='w-full'
             type='button'
-            disabled={isLoading}
+            disabled={isPending}
           >
             <IconFacebook className='h-4 w-4' /> Facebook
           </Button>

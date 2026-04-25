@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Loader2 } from 'lucide-react'
 import { handleAuthProtection } from '@/lib/route-utils'
-import { AuthenticatedLayout } from '@/components/layout/authenticated-layout'
+import OnboardingScreen from '@/features/onboarding'
 
-export const Route = createFileRoute('/_authenticated')({
-  beforeLoad: async ({ context }) => {
+export const Route = createFileRoute('/(auth)/onboarding')({
+  loader: async ({ context }) => {
     return await handleAuthProtection('protected', context)
   },
   pendingComponent: () => (
@@ -12,5 +12,5 @@ export const Route = createFileRoute('/_authenticated')({
       <Loader2 className='animate-spin' />
     </div>
   ),
-  component: AuthenticatedLayout,
+  component: OnboardingScreen,
 })

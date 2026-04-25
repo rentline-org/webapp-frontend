@@ -1,9 +1,8 @@
-import { useState } from 'react'
-import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from '@tanstack/react-router'
-import { showSubmittedData } from '@/lib/show-submitted-data'
+import { getRouteApi, useNavigate } from '@tanstack/react-router'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,36 +19,44 @@ import {
   InputOTPSlot,
   InputOTPSeparator,
 } from '@/components/ui/input-otp'
-
-const formSchema = z.object({
-  otp: z
-    .string()
-    .min(6, 'Please enter the 6-digit code.')
-    .max(6, 'Please enter the 6-digit code.'),
-})
+import { useVerifyOtpMutation } from '../query'
+import { otpFormSchema, type TOtpFormSchema } from '../types'
 
 type OtpFormProps = React.HTMLAttributes<HTMLFormElement>
 
+const routeApi = getRouteApi('/(auth)/otp')
+
 export function OtpForm({ className, ...props }: OtpFormProps) {
   const navigate = useNavigate()
-  const [isLoading, setIsLoading] = useState(false)
+  const { isPending, mutate } = useVerifyOtpMutation()
+  const { email } = routeApi.useSearch()
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<TOtpFormSchema>({
+    resolver: zodResolver(otpFormSchema),
     defaultValues: { otp: '' },
   })
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const otp = form.watch('otp')
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-    showSubmittedData(data)
+  function onSubmit(schema: TOtpFormSchema) {
+    mutate(
+      { email, schema },
+      {
+        onSuccess: (data) => {
+          if (data?.user.active_organization === null) {
+            navigate({
+              to: '/onboarding',
+              replace: true,
+            })
+          }
 
-    setTimeout(() => {
-      setIsLoading(false)
-      navigate({ to: '/' })
-    }, 1000)
+          toast.success('OTP verified successfully!')
+
+          if (data?.user) navigate({ to: '/', replace: true })
+        },
+      }
+    )
   }
 
   return (
@@ -91,7 +98,8 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
             </FormItem>
           )}
         />
-        <Button className='mt-2' disabled={otp.length < 6 || isLoading}>
+        <Button className='mt-2' disabled={otp.length < 6 || isPending}>
+          {isPending ? <Loader2 className='animate-spin' /> : null}
           Verify
         </Button>
       </form>

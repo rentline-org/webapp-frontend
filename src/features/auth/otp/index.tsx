@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { getRouteApi, Link, useSearch } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
@@ -10,7 +10,11 @@ import {
 import { AuthLayout } from '../auth-layout'
 import { OtpForm } from './components/otp-form'
 
+// const route = getRouteApi('/(auth)/otp');
+
 export function Otp() {
+  // const { email } = route.useSearch();
+
   return (
     <AuthLayout>
       <Card className='max-w-md gap-4 md:min-w-lg'>
