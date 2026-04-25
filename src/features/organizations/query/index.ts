@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { handleGet, handlePost } from '@/api'
 import type {
@@ -20,17 +19,13 @@ async function handleGetUserOrganizations(): Promise<IOrganizationData[]> {
   return result.data
 }
 
-async function handleCreateOrganization({
-  name,
-  ...schema
-}: TCreateOrganizationSchema): Promise<IOrganizationData> {
+async function handleCreateOrganization(
+  payload: TCreateOrganizationSchema
+): Promise<IOrganizationData> {
   const response = await handlePost<
     IOrganizationMutationResponse,
     IOrganizationMutationRequest
-  >(CREATE_ORGANIZATION_ENDPOINT, {
-    ...schema,
-    title: name,
-  })
+  >(CREATE_ORGANIZATION_ENDPOINT, payload)
 
   return response.data
 }

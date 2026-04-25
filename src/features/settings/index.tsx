@@ -1,5 +1,5 @@
 import { Outlet } from '@tanstack/react-router'
-import { Bell, UserCog, Building2, Wallet, BadgeDollarSign } from 'lucide-react'
+import { Bell, UserCog, Building2, Wallet, CreditCard } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Main } from '@/components/layout/main'
 import { SidebarNav } from './components/sidebar-nav'
@@ -23,7 +23,7 @@ const sidebarNavItems = [
   {
     title: 'Plans',
     href: '/settings/plans',
-    icon: <BadgeDollarSign size={18} />,
+    icon: <CreditCard size={18} />,
   },
   {
     title: 'Notifications',
