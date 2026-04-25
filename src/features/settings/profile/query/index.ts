@@ -15,6 +15,8 @@ async function handleGetUserProfile(): Promise<IUserProfileData | null> {
 }
 
 export function useUserProfileQuery() {
+  // const { setUser } = useAuthStore((state) => state.auth)
+
   return useQuery<IUserProfileData | null>({
     queryKey: [USER_PROFILE_ENDPOINT],
     queryFn: handleGetUserProfile,

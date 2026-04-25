@@ -36,7 +36,6 @@ const OnboardingOrgList = ({ organizations, activeOrganization }: Props) => {
 
   const checkIsActive = useCallback(
     (id: number) => {
-      console.log(activeOrganization)
       return activeOrganization && activeOrganization.id === id
     },
     [activeOrganization]

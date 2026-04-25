@@ -10,6 +10,7 @@ export interface IOrganizationData {
   number_of_properties: number
   created_at: string
   updated_at: string
+  avatar: string
 }
 
 export interface IActiveOrganization extends IOrganizationData {

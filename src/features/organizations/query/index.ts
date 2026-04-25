@@ -31,7 +31,6 @@ async function handleCreateOrganization({
     ...schema,
     title: name,
   })
-  console.log(response)
 
   return response.data
 }
