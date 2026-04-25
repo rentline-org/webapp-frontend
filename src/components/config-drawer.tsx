@@ -25,6 +25,15 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from './ui/drawer'
 import { useSidebar } from './ui/sidebar'
 
 export function ConfigDrawer() {
@@ -41,8 +50,8 @@ export function ConfigDrawer() {
   }
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
+    <Drawer direction='right'>
+      <DrawerTrigger asChild>
         <Button
           size='icon'
           variant='ghost'
@@ -51,31 +60,32 @@ export function ConfigDrawer() {
         >
           <Settings aria-hidden='true' />
         </Button>
-      </SheetTrigger>
-      <SheetContent className='flex flex-col'>
-        <SheetHeader className='pb-0 text-start'>
-          <SheetTitle>Theme Settings</SheetTitle>
-          <SheetDescription>
+      </DrawerTrigger>
+      <DrawerContent className='flex flex-col'>
+        <DrawerHeader className='text-start'>
+          <DrawerTitle>Theme Settings</DrawerTitle>
+          <DrawerDescription>
             Adjust the appearance and layout to suit your preferences.
-          </SheetDescription>
-        </SheetHeader>
-        <div className='space-y-6 overflow-y-auto px-4'>
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className='mt-4 space-y-6 overflow-y-auto px-4'>
           <ThemeConfig />
           <SidebarConfig />
           <LayoutConfig />
           <DirConfig />
         </div>
-        <SheetFooter className='gap-2'>
+        <DrawerFooter className='w-full gap-2'>
           <Button
             variant='destructive'
+            className='w-full'
             onClick={handleReset}
             aria-label='Reset all settings to default values'
           >
             Reset
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   )
 }
 

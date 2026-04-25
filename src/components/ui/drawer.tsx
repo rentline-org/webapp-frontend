@@ -63,7 +63,7 @@ function DrawerContent({
           'data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[85vh] data-[vaul-drawer-direction=bottom]:rounded-t-2xl data-[vaul-drawer-direction=bottom]:border-t',
 
           // RIGHT SIDE — Clean floating detached look
-          'data-[vaul-drawer-direction=right]:inset-y-4 data-[vaul-drawer-direction=right]:right-6 data-[vaul-drawer-direction=right]:w-105 data-[vaul-drawer-direction=right]:max-w-[92vw] data-[vaul-drawer-direction=right]:rounded-3xl',
+          'data-[vaul-drawer-direction=right]:inset-y-4 data-[vaul-drawer-direction=right]:right-5 data-[vaul-drawer-direction=right]:w-105 data-[vaul-drawer-direction=right]:max-w-[92vw] data-[vaul-drawer-direction=right]:rounded-3xl',
 
           // LEFT SIDE
           'data-[vaul-drawer-direction=left]:inset-y-8 data-[vaul-drawer-direction=left]:left-8 data-[vaul-drawer-direction=left]:w-105 data-[vaul-drawer-direction=left]:max-w-[92vw] data-[vaul-drawer-direction=left]:rounded-3xl',
@@ -86,7 +86,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot='drawer-header'
       className={cn(
-        'flex items-center justify-between border-b px-6 py-4',
+        'flex flex-col justify-between border-b px-6 py-4',
         className
       )}
       {...props}
