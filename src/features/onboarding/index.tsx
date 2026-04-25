@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -15,46 +15,69 @@ import OrganizationDefinition from './components/organization-definition'
 const OnboardingScreen = () => {
   const { data, isLoading } = useUserProfileQuery()
 
-  const organizations = useMemo(() => data && data.organizations, [data])
+  const organizations = useMemo(() => data?.organizations || [], [data])
 
   const isEmpty = useMemo(
-    () => organizations && organizations.length === 0,
-    [organizations]
+    () => !isLoading && organizations.length === 0,
+    [organizations, isLoading]
   )
 
   return (
-    <div className='flex h-screen w-full items-center justify-center'>
-      <Card className='max-w-md lg:min-w-2xl'>
-        <CardHeader className='col-span-3 h-fit'>
-          <div className='flex w-full items-center justify-between'>
-            <div className=''>
-              <CardTitle className='text-xl'>Welcome to rentline!</CardTitle>
-              <CardDescription>
+    <div className='flex min-h-screen w-full items-center justify-center bg-muted/30 p-4 md:p-6'>
+      <Card className='w-full max-w-md overflow-hidden border-none shadow-xl md:border-solid lg:max-w-2xl'>
+        <CardHeader className='border-b bg-background px-4 py-6 md:px-8'>
+          <div className='flex w-full flex-col items-start justify-between gap-4 sm:flex-row sm:items-center'>
+            <div className='space-y-1.5'>
+              <CardTitle className='text-2xl font-bold tracking-tight md:text-3xl'>
+                Welcome to Rentline!
+              </CardTitle>
+              <CardDescription className='text-sm md:text-base'>
                 Select the organization you would like to work with today
               </CardDescription>
-              <NewOrganizationModal />
+              <div className='pt-2'>
+                <NewOrganizationModal />
+              </div>
             </div>
-            <div className='col-span-1'>
+
+            <div className='hidden shrink-0 sm:block'>
               <OrganizationDefinition />
             </div>
           </div>
         </CardHeader>
 
-        <CardContent>
-          {(isLoading && <Loader2 className='animate-spin' />) || isEmpty ? (
-            <div className='flex w-full items-center'>
-              <p className='text-sm'>
-                You do not have any organizations.{' '}
-                <span className='font-bold'>Create one to continue</span>
+        <CardContent className='p-0'>
+          {isLoading ? (
+            <div className='flex h-64 w-full flex-col items-center justify-center gap-2 text-muted-foreground'>
+              <Loader2 className='h-8 w-8 animate-spin' />
+              <p className='animate-pulse text-sm'>Loading your workspace...</p>
+            </div>
+          ) : isEmpty ? (
+            <div className='flex flex-col items-center justify-center p-8 text-center md:p-12'>
+              <div className='mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10'>
+                <Plus className='h-6 w-6 text-primary' />
+              </div>
+              <h3 className='text-lg font-semibold'>No organizations found</h3>
+              <p className='mt-1 text-sm text-muted-foreground'>
+                You don't have any organizations yet.{' '}
+                <span className='block font-medium text-foreground sm:inline'>
+                  Create one to get started with your properties.
+                </span>
               </p>
             </div>
           ) : (
-            <OnboardingOrgList
-              activeOrganization={data!.active_organization}
-              organizations={data!.organizations}
-            />
+            <div className='p-4 md:p-6'>
+              <OnboardingOrgList
+                activeOrganization={data!.active_organization}
+                organizations={organizations}
+              />
+            </div>
           )}
         </CardContent>
+
+        {/* Mobile-only definition toggle at the bottom to keep the header clean */}
+        <div className='border-t bg-muted/20 p-4 sm:hidden'>
+          <OrganizationDefinition />
+        </div>
       </Card>
     </div>
   )

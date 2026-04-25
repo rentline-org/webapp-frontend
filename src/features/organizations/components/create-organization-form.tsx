@@ -11,12 +11,7 @@ import { COUNTRIES } from '@/lib/countries'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldLabel,
-} from '@/components/ui/field'
+import { Field } from '@/components/ui/field'
 import {
   Form,
   FormControl,
@@ -84,7 +79,6 @@ const CreateOrganizationForm = ({ modalOpen = false, setModalOpen }: Props) => {
     },
   })
 
-  // eslint-disable-next-line react-hooks/incompatible-library
   const country = form.watch('country')
   const isBR = isBrazil(country)
 
@@ -142,23 +136,34 @@ const CreateOrganizationForm = ({ modalOpen = false, setModalOpen }: Props) => {
 
   return (
     <Form {...form}>
-      <form className='grid gap-4' onSubmit={form.handleSubmit(onSubmit)}>
-        {/* Progress */}
-        <div className='flex gap-2'>
-          {steps.map((_, i) => (
-            <div
-              key={i}
-              className={`h-2 flex-1 rounded-full ${
-                i <= step ? 'bg-primary' : 'bg-muted'
-              }`}
-            />
-          ))}
+      <form className='grid gap-6' onSubmit={form.handleSubmit(onSubmit)}>
+        {/* Progress Header */}
+        <div className='space-y-2'>
+          <div className='mb-1 flex items-center justify-between'>
+            <span className='text-xs font-medium tracking-wider text-muted-foreground uppercase'>
+              {steps[step]}
+            </span>
+            <span className='text-xs font-medium text-muted-foreground'>
+              Step {step + 1} of {steps.length}
+            </span>
+          </div>
+          <div className='flex gap-2'>
+            {steps.map((_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  'h-1.5 flex-1 rounded-full transition-colors duration-300',
+                  i <= step ? 'bg-primary' : 'bg-muted'
+                )}
+              />
+            ))}
+          </div>
         </div>
 
         {/* STEP 1 */}
         {step === 0 && (
-          <>
-            <div className='grid grid-cols-2 gap-4'>
+          <div className='grid gap-4'>
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
               <FormField
                 name='title'
                 control={form.control}
@@ -202,23 +207,24 @@ const CreateOrganizationForm = ({ modalOpen = false, setModalOpen }: Props) => {
                     <Textarea
                       {...field}
                       placeholder='About my organization...'
+                      className='min-h-25'
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </>
+          </div>
         )}
 
         {/* STEP 2 */}
         {step === 1 && (
-          <div className='grid grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
             <FormField
               name='country'
               control={form.control}
               render={({ field }) => (
-                <FormItem>
+                <FormItem className='col-span-1 md:col-span-2'>
                   <FormLabel>Country</FormLabel>
                   <FormControl>
                     <CountryCombobox
@@ -280,7 +286,7 @@ const CreateOrganizationForm = ({ modalOpen = false, setModalOpen }: Props) => {
               name='address_line'
               control={form.control}
               render={({ field }) => (
-                <FormItem className={cn(isBR ? 'col-span-2' : '')}>
+                <FormItem className='col-span-1 md:col-span-2'>
                   <FormLabel>Address (Optional)</FormLabel>
                   <FormControl>
                     <Input {...field} />
@@ -294,8 +300,8 @@ const CreateOrganizationForm = ({ modalOpen = false, setModalOpen }: Props) => {
 
         {/* STEP 3 */}
         {step === 2 && (
-          <>
-            <div className='grid grid-cols-2 gap-4'>
+          <div className='grid gap-4'>
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
               <FormField
                 name='phone'
                 control={form.control}
@@ -325,8 +331,8 @@ const CreateOrganizationForm = ({ modalOpen = false, setModalOpen }: Props) => {
               />
             </div>
 
-            {isBR ? (
-              <div className='grid grid-cols-2 gap-4'>
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+              {isBR && (
                 <FormField
                   name='tax_id_type'
                   control={form.control}
@@ -351,27 +357,13 @@ const CreateOrganizationForm = ({ modalOpen = false, setModalOpen }: Props) => {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  name='tax_id'
-                  control={form.control}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CPF / CPNJ</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            ) : (
+              )}
               <FormField
                 name='tax_id'
                 control={form.control}
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>VAT</FormLabel>
+                  <FormItem className={cn(!isBR && 'col-span-1 md:col-span-2')}>
+                    <FormLabel>{isBR ? 'CPF / CNPJ' : 'VAT'}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -379,53 +371,74 @@ const CreateOrganizationForm = ({ modalOpen = false, setModalOpen }: Props) => {
                   </FormItem>
                 )}
               />
-            )}
+            </div>
 
             <FormField
               name='is_active'
               control={form.control}
               render={({ field }) => (
-                <FormItem>
+                <FormItem className='pt-2'>
                   <FormControl>
-                    <Field orientation='horizontal'>
+                    <Field
+                      orientation='horizontal'
+                      className='items-start space-x-3'
+                    >
                       <Checkbox
+                        id='is_active'
                         checked={field.value}
                         onCheckedChange={(c) => field.onChange(c === true)}
+                        className='mt-1'
                       />
-                      <FieldContent>
-                        <FieldLabel>Set as active</FieldLabel>
-                        <FieldDescription>
+                      <div className='grid gap-1.5 leading-none'>
+                        <label
+                          htmlFor='is_active'
+                          className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                        >
+                          Set as active
+                        </label>
+                        <p className='text-xs text-muted-foreground'>
                           Enables the organization by default
-                        </FieldDescription>
-                      </FieldContent>
+                        </p>
+                      </div>
                     </Field>
                   </FormControl>
                 </FormItem>
               )}
             />
-          </>
+          </div>
         )}
 
         {/* Actions */}
-        <div className='flex justify-between'>
+        <div className='flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row sm:justify-between'>
           {step > 0 ? (
-            <Button type='button' variant='outline' onClick={prev}>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={prev}
+              className='w-full sm:w-auto'
+            >
               Back
             </Button>
           ) : (
-            <span />
+            <div className='hidden sm:block' />
           )}
 
-          {step < steps.length - 1 ? (
-            <Button type='button' onClick={next}>
-              Next
-            </Button>
-          ) : (
-            <Button type='submit' disabled={isPending}>
-              {isPending && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-              Save Changes
-            </Button>
-          )}
+          <div className='flex w-full flex-col gap-3 sm:w-auto sm:flex-row'>
+            {step < steps.length - 1 ? (
+              <Button type='button' onClick={next} className='w-full sm:w-auto'>
+                Next
+              </Button>
+            ) : (
+              <Button
+                type='submit'
+                disabled={isPending}
+                className='w-full sm:w-auto'
+              >
+                {isPending && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+                Save Changes
+              </Button>
+            )}
+          </div>
         </div>
       </form>
     </Form>

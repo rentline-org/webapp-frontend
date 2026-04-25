@@ -1,6 +1,7 @@
 import React from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { Bell, CheckCircle, Expand, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -94,23 +95,29 @@ export default function NotificationsPanel() {
         </button>
       </DrawerTrigger>
 
-      <DrawerContent className='w-1/3!'>
-        <DrawerHeader className='w-full px-6 py-5'>
+      {/* MOBILE: w-full | DESKTOP: max-w-md or w-[400px] */}
+      <DrawerContent className='fixed inset-y-0 right-0 z-50 mt-0 flex h-full w-full flex-col rounded-none border-l bg-background md:w-112.5 lg:w-125'>
+        <DrawerHeader className='px-4 py-5 md:px-6'>
           <div className='flex w-full items-center justify-between'>
             <div>
-              <DrawerTitle className='text-xl'>Notifications</DrawerTitle>
-              <DrawerDescription>
+              <DrawerTitle className='text-lg md:text-xl'>
+                Notifications
+              </DrawerTitle>
+              <DrawerDescription className='text-xs md:text-sm'>
                 Stay updated with your rental activity
               </DrawerDescription>
             </div>
 
-            <div className='flex items-center gap-3'>
-              <Button variant='ghost' size='icon'>
+            <div className='flex items-center gap-1 md:gap-3'>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='hidden sm:inline-flex'
+              >
                 <Expand className='size-5' />
-                {/* <LucideExpand /> */}
               </Button>
               <DrawerClose asChild>
-                <Button variant='ghost' size='icon' className='h-8 w-8'>
+                <Button variant='ghost' size='icon' className='h-9 w-9'>
                   <X className='size-5' />
                 </Button>
               </DrawerClose>
@@ -118,36 +125,44 @@ export default function NotificationsPanel() {
           </div>
         </DrawerHeader>
 
-        <Tabs defaultValue='all' className='flex flex-1 flex-col'>
-          <TabsList className='flex w-full items-center justify-between rounded-none border-b px-6'>
-            <div className='flex items-center gap-2'>
-              <TabsTrigger value='all'>All</TabsTrigger>
-              <TabsTrigger value='unread'>Unread ({unreadCount})</TabsTrigger>
+        <Tabs
+          defaultValue='all'
+          className='flex flex-1 flex-col overflow-hidden'
+        >
+          <TabsList className='flex w-full items-center justify-between rounded-none border-b px-4 md:px-6'>
+            <div className='flex items-center gap-1'>
+              <TabsTrigger value='all' className='text-xs md:text-sm'>
+                All
+              </TabsTrigger>
+              <TabsTrigger value='unread' className='text-xs md:text-sm'>
+                Unread{' '}
+                <span className='ml-1 hidden sm:inline'>({unreadCount})</span>
+              </TabsTrigger>
             </div>
 
             <Button
               variant='link'
-              className='col-span-2'
               size='sm'
+              className='text-xs md:text-sm'
               onClick={() => {}}
             >
               Mark all as read
             </Button>
           </TabsList>
 
-          <TabsContent value='all' className='mt-0 flex-1 p-0'>
+          <TabsContent value='all' className='mt-0 flex-1 overflow-hidden p-0'>
             <NotificationList notifications={sampleNotifications} />
           </TabsContent>
 
-          <TabsContent value='unread' className='mt-0 flex-1 p-0'>
+          <TabsContent
+            value='unread'
+            className='mt-0 flex-1 overflow-hidden p-0'
+          >
             <NotificationList
               notifications={sampleNotifications.filter((n) => n.isUnread)}
             />
           </TabsContent>
         </Tabs>
-
-        {/* Footer only has spacing now (no buttons) */}
-        {/* <DrawerFooter className='px-6 py-4' /> */}
       </DrawerContent>
     </Drawer>
   )
@@ -159,26 +174,29 @@ function NotificationList({
   notifications: Notification[]
 }) {
   return (
-    <ScrollArea className='flex-1 px-6 py-4'>
-      <div className='space-y-3'>
+    <ScrollArea className='h-full w-full px-4 py-4 md:px-6'>
+      <div className='space-y-3 pb-8'>
         {notifications.map((notification) => (
           <div
             key={notification.id}
-            className={`flex gap-4 rounded-2xl border bg-card p-4 transition-all hover:bg-accent/50 ${
-              notification.isUnread ? 'border-border bg-muted/60' : ''
-            }`}
+            className={cn(
+              'flex gap-3 rounded-xl border bg-card p-3 transition-all hover:bg-accent/50 md:gap-4 md:p-4',
+              notification.isUnread
+                ? 'border-primary/20 bg-primary/5'
+                : 'border-border'
+            )}
           >
             {/* Avatar / Icon */}
             <div className='mt-0.5 shrink-0'>
               {notification.avatar ? (
-                <Avatar className='h-10 w-10'>
+                <Avatar className='h-9 w-9 md:h-10 md:w-10'>
                   <AvatarImage src={notification.avatar} />
-                  <AvatarFallback className='text-xs'>
+                  <AvatarFallback className='text-[10px] md:text-xs'>
                     {notification.title.substring(0, 2)}
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                <div className='flex h-10 w-10 items-center justify-center rounded-full bg-muted'>
+                <div className='flex h-9 w-9 items-center justify-center rounded-full bg-muted md:h-10 md:w-10'>
                   {notification.icon}
                 </div>
               )}
@@ -186,20 +204,20 @@ function NotificationList({
 
             {/* Content */}
             <div className='min-w-0 flex-1'>
-              <p className='text-sm leading-snug font-medium text-foreground'>
+              <p className='text-xs leading-snug font-semibold text-foreground md:text-sm'>
                 {notification.title}
               </p>
-              <p className='mt-1 line-clamp-2 text-sm text-muted-foreground'>
+              <p className='mt-1 line-clamp-2 text-xs text-muted-foreground md:text-sm'>
                 {notification.description}
               </p>
-              <p className='mt-2 text-xs text-muted-foreground'>
+              <p className='mt-2 text-[10px] font-medium text-muted-foreground md:text-xs'>
                 {formatDistanceToNow(notification.time, { addSuffix: true })}
               </p>
             </div>
 
             {/* Unread indicator */}
             {notification.isUnread && (
-              <div className='mt-2 h-2 w-2 shrink-0 rounded-full bg-primary' />
+              <div className='mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]' />
             )}
           </div>
         ))}
