@@ -23,8 +23,8 @@ export const sidebarData: SidebarData = {
           icon: Home,
         },
         {
-          title: 'Properties & Units',
-          url: '/apps',
+          title: 'Properties',
+          url: '/properties',
           icon: Building2,
         },
         {

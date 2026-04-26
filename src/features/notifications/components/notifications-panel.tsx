@@ -95,8 +95,7 @@ export default function NotificationsPanel() {
         </button>
       </DrawerTrigger>
 
-      {/* MOBILE: w-full | DESKTOP: max-w-md or w-[400px] */}
-      <DrawerContent className='fixed inset-y-0 right-0 z-50 mt-0 flex h-full w-full flex-col rounded-none border-l bg-background md:w-112.5 lg:w-125'>
+      <DrawerContent className='fixed right-0 z-50 mt-0 flex h-full w-full flex-col rounded-none border-l bg-background md:w-112.5 lg:w-125'>
         <DrawerHeader className='px-4 py-5 md:px-6'>
           <div className='flex w-full items-center justify-between'>
             <div>
