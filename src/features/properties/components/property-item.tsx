@@ -31,10 +31,10 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
               <div className='space-y-2'>
                 <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
                   <div className='min-w-0'>
-                    <h2 className='text-lg leading-tight font-semibold break-words'>
+                    <h2 className='text-lg leading-tight font-semibold wrap-break-word'>
                       {property.name}
                     </h2>
-                    <p className='text-sm break-words text-muted-foreground'>
+                    <p className='text-sm wrap-break-word text-muted-foreground'>
                       {property.address}
                     </p>
                   </div>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Cross2Icon } from '@radix-ui/react-icons'
 import { getRouteApi } from '@tanstack/react-router'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -132,16 +133,22 @@ export function Properties() {
   return (
     <Main fixed>
       <div className='flex flex-col gap-6'>
-        <div>
-          <h1 className='text-2xl font-semibold tracking-tight sm:text-3xl'>
-            Properties
-          </h1>
-          <p className='mt-1 text-sm text-muted-foreground'>
-            Browse and manage your property inventory.
-          </p>
+        <div className='flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
+          <div>
+            <h1 className='text-2xl font-semibold tracking-tight sm:text-3xl'>
+              Properties
+            </h1>
+            <p className='mt-1 text-sm text-muted-foreground'>
+              Browse and manage your property inventory.
+            </p>
+          </div>
+
+          <Button className='w-full sm:w-auto'>
+            <Plus />
+            Add Property
+          </Button>
         </div>
 
-        {/* Tabs */}
         <div className='w-full overflow-x-auto'>
           <Tabs
             value={propertyType}
@@ -162,31 +169,33 @@ export function Properties() {
           </Tabs>
         </div>
 
-        {/* Filters */}
-        <div className='flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between'>
-          <div className='flex flex-wrap items-center gap-2'>
+        <div className='flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between'>
+          <div className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center'>
             <Input
               placeholder='Search properties...'
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
               className='h-9 w-full sm:w-60 lg:w-80'
             />
-            <FacetedFilter
-              title='Status'
-              options={statusOptions}
-              selectedValues={statusFilter}
-              onChange={setStatusFilter}
-            />
 
-            <FacetedFilter
-              title='Occupancy'
-              options={occupancyOptions}
-              selectedValues={occupancyFilter}
-              onChange={setOccupancyFilter}
-            />
+            <div className='flex flex-wrap gap-2'>
+              <FacetedFilter
+                title='Status'
+                options={statusOptions}
+                selectedValues={statusFilter}
+                onChange={setStatusFilter}
+              />
+
+              <FacetedFilter
+                title='Occupancy'
+                options={occupancyOptions}
+                selectedValues={occupancyFilter}
+                onChange={setOccupancyFilter}
+              />
+            </div>
           </div>
 
-          <div className='flex items-center gap-2'>
+          <div className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center'>
             <Select
               value={sort}
               onValueChange={(v) => handleSortChange(v as PropertySort)}
@@ -205,7 +214,7 @@ export function Properties() {
               <Button
                 variant='ghost'
                 onClick={resetFilters}
-                className='h-9 px-3'
+                className='h-9 self-start px-3 sm:self-auto'
               >
                 Reset
                 <Cross2Icon className='ms-2 h-4 w-4' />
@@ -214,8 +223,7 @@ export function Properties() {
           </div>
         </div>
 
-        {/* Grid */}
-        <div className='grid grid-cols-1 gap-4 pb-10 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2'>
+        <div className='grid grid-cols-1 gap-4 pb-10 md:grid-cols-2 xl:grid-cols-2'>
           {filteredProperties.map((property) => (
             <PropertyItem key={property.id} property={property} />
           ))}
