@@ -48,14 +48,15 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
                 </div>
 
                 <div className='flex flex-wrap gap-2 pt-2'>
-                  <div className='inline-flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1.5 text-sm'>
+                  <Badge variant='outline'>
                     {typeIcon(property.type)}
                     <span className='capitalize'>{property.type}</span>
-                  </div>
+                  </Badge>
 
-                  <div className='inline-flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1.5 text-sm'>
-                    <span>{property.units} units</span>
-                  </div>
+                  <Badge variant='outline'>{property.units} units</Badge>
+                  <Badge variant='default' className='self-start sm:self-auto'>
+                    {occupancyLabel(property.occupancy)}
+                  </Badge>
                 </div>
               </div>
 
@@ -69,10 +70,6 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
                     </span>
                   </p>
                 </div>
-
-                <Badge variant='default' className='self-start sm:self-auto'>
-                  {occupancyLabel(property.occupancy)}
-                </Badge>
               </div>
             </div>
           </div>
