@@ -131,7 +131,7 @@ export function Properties() {
   }
 
   return (
-    <Main fixed>
+    <Main>
       <div className='flex flex-col gap-6'>
         <div className='flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
           <div>
