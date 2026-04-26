@@ -11,8 +11,8 @@ type PropertyCardProps = {
 const PropertyItem = ({ property }: PropertyCardProps) => {
   return (
     <Link
-      to='/properties'
-      params={{ id: String(property.id) }}
+      to='/properties/$propertyId'
+      params={{ propertyId: String(property.id) }}
       className='block'
     >
       <Card className='h-full overflow-hidden rounded-3xl border bg-background p-0 shadow-sm transition-shadow hover:shadow-md'>
