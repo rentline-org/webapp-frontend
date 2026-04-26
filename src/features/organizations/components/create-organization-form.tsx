@@ -79,6 +79,7 @@ const CreateOrganizationForm = ({ modalOpen = false, setModalOpen }: Props) => {
     },
   })
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const country = form.watch('country')
   const isBR = isBrazil(country)
 
@@ -287,7 +288,7 @@ const CreateOrganizationForm = ({ modalOpen = false, setModalOpen }: Props) => {
               control={form.control}
               render={({ field }) => (
                 <FormItem className='col-span-1 md:col-span-2'>
-                  <FormLabel>Address (Optional)</FormLabel>
+                  <FormLabel>Address</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>

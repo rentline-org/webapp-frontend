@@ -1,4 +1,5 @@
 import z from 'zod'
+import type { IResponse } from '@/api'
 
 export interface IOrganizationData {
   id: number
@@ -40,9 +41,7 @@ export interface IActiveOrganization extends IOrganizationData {
   website: string | null
 }
 
-export interface IOrganizationResponse {
-  data: IOrganizationData[]
-}
+export type IOrganizationResponse = IResponse<IOrganizationData[]>
 
 export const stepOneSchema = z.object({
   title: z.string().min(1, 'Organization name is required'),
@@ -127,7 +126,7 @@ export interface IOrganizationMutationRequest {
   state?: string
   city: string
   postal_code: string
-  address_line: string
+  address_line?: string
 
   // Tax
   tax_id?: string
@@ -137,6 +136,4 @@ export interface IOrganizationMutationRequest {
   is_active?: boolean
 }
 
-export interface IOrganizationMutationResponse {
-  data: IOrganizationData
-}
+export type IOrganizationMutationResponse = IResponse<IOrganizationData>

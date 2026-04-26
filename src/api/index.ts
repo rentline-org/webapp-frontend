@@ -1,5 +1,19 @@
+/* eslint-disable no-console */
+/* eslint-disable preserve-caught-error */
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { getCookie } from '@/lib/cookies'
+import { ApiError } from './errors'
+
+export type ApiErrorResponse = {
+  message?: string
+  errors?: Record<string, string[]>
+}
+
+export interface IResponse<TData> extends ApiErrorResponse {
+  data: TData
+  // errors?: Record<string, Array<string>>
+  // message?: string
+}
 
 export const RentlineApi = axios.create({
   baseURL: import.meta.env.VITE_RENTLINE_API_URL,
@@ -42,13 +56,30 @@ export const handlePost = async <TResponse, TRequest = unknown>(
   data?: TRequest,
   config?: AxiosRequestConfig<TRequest>
 ): Promise<TResponse> => {
-  const res = await RentlineApi.post<
-    TResponse,
-    AxiosResponse<TResponse>,
-    TRequest
-  >(url, data, config)
+  try {
+    const res = await RentlineApi.post<
+      TResponse,
+      AxiosResponse<TResponse>,
+      TRequest
+    >(url, data, config)
 
-  return res.data
+    return res.data
+  } catch (err) {
+    if (axios.isAxiosError<ApiErrorResponse>(err)) {
+      const message =
+        err.response?.data?.message ??
+        Object.values(err.response?.data?.errors ?? {}).flat()[0] ??
+        err.message ??
+        'Request failed'
+
+      throw new ApiError(message, {
+        status: err.response?.status,
+        errors: err.response?.data?.errors,
+      })
+    }
+
+    throw err
+  }
 }
 
 export const handlePut = async <TResponse, TRequest = unknown>(

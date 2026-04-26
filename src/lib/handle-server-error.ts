@@ -1,4 +1,5 @@
-import { AxiosError } from 'axios'
+import axios from 'axios'
+import type { ApiErrorResponse } from '@/api'
 import { toast } from 'sonner'
 
 export function handleServerError(error: unknown) {
@@ -7,23 +8,31 @@ export function handleServerError(error: unknown) {
     console.log(error)
   }
 
-  let errMsg = 'Something went wrong!'
+  let errMsg: string | null = null
 
-  if (
-    error &&
-    typeof error === 'object' &&
-    'status' in error &&
-    Number(error.status) === 204
-  ) {
-    errMsg = 'No content.'
-  }
+  if (axios.isAxiosError<ApiErrorResponse>(error)) {
+    const status = error.response?.status
+    const data = error.response?.data
 
-  if (error instanceof AxiosError) {
-    const title = error.response?.data?.title
-    if (typeof title === 'string' && title.length > 0) {
-      errMsg = title
+    if (status === 422) {
+      errMsg =
+        data?.message ??
+        Object.values(data?.errors ?? {})
+          .flat()
+          .find(Boolean) ??
+        'Validation failed.'
+    } else if (status && status >= 500) {
+      errMsg = data?.message ?? 'Internal server error.'
+    } else if (status === 204) {
+      errMsg = 'No content.'
+    } else {
+      errMsg = data?.message ?? error.message
     }
+  } else if (error instanceof Error) {
+    errMsg = error.message
   }
 
-  toast.error(errMsg)
+  if (errMsg) {
+    toast.error(errMsg)
+  }
 }

@@ -29,6 +29,10 @@ async function handleCreateOrganization(
     ...payload,
   })
 
+  if (response.errors) {
+    throw response.message
+  }
+
   return response.data
 }
 
