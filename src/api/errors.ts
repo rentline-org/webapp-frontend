@@ -1,14 +1,20 @@
-export class ApiError extends Error {
+export class ApiError<TData> extends Error {
   status?: number
   errors?: Record<string, string[]>
+  data?: TData
 
   constructor(
     message: string,
-    opts?: { status?: number; errors?: Record<string, string[]> }
+    options?: {
+      status?: number
+      errors?: Record<string, string[]>
+      data?: TData
+    }
   ) {
     super(message)
-    this.name = 'ApiError'
-    this.status = opts?.status
-    this.errors = opts?.errors
+
+    this.status = options?.status
+    this.errors = options?.errors
+    this.data = options?.data
   }
 }

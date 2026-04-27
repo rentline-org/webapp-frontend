@@ -34,10 +34,13 @@ const PropertyDetails = () => {
   return (
     <Main fixed>
       <div className='flex flex-col gap-4'>
-        <Button variant='outline' size='icon' onClick={handleBackRouting}>
-          <ChevronLeft className='size-5' />
-        </Button>
-        Viewing {property.name}
+        <div className=''>
+          <Button variant='ghost' size='sm' onClick={handleBackRouting}>
+            <ChevronLeft className='size-5' />
+            Back to properties
+          </Button>
+        </div>
+        <span>Viewing {property.name}</span>
       </div>
     </Main>
   )

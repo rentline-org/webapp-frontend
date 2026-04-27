@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
-import { Loader2 } from 'lucide-react'
+import { House, Loader2, Users2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,11 @@ import {
   ItemTitle,
 } from '@/components/ui/item'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useHandleSelectOrganization } from '@/features/organizations/org-switcher/query'
 import type {
   IActiveOrganization,
@@ -93,12 +98,33 @@ const OnboardingOrgList = ({ organizations, activeOrganization }: Props) => {
                   </ItemDescription>
 
                   <div className='flex flex-wrap items-center gap-2'>
-                    <Badge variant='secondary' className='whitespace-nowrap'>
-                      o Properties
-                    </Badge>
-                    <Badge variant='secondary' className='whitespace-nowrap'>
-                      0 Tenants
-                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge
+                          variant='secondary'
+                          className='whitespace-nowrap'
+                        >
+                          <House />
+                          {org.properties_count}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent side='bottom'>
+                        Number of properties
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge
+                          variant='secondary'
+                          className='whitespace-nowrap'
+                        >
+                          <Users2 />0
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent side='bottom'>
+                        Number of tenants
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </div>
               </ItemContent>

@@ -7,6 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Header } from '@/components/layout/header'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { ThemeSwitch } from '@/components/theme-switch'
 import { useUserProfileQuery } from '../settings/profile/query'
 import NewOrganizationModal from './components/new-organization-modal'
 import OnboardingOrgList from './components/onboarding-org-list'
@@ -23,9 +26,15 @@ const OnboardingScreen = () => {
   )
 
   return (
-    <div className='flex min-h-screen w-full items-center justify-center bg-muted/30 p-4 md:p-6'>
-      <Card className='w-full max-w-md overflow-hidden border-none shadow-xl md:border-solid lg:max-w-2xl'>
-        <CardHeader className='border-b bg-background px-4 py-6 md:px-8'>
+    <div className='flex min-h-screen w-full flex-col items-center bg-muted/30 p-4 md:p-6'>
+      <Header fixed showSeparator={false}>
+        <div className='ml-auto flex items-center gap-x-4'>
+          <ProfileDropdown user={data} />
+          <ThemeSwitch />
+        </div>
+      </Header>
+      <Card className='my-auto w-full max-w-md overflow-hidden border-none shadow-xl md:border-solid lg:max-w-2xl'>
+        <CardHeader className='border-b px-4 py-6 md:px-8'>
           <div className='flex w-full flex-col items-start justify-between gap-4 sm:flex-row sm:items-center'>
             <div className='space-y-1.5'>
               <CardTitle className='text-2xl font-bold tracking-tight md:text-3xl'>

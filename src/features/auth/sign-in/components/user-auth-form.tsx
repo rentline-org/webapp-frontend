@@ -71,6 +71,11 @@ export function UserAuthForm({
         const targetPath = redirectTo?.startsWith('/') ? redirectTo : '/'
         navigate({ to: targetPath, replace: true })
       },
+      // onError(err) {
+      //   if (err?.error_code === 'ACCOUNT_UNVERIFIED') {
+      //     setErrMsg(err?.detail)
+      //   }
+      // },
     })
   }
 

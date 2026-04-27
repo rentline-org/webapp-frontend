@@ -6,6 +6,8 @@ import { ApiError } from './errors'
 
 export type ApiErrorResponse = {
   message?: string
+  detail?: string
+  error_code?: string
   errors?: Record<string, string[]>
 }
 
@@ -66,15 +68,19 @@ export const handlePost = async <TResponse, TRequest = unknown>(
     return res.data
   } catch (err) {
     if (axios.isAxiosError<ApiErrorResponse>(err)) {
+      const responseData = err.response?.data
+
       const message =
-        err.response?.data?.message ??
-        Object.values(err.response?.data?.errors ?? {}).flat()[0] ??
+        responseData?.message ??
+        responseData?.detail ??
+        Object.values(responseData?.errors ?? {}).flat()[0] ??
         err.message ??
         'Request failed'
 
       throw new ApiError(message, {
         status: err.response?.status,
-        errors: err.response?.data?.errors,
+        errors: responseData?.errors,
+        data: responseData,
       })
     }
 

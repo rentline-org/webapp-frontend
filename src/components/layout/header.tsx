@@ -6,9 +6,18 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 type HeaderProps = React.HTMLAttributes<HTMLElement> & {
   fixed?: boolean
   ref?: React.Ref<HTMLElement>
+  noSidebar?: boolean
+  showSeparator?: boolean
 }
 
-export function Header({ className, fixed, children, ...props }: HeaderProps) {
+export function Header({
+  className,
+  fixed,
+  children,
+  noSidebar = false,
+  showSeparator = true,
+  ...props
+}: HeaderProps) {
   const [offset, setOffset] = useState(0)
 
   useEffect(() => {
@@ -28,6 +37,7 @@ export function Header({ className, fixed, children, ...props }: HeaderProps) {
       className={cn(
         'z-50 h-16',
         fixed && 'header-fixed peer/header sticky top-0 w-[inherit]',
+        !showSeparator && 'border-b',
         offset > 10 && fixed ? 'shadow' : 'shadow-none',
         className
       )}
@@ -41,8 +51,8 @@ export function Header({ className, fixed, children, ...props }: HeaderProps) {
             'after:absolute after:inset-0 after:-z-10 after:bg-background/20 after:backdrop-blur-lg'
         )}
       >
-        <SidebarTrigger variant='outline' className='max-md:scale-125' />
-        <Separator orientation='vertical' className='h-6' />
+        {noSidebar && <SidebarTrigger />}
+        {showSeparator && <Separator orientation='vertical' className='h-6' />}
         {children}
       </div>
     </header>

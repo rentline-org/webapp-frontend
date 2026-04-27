@@ -25,7 +25,7 @@ async function handleSignIn(
     return response.data
   }
 
-  return null
+  throw response.data
 }
 
 export function useHandleSignIn() {

@@ -21,6 +21,7 @@ export interface IOrganizationData {
 
   currency: string
   timezone: string
+  properties_count?: number
 
   tax_id: string
   tax_id_type: 'cpf' | 'cnpj' | 'vat'

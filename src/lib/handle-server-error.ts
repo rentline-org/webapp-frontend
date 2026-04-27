@@ -32,6 +32,8 @@ export function handleServerError(error: unknown) {
     errMsg = error.message
   }
 
+  // console.log(error);
+
   if (errMsg) {
     toast.error(errMsg)
   }

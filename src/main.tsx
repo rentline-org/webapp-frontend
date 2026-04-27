@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { AxiosError } from 'axios'
@@ -10,6 +11,8 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth-store'
 import { handleServerError } from '@/lib/handle-server-error'
+import { ApiError } from './api/errors'
+import { Button } from './components/ui/button'
 import { DirectionProvider } from './context/direction-provider'
 import { FontProvider } from './context/font-provider'
 import { ThemeProvider } from './context/theme-provider'
@@ -17,6 +20,8 @@ import { ThemeProvider } from './context/theme-provider'
 import { routeTree } from './routeTree.gen'
 // Styles
 import './styles/index.css'
+
+const appUrl = import.meta.env.VITE_APP_URL || window.location.origin
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +43,38 @@ const queryClient = new QueryClient({
     },
     mutations: {
       onError: (error) => {
+        console.log(error.message)
+
+        if (error instanceof ApiError) {
+          const data = error?.data
+
+          if (data?.error_code === 'ACCOUNT_UNVERIFIED') {
+            console.log(data)
+
+            sessionStorage.setItem('unverified_email', data?.email ?? '')
+
+            toast.error(
+              'Your account is not verified. Please check your email.',
+              {
+                duration: 60_000,
+                action: (
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      location.replace(`${appUrl}/otp?email=${data?.email}`)
+                    }
+                  >
+                    Verify Now
+                  </Button>
+                ),
+              }
+            )
+
+            throw data
+          }
+        }
+
         handleServerError(error)
 
         if (error instanceof AxiosError) {
