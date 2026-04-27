@@ -51,7 +51,7 @@ export function Header({
             'after:absolute after:inset-0 after:-z-10 after:bg-background/20 after:backdrop-blur-lg'
         )}
       >
-        {noSidebar && <SidebarTrigger />}
+        {!noSidebar && <SidebarTrigger />}
         {showSeparator && <Separator orientation='vertical' className='h-6' />}
         {children}
       </div>

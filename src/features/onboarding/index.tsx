@@ -27,16 +27,16 @@ const OnboardingScreen = () => {
 
   return (
     <div className='flex min-h-screen w-full flex-col items-center bg-muted/30 p-4 md:p-6'>
-      <Header fixed showSeparator={false}>
+      <Header fixed showSeparator={false} noSidebar>
         <div className='ml-auto flex items-center gap-x-4'>
           <ProfileDropdown user={data} />
           <ThemeSwitch />
         </div>
       </Header>
       <Card className='my-auto w-full max-w-md overflow-hidden border-none shadow-xl md:border-solid lg:max-w-2xl'>
-        <CardHeader className='border-b px-4 py-6 md:px-8'>
-          <div className='flex w-full flex-col items-start justify-between gap-4 sm:flex-row sm:items-center'>
-            <div className='space-y-1.5'>
+        <CardHeader className='border-b px-4 sm:py-4 md:px-8'>
+          <div className='flex w-full flex-col-reverse items-start justify-between sm:flex-row sm:items-start sm:gap-4'>
+            <div className='sm:space-y-1.5'>
               <CardTitle className='text-2xl font-bold tracking-tight md:text-3xl'>
                 Welcome to Rentline!
               </CardTitle>
@@ -48,7 +48,7 @@ const OnboardingScreen = () => {
               </div>
             </div>
 
-            <div className='hidden shrink-0 sm:block'>
+            <div className='ml-auto sm:ml-0 sm:shrink-0'>
               <OrganizationDefinition />
             </div>
           </div>
@@ -84,9 +84,9 @@ const OnboardingScreen = () => {
         </CardContent>
 
         {/* Mobile-only definition toggle at the bottom to keep the header clean */}
-        <div className='border-t bg-muted/20 p-4 sm:hidden'>
+        {/* <div className='border-t bg-muted/20 p-4 sm:hidden'>
           <OrganizationDefinition />
-        </div>
+        </div> */}
       </Card>
     </div>
   )
