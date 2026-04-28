@@ -48,7 +48,7 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
       params={{ propertySlug: property.slug }}
       className='block'
     >
-      <Card className='group h-full overflow-hidden rounded-3xl border bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary hover:shadow-md'>
+      <Card className='group h-full overflow-hidden bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary hover:shadow-md'>
         <CardContent className='p-0'>
           <div className='grid grid-cols-1 md:grid-cols-[180px_1fr]'>
             <div className='relative h-52 overflow-hidden border-b md:h-full md:border-r md:border-b-0'>

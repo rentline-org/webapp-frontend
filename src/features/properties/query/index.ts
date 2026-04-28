@@ -1,6 +1,10 @@
-import { type QueryClient, useQuery } from '@tanstack/react-query'
-import { handleGet, type IResponse } from '@/api'
-import type { IProperty, IPropertyResponse } from '../types'
+import { type QueryClient, useMutation, useQuery } from '@tanstack/react-query'
+import { handleGet, handlePost, type IResponse } from '@/api'
+import type {
+  IProperty,
+  IPropertyResponse,
+  TCreatePropertySchema,
+} from '../types'
 
 const PROPERTIES_ENDPOINT = '/properties'
 
@@ -17,6 +21,15 @@ async function handleGetPropertyBySlug(slug: string): Promise<IProperty> {
   return result.data
 }
 
+async function handleCreateProperty(payload: TCreatePropertySchema) {
+  const result = await handlePost<IResponse<IProperty>, TCreatePropertySchema>(
+    PROPERTIES_ENDPOINT,
+    payload
+  )
+
+  return result.data
+}
+
 export function useGetProperties() {
   return useQuery<IProperty[]>({
     queryKey: [PROPERTIES_ENDPOINT],
@@ -28,6 +41,15 @@ export function useGetPropertyBySlug(slug: string) {
   return useQuery<IProperty>({
     queryKey: [`${PROPERTIES_ENDPOINT}/slug/${slug}`],
     queryFn: () => handleGetPropertyBySlug(slug),
+  })
+}
+
+export function useCreateProperty() {
+  return useMutation({
+    mutationKey: [PROPERTIES_ENDPOINT, 'new'],
+    mutationFn: async (payload: TCreatePropertySchema) => {
+      return await handleCreateProperty(payload)
+    },
   })
 }
 

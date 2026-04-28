@@ -48,7 +48,7 @@ export function Properties() {
   } = route.useSearch()
 
   const [viewMode, setViewMode] = useState<'table' | 'large_cards'>(() => {
-    if (typeof window === 'undefined') return 'table'
+    // if (typeof window === 'undefined') return 'table'
     return localStorage.getItem('properties_view_mode') === 'large_cards'
       ? 'large_cards'
       : 'table'
@@ -162,7 +162,15 @@ export function Properties() {
           </div>
 
           <div className='flex items-center gap-4'>
-            <Button className='w-full sm:w-auto' size='sm'>
+            <Button
+              className='w-full sm:w-auto'
+              size='sm'
+              onClick={() => {
+                navigate({
+                  to: '/properties/new',
+                })
+              }}
+            >
               <Plus className='size-4' />
               Add Property
             </Button>
@@ -198,13 +206,14 @@ export function Properties() {
               }
               className='w-full'
             >
-              <TabsList className='flex h-auto w-full flex-wrap justify-start gap-2 rounded-2xl border bg-muted/30 p-1'>
+              <TabsList className='flex h-auto w-full flex-wrap items-center justify-start gap-2 rounded-2xl border bg-muted/30 p-1'>
                 {propertyTypes.map((item) => (
                   <TabsTrigger
                     key={item.value}
                     value={item.value}
                     className='h-9 rounded-xl px-4 text-sm'
                   >
+                    <item.icon />
                     {item.label}
                   </TabsTrigger>
                 ))}

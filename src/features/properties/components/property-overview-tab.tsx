@@ -27,8 +27,6 @@ const PropertyOverviewTab = ({ property, setUploadOpen }: Props) => {
       <div className='space-y-6'>
         <GeneralDetails property={property} />
 
-        {/* <RecentSales />
-         */}
         <Card className='col-span-1 lg:col-span-4'>
           <CardHeader>
             <CardTitle>Revenue</CardTitle>
