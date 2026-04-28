@@ -53,7 +53,7 @@ export const propertiesColumns: ColumnDef<IProperty>[] = [
     header: () => (
       <span className='inline-flex items-center gap-2'>
         <ImageIcon className='size-3.5' />
-        Image
+        Thumbnail
       </span>
     ),
     cell: ({ row }) => {
@@ -72,7 +72,7 @@ export const propertiesColumns: ColumnDef<IProperty>[] = [
         <img
           src={thumbnail_url}
           alt={title}
-          className='aspect-[4/3] w-28 rounded-2xl object-cover ring-1 ring-border'
+          className='aspect-4/3 w-28 rounded-2xl object-cover ring-1 ring-border'
         />
       )
     },

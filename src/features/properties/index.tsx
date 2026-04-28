@@ -162,7 +162,7 @@ export function Properties() {
           </div>
 
           <div className='flex items-center gap-4'>
-            <Button className='w-full sm:w-auto'>
+            <Button className='w-full sm:w-auto' size='sm'>
               <Plus className='size-4' />
               Add Property
             </Button>
@@ -170,6 +170,7 @@ export function Properties() {
             <ToggleGroup
               type='single'
               defaultValue='table'
+              size='sm'
               variant='outline'
               value={viewMode}
               onValueChange={(value) =>
@@ -182,7 +183,7 @@ export function Properties() {
               </ToggleGroupItem>
               <ToggleGroupItem value='large_cards'>
                 <LayoutGrid className='size-4' />
-                Cards
+                List
               </ToggleGroupItem>
             </ToggleGroup>
           </div>

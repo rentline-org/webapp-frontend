@@ -18,6 +18,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { invalidatePropertiesQuery } from '@/features/properties/query'
 import { invalidateUserProfile } from '@/features/settings/profile/query'
 import type { IUserProfileData } from '@/features/settings/profile/types'
 import type { IOrganizationData } from '../types'
@@ -48,7 +49,11 @@ export function OrgSwitcher({ userProfile, isLoading, isFetching }: Props) {
   const handleSelectOrg = (org: IOrganizationData) => {
     mutate(org.id, {
       async onSuccess() {
-        await invalidateUserProfile(queryClient)
+        await Promise.all([
+          invalidateUserProfile(queryClient),
+          invalidatePropertiesQuery(queryClient),
+        ])
+
         toast.info(`Using organization: ${org.title}`)
       },
     })
