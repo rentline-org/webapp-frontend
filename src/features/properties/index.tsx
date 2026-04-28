@@ -1,10 +1,16 @@
-// Properties.tsx
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Cross2Icon } from '@radix-ui/react-icons'
 import { getRouteApi } from '@tanstack/react-router'
-import { Loader2, Plus } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import {
+  LayoutGrid,
+  Loader2,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Table2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -13,17 +19,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { FacetedFilter } from '@/components/filter'
 import { Main } from '@/components/layout/main'
 import PropertiesTable from './components/properties-table'
 import PropertyItem from './components/property-item'
 import { useGetProperties } from './query'
 import type {
+  IProperty,
   PropertySort,
   PropertyStatus,
   TPropertyTypeFilter,
-  IProperty,
 } from './types'
 import { propertyTypes, statusOptions } from './utils/constants'
 
@@ -39,28 +47,29 @@ export function Properties() {
     sort: initialSort = 'newly_added',
   } = route.useSearch()
 
-  const [viewMode, setViewMode] = useState<'table' | 'large_cards'>('table')
+  const [viewMode, setViewMode] = useState<'table' | 'large_cards'>(() => {
+    if (typeof window === 'undefined') return 'table'
+    return localStorage.getItem('properties_view_mode') === 'large_cards'
+      ? 'large_cards'
+      : 'table'
+  })
+
   const [searchTerm, setSearchTerm] = useState(filter)
   const [propertyType, setPropertyType] = useState<TPropertyTypeFilter>(type)
   const [sort, setSort] = useState<PropertySort>(initialSort)
   const [statusFilter, setStatusFilter] = useState<PropertyStatus[]>([])
 
-  const filteredProperties = useMemo(() => {
+  const cardFilteredProperties = useMemo(() => {
     if (!properties) return []
 
     return [...properties]
       .filter((property) => {
         const matchesType =
-          propertyType === 'all'
-            ? true
-            : property.property_type === propertyType
+          propertyType === 'all' || property.property_type === propertyType
 
         const matchesStatus =
-          statusFilter.length === 0
-            ? true
-            : statusFilter.includes(
-                property.is_available ? 'vacant' : 'occupied'
-              )
+          statusFilter.length === 0 ||
+          statusFilter.includes(property.is_available ? 'vacant' : 'occupied')
 
         const matchesSearch = [property.title, property.address]
           .join(' ')
@@ -76,7 +85,7 @@ export function Properties() {
       })
   }, [properties, propertyType, searchTerm, sort, statusFilter])
 
-  const isFiltered =
+  const isCardsFiltered =
     searchTerm.length > 0 ||
     propertyType !== 'all' ||
     statusFilter.length > 0 ||
@@ -135,102 +144,119 @@ export function Properties() {
     })
   }
 
-  const renderViewMode = () => {
-    if (isLoading) {
-      return (
-        <div className='flex w-full items-center justify-center py-16'>
-          <Loader2 className='size-5 animate-spin' />
-        </div>
-      )
-    }
-
-    if (viewMode === 'large_cards') {
-      return filteredProperties.length ? (
-        <div className='grid grid-cols-1 gap-4 pb-10 lg:grid-cols-2 2xl:grid-cols-3'>
-          {filteredProperties.map((property) => (
-            <PropertyItem key={property.id} property={property} />
-          ))}
-        </div>
-      ) : (
-        <div className='rounded-2xl border bg-card p-10 text-center text-sm text-muted-foreground shadow-sm'>
-          No properties found.
-        </div>
-      )
-    }
-
-    return (
-      <PropertiesTable data={filteredProperties} onRowClick={openProperty} />
-    )
-  }
+  useEffect(() => {
+    localStorage.setItem('properties_view_mode', viewMode)
+  }, [viewMode])
 
   return (
     <Main>
       <div className='flex flex-col gap-6'>
-        <div className='flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
-          <div>
+        <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
+          <div className='space-y-1'>
             <h1 className='text-2xl font-semibold tracking-tight sm:text-3xl'>
               Properties
             </h1>
-            <p className='mt-1 text-sm text-muted-foreground'>
+            <p className='text-sm text-muted-foreground'>
               Browse and manage your property inventory.
             </p>
           </div>
 
-          <Button className='w-full sm:w-auto'>
-            <Plus />
-            Add Property
-          </Button>
+          <div className='flex items-center gap-4'>
+            <Button className='w-full sm:w-auto'>
+              <Plus className='size-4' />
+              Add Property
+            </Button>
+            <Separator orientation='vertical' className='h-6' />
+            <ToggleGroup
+              type='single'
+              defaultValue='table'
+              variant='outline'
+              value={viewMode}
+              onValueChange={(value) =>
+                setViewMode(value as 'table' | 'large_cards')
+              }
+            >
+              <ToggleGroupItem value='table'>
+                <Table2 className='size-4' />
+                Table
+              </ToggleGroupItem>
+              <ToggleGroupItem value='large_cards'>
+                <LayoutGrid className='size-4' />
+                Cards
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
         </div>
 
-        <div className='rounded-2xl border bg-card/80 p-4 shadow-sm backdrop-blur'>
+        {/* <div className='flex justify-end gap-2'>
+          <Button
+            type='button'
+            variant={viewMode === 'table' ? 'default' : 'outline'}
+            onClick={() => setViewMode('table')}
+          >
+            <Table2 className='size-4' />
+            Table
+          </Button>
+
+          <Button
+            type='button'
+            variant={viewMode === 'large_cards' ? 'default' : 'outline'}
+            onClick={() => setViewMode('large_cards')}
+          >
+            <LayoutGrid className='size-4' />
+            Cards
+          </Button>
+        </div> */}
+
+        {viewMode === 'large_cards' && (
           <div className='flex flex-col gap-4'>
-            <div className='w-full overflow-x-auto'>
-              <Tabs
-                value={propertyType}
-                onValueChange={(value) =>
-                  handleTypeChange(value as TPropertyTypeFilter)
-                }
-                className='min-w-max lg:min-w-full'
-              >
-                <TabsList className='h-11 w-max justify-start gap-1 rounded-2xl border bg-muted/20 p-1 lg:w-full'>
-                  {propertyTypes.map((item) => (
-                    <TabsTrigger
-                      key={item.value}
-                      value={item.value}
-                      className='h-9 rounded-xl px-4 whitespace-nowrap data-[state=active]:shadow-sm'
-                    >
-                      {item.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            </div>
+            <Tabs
+              value={propertyType}
+              onValueChange={(value) =>
+                handleTypeChange(value as TPropertyTypeFilter)
+              }
+              className='w-full'
+            >
+              <TabsList className='flex h-auto w-full flex-wrap justify-start gap-2 rounded-2xl border bg-muted/30 p-1'>
+                {propertyTypes.map((item) => (
+                  <TabsTrigger
+                    key={item.value}
+                    value={item.value}
+                    className='h-9 rounded-xl px-4 text-sm'
+                  >
+                    {item.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
 
             <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
-              <div className='flex w-full flex-col gap-3 lg:flex-row lg:items-center'>
-                <Input
-                  placeholder='Search properties...'
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className='h-10 w-full lg:w-80'
-                />
-
-                <div className='flex flex-wrap gap-2'>
-                  <FacetedFilter
-                    title='Status'
-                    options={statusOptions}
-                    selectedValues={statusFilter}
-                    onChange={setStatusFilter}
+              <div className='flex flex-col gap-3 md:flex-row md:items-center'>
+                <div className='relative w-full md:w-70'>
+                  <Search className='pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground' />
+                  <Input
+                    placeholder='Search properties...'
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className='pl-9'
                   />
                 </div>
+
+                <FacetedFilter
+                  title='Status'
+                  options={statusOptions}
+                  selectedValues={statusFilter}
+                  onChange={setStatusFilter}
+                />
               </div>
 
-              <div className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center'>
+              <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
                 <Select
                   value={sort}
                   onValueChange={(v) => handleSortChange(v as PropertySort)}
                 >
-                  <SelectTrigger className='h-10 w-full sm:w-52'>
+                  <SelectTrigger className='w-full sm:w-55'>
+                    <SlidersHorizontal className='mr-2 size-4 text-muted-foreground' />
                     <SelectValue placeholder='Sort by' />
                   </SelectTrigger>
                   <SelectContent>
@@ -239,45 +265,53 @@ export function Properties() {
                     <SelectItem value='name_desc'>Name descending</SelectItem>
                   </SelectContent>
                 </Select>
-
-                <Select
-                  value={viewMode}
-                  onValueChange={(v) =>
-                    setViewMode(v as 'table' | 'large_cards')
-                  }
-                >
-                  <SelectTrigger className='h-10 w-full sm:w-52'>
-                    <SelectValue placeholder='Change view mode' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='table'>Table view</SelectItem>
-                    <SelectItem value='large_cards'>Large cards</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {isFiltered && (
-                  <Button
-                    variant='ghost'
-                    onClick={resetFilters}
-                    className='h-10 self-start px-3 sm:self-auto'
-                  >
-                    Reset
-                    <Cross2Icon className='ms-2 h-4 w-4' />
-                  </Button>
-                )}
               </div>
             </div>
 
-            <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-              <span>{filteredProperties.length} properties</span>
-              <Badge variant='outline' className='rounded-full px-2 py-0'>
-                {viewMode === 'table' ? 'Table' : 'Cards'}
-              </Badge>
-            </div>
+            {isCardsFiltered && (
+              <div className='flex flex-wrap items-center gap-2 text-sm text-muted-foreground'>
+                <Button
+                  variant='ghost'
+                  onClick={resetFilters}
+                  className='px-3 text-muted-foreground'
+                >
+                  Clear filters
+                  <Cross2Icon className='ms-2 h-4 w-4' />
+                </Button>
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
-        {renderViewMode()}
+        {isLoading ? (
+          <div className='flex items-center justify-center py-16'>
+            <Loader2 className='size-5 animate-spin' />
+          </div>
+        ) : viewMode === 'large_cards' ? (
+          cardFilteredProperties.length ? (
+            <div className='grid grid-cols-1 gap-4 pb-10 xl:grid-cols-2 2xl:grid-cols-3'>
+              {cardFilteredProperties.map((property) => (
+                <PropertyItem key={property.id} property={property} />
+              ))}
+            </div>
+          ) : (
+            <Card className='rounded-3xl border-dashed bg-card/70 shadow-none'>
+              <CardContent className='flex flex-col items-center justify-center gap-3 py-16 text-center'>
+                <p className='text-base font-medium'>No properties found</p>
+                <p className='text-sm text-muted-foreground'>
+                  Try adjusting the search or filters.
+                </p>
+                {isCardsFiltered && (
+                  <Button variant='outline' onClick={resetFilters}>
+                    Clear filters
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )
+        ) : (
+          <PropertiesTable data={properties ?? []} onRowClick={openProperty} />
+        )}
       </div>
     </Main>
   )
