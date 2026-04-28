@@ -1,24 +1,26 @@
 import type { VariantProps } from 'class-variance-authority'
-import { Building2, CircleSlash2, Home, Layers3 } from 'lucide-react'
+import { Building2, CircleSlash2, Home } from 'lucide-react'
 import type { badgeVariants } from '@/components/ui/badge'
-import type { PropertyOccupancy, PropertyStatus, PropertyType } from '../types'
+import type { PropertyOccupancy, PropertyStatus, TPropertyType } from '../types'
 
-export function currency(value: number) {
-  return new Intl.NumberFormat('en-US', {
+export function currency(
+  value: number,
+  locale: string = 'en-US',
+  currency: string = 'USD'
+) {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'USD',
+    currency: currency,
     maximumFractionDigits: 0,
   }).format(value)
 }
 
-export function typeIcon(type: PropertyType) {
+export function typeIcon(type: TPropertyType) {
   switch (type) {
-    case 'houses':
+    case 'house':
       return <Home className='h-4 w-4' />
-    case 'apartments':
+    case 'apartment':
       return <Building2 className='h-4 w-4' />
-    case 'commercial':
-      return <Layers3 className='h-4 w-4' />
     case 'land':
       return <CircleSlash2 className='h-4 w-4' />
     default:

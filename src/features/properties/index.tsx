@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Cross2Icon } from '@radix-ui/react-icons'
 import { getRouteApi } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -15,22 +15,20 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FacetedFilter } from '@/components/filter'
 import { Main } from '@/components/layout/main'
 import PropertyItem from './components/property-item'
-import { properties } from './data/properties'
+import { useGetProperties } from './query'
 import type {
   PropertyOccupancy,
   PropertySort,
   PropertyStatus,
-  PropertyType,
+  TPropertyTypeFilter,
 } from './types'
-import {
-  occupancyOptions,
-  propertyTypes,
-  statusOptions,
-} from './utils/constants'
+import { propertyTypes, statusOptions } from './utils/constants'
 
 const route = getRouteApi('/_authenticated/properties/')
 
 export function Properties() {
+  const { data: properties, isLoading } = useGetProperties()
+
   const {
     filter = '',
     type = 'all',
@@ -39,7 +37,7 @@ export function Properties() {
   const navigate = route.useNavigate()
 
   const [searchTerm, setSearchTerm] = useState(filter)
-  const [propertyType, setPropertyType] = useState<PropertyType>(type)
+  const [propertyType, setPropertyType] = useState<TPropertyTypeFilter>(type)
   const [sort, setSort] = useState<PropertySort>(initialSort)
   const [statusFilter, setStatusFilter] = useState<PropertyStatus[]>([])
   const [occupancyFilter, setOccupancyFilter] = useState<PropertyOccupancy[]>(
@@ -54,34 +52,40 @@ export function Properties() {
     sort !== 'newly_added'
 
   const filteredProperties = useMemo(() => {
+    if (!properties) return []
+
     return [...properties]
       .filter((property) => {
         const matchesType =
-          propertyType === 'all' ? true : property.type === propertyType
+          propertyType === 'all'
+            ? true
+            : property.property_type === propertyType
 
         const matchesStatus =
           statusFilter.length === 0
             ? true
-            : statusFilter.includes(property.status)
+            : statusFilter.includes(
+                property.is_available ? 'vacant' : 'occupied'
+              )
 
-        const matchesOccupancy =
-          occupancyFilter.length === 0
-            ? true
-            : occupancyFilter.includes(property.occupancy)
+        // const matchesOccupancy =
+        //   occupancyFilter.length === 0
+        //     ? true
+        //     : occupancyFilter.includes(property.)
 
-        const matchesSearch = [property.name, property.address]
+        const matchesSearch = [property.title, property.address]
           .join(' ')
           .toLowerCase()
           .includes(searchTerm.toLowerCase())
 
-        return matchesType && matchesStatus && matchesOccupancy && matchesSearch
+        return matchesType && matchesStatus && matchesSearch
       })
       .sort((a, b) => {
-        if (sort === 'name_asc') return a.name.localeCompare(b.name)
-        if (sort === 'name_desc') return b.name.localeCompare(a.name)
+        if (sort === 'name_asc') return a.title.localeCompare(b.title)
+        if (sort === 'name_desc') return b.title.localeCompare(a.title)
         return Number(b.id) - Number(a.id)
       })
-  }, [occupancyFilter, propertyType, searchTerm, sort, statusFilter])
+  }, [properties, propertyType, searchTerm, sort, statusFilter])
 
   const handleSearch = (value: string) => {
     setSearchTerm(value)
@@ -93,7 +97,7 @@ export function Properties() {
     })
   }
 
-  const handleTypeChange = (value: PropertyType) => {
+  const handleTypeChange = (value: TPropertyTypeFilter) => {
     setPropertyType(value)
     navigate({
       search: (prev) => ({
@@ -152,7 +156,9 @@ export function Properties() {
         <div className='w-full overflow-x-auto'>
           <Tabs
             value={propertyType}
-            onValueChange={(value) => handleTypeChange(value as PropertyType)}
+            onValueChange={(value) =>
+              handleTypeChange(value as TPropertyTypeFilter)
+            }
             className='min-w-max lg:min-w-full'
           >
             <TabsList className='h-10 w-max justify-start gap-1 rounded-2xl border bg-muted/20 p-1 lg:w-full'>
@@ -186,12 +192,12 @@ export function Properties() {
                 onChange={setStatusFilter}
               />
 
-              <FacetedFilter
+              {/* <FacetedFilter
                 title='Occupancy'
                 options={occupancyOptions}
                 selectedValues={occupancyFilter}
                 onChange={setOccupancyFilter}
-              />
+              /> */}
             </div>
           </div>
 
@@ -223,11 +229,17 @@ export function Properties() {
           </div>
         </div>
 
-        <div className='grid grid-cols-1 gap-4 pb-10 md:grid-cols-2 xl:grid-cols-2'>
-          {filteredProperties.map((property) => (
-            <PropertyItem key={property.id} property={property} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className='flex w-full items-center justify-center'>
+            <Loader2 className='animate-spin' />
+          </div>
+        ) : (
+          <div className='grid grid-cols-1 gap-4 pb-10 md:grid-cols-2 xl:grid-cols-2'>
+            {filteredProperties.map((property) => (
+              <PropertyItem key={property.id} property={property} />
+            ))}
+          </div>
+        )}
       </div>
     </Main>
   )

@@ -4,7 +4,7 @@ import { Properties } from '@/features/properties'
 
 const appsSearchSchema = z.object({
   type: z
-    .enum(['all', 'houses', 'apartments', 'commercial', 'land'])
+    .enum(['all', 'house', 'apartment', 'land'])
     .optional()
     .catch(undefined),
   filter: z.string().optional().catch(''),
