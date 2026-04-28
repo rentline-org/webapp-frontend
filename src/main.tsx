@@ -88,25 +88,56 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       if (error instanceof AxiosError) {
-        if (error.response?.status === 401) {
+        const status = error.response?.status
+
+        if (status === 401) {
           toast.error('Session expired!')
           useAuthStore.getState().auth.reset()
           const redirect = `${router.history.location.href}`
           router.navigate({ to: '/sign-in', search: { redirect } })
         }
-        if (error.response?.status === 500) {
+
+        if (status === 403) {
+          toast.error('You don’t have permission to access this.')
+          return
+        }
+
+        if (status === 404) {
+          toast.error('Resource not found.')
+          return
+        }
+
+        if (status === 500) {
           toast.error('Internal Server Error!')
-          // Only navigate to error page in production to avoid disrupting HMR in development
           if (import.meta.env.PROD) {
             router.navigate({ to: '/500' })
           }
         }
-        if (error.response?.status === 403) {
-          // router.navigate("/forbidden", { replace: true });
-        }
       }
     },
   }),
+  // queryCache: new QueryCache({
+  //   onError: (error) => {
+  //     if (error instanceof AxiosError) {
+  //       if (error.response?.status === 401) {
+  //         toast.error('Session expired!')
+  //         useAuthStore.getState().auth.reset()
+  //         const redirect = `${router.history.location.href}`
+  //         router.navigate({ to: '/sign-in', search: { redirect } })
+  //       }
+  //       if (error.response?.status === 500) {
+  //         toast.error('Internal Server Error!')
+  //         // Only navigate to error page in production to avoid disrupting HMR in development
+  //         if (import.meta.env.PROD) {
+  //           router.navigate({ to: '/500' })
+  //         }
+  //       }
+  //       if (error.response?.status === 403) {
+  //         // router.navigate("/forbidden", { replace: true });
+  //       }
+  //     }
+  //   },
+  // }),
 })
 
 // Create a new router instance

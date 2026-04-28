@@ -1,35 +1,36 @@
-import { useMemo } from 'react'
+import { useEffect } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Main } from '@/components/layout/main'
-import { properties } from './data/properties'
+import { useGetPropertyBySlug } from './query'
 
-// type Props = {}
-
-const routeApi = getRouteApi('/_authenticated/properties/$propertyId')
+const routeApi = getRouteApi('/_authenticated/properties/$propertySlug')
 
 const PropertyDetails = () => {
-  const { propertyId } = routeApi.useParams()
+  const propertySlug = routeApi.useParams()
   const navigate = routeApi.useNavigate()
 
-  const property = useMemo(
-    () => properties.find((p) => p.id === propertyId),
-    [propertyId]
+  const { data: property, isLoading } = useGetPropertyBySlug(
+    propertySlug.propertySlug
   )
-
-  if (!property) {
-    //   navigate
-    return navigate({
-      to: '/properties',
-    })
-  }
 
   const handleBackRouting = () => {
     navigate({
       to: '/properties',
     })
   }
+
+  useEffect(() => {
+    if (!isLoading && !property) {
+      navigate({
+        to: '/not-found',
+        search: {
+          redirect: '/properties',
+        },
+      })
+    }
+  }, [isLoading, navigate, property])
 
   return (
     <Main fixed>
@@ -40,7 +41,13 @@ const PropertyDetails = () => {
             Back to properties
           </Button>
         </div>
-        <span>Viewing {property.name}</span>
+        {isLoading ? (
+          <div className='flex h-full w-full items-center justify-center'>
+            <Loader2 className='animate-spin' />
+          </div>
+        ) : (
+          <span>Viewing {property?.title}</span>
+        )}
       </div>
     </Main>
   )

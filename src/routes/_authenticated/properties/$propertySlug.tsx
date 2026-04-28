@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import PropertyDetails from '@/features/properties/property-details'
 
-export const Route = createFileRoute('/_authenticated/properties/$propertyId')({
+export const Route = createFileRoute(
+  '/_authenticated/properties/$propertySlug'
+)({
   component: PropertyDetails,
 })

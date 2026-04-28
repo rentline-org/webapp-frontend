@@ -11,9 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as errorsNotFoundRouteImport } from './routes/(errors)/not-found'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
-import { Route as errors404RouteImport } from './routes/(errors)/404'
 import { Route as errors403RouteImport } from './routes/(errors)/403'
 import { Route as errors401RouteImport } from './routes/(errors)/401'
 import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
@@ -33,7 +33,7 @@ import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
-import { Route as AuthenticatedPropertiesPropertyIdRouteImport } from './routes/_authenticated/properties/$propertyId'
+import { Route as AuthenticatedPropertiesPropertySlugRouteImport } from './routes/_authenticated/properties/$propertySlug'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -45,6 +45,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const errorsNotFoundRoute = errorsNotFoundRouteImport.update({
+  id: '/(errors)/not-found',
+  path: '/not-found',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const errors503Route = errors503RouteImport.update({
   id: '/(errors)/503',
   path: '/503',
@@ -53,11 +58,6 @@ const errors503Route = errors503RouteImport.update({
 const errors500Route = errors500RouteImport.update({
   id: '/(errors)/500',
   path: '/500',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors404Route = errors404RouteImport.update({
-  id: '/(errors)/404',
-  path: '/404',
   getParentRoute: () => rootRouteImport,
 } as any)
 const errors403Route = errors403RouteImport.update({
@@ -164,10 +164,10 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
-const AuthenticatedPropertiesPropertyIdRoute =
-  AuthenticatedPropertiesPropertyIdRouteImport.update({
-    id: '/properties/$propertyId',
-    path: '/properties/$propertyId',
+const AuthenticatedPropertiesPropertySlugRoute =
+  AuthenticatedPropertiesPropertySlugRouteImport.update({
+    id: '/properties/$propertySlug',
+    path: '/properties/$propertySlug',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedErrorsErrorRoute =
@@ -187,11 +187,11 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof authSignUpRoute
   '/401': typeof errors401Route
   '/403': typeof errors403Route
-  '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/not-found': typeof errorsNotFoundRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/properties/$propertyId': typeof AuthenticatedPropertiesPropertyIdRoute
+  '/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -212,12 +212,12 @@ export interface FileRoutesByTo {
   '/sign-up': typeof authSignUpRoute
   '/401': typeof errors401Route
   '/403': typeof errors403Route
-  '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/not-found': typeof errorsNotFoundRoute
   '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/properties/$propertyId': typeof AuthenticatedPropertiesPropertyIdRoute
+  '/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -241,12 +241,12 @@ export interface FileRoutesById {
   '/(auth)/sign-up': typeof authSignUpRoute
   '/(errors)/401': typeof errors401Route
   '/(errors)/403': typeof errors403Route
-  '/(errors)/404': typeof errors404Route
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
+  '/(errors)/not-found': typeof errorsNotFoundRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/_authenticated/properties/$propertyId': typeof AuthenticatedPropertiesPropertyIdRoute
+  '/_authenticated/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -271,11 +271,11 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/401'
     | '/403'
-    | '/404'
     | '/500'
     | '/503'
+    | '/not-found'
     | '/errors/$error'
-    | '/properties/$propertyId'
+    | '/properties/$propertySlug'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -296,12 +296,12 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/401'
     | '/403'
-    | '/404'
     | '/500'
     | '/503'
+    | '/not-found'
     | '/'
     | '/errors/$error'
-    | '/properties/$propertyId'
+    | '/properties/$propertySlug'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -324,12 +324,12 @@ export interface FileRouteTypes {
     | '/(auth)/sign-up'
     | '/(errors)/401'
     | '/(errors)/403'
-    | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
+    | '/(errors)/not-found'
     | '/_authenticated/'
     | '/_authenticated/errors/$error'
-    | '/_authenticated/properties/$propertyId'
+    | '/_authenticated/properties/$propertySlug'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
@@ -352,9 +352,9 @@ export interface RootRouteChildren {
   authSignUpRoute: typeof authSignUpRoute
   errors401Route: typeof errors401Route
   errors403Route: typeof errors403Route
-  errors404Route: typeof errors404Route
   errors500Route: typeof errors500Route
   errors503Route: typeof errors503Route
+  errorsNotFoundRoute: typeof errorsNotFoundRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -373,6 +373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/(errors)/not-found': {
+      id: '/(errors)/not-found'
+      path: '/not-found'
+      fullPath: '/not-found'
+      preLoaderRoute: typeof errorsNotFoundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(errors)/503': {
       id: '/(errors)/503'
       path: '/503'
@@ -385,13 +392,6 @@ declare module '@tanstack/react-router' {
       path: '/500'
       fullPath: '/500'
       preLoaderRoute: typeof errors500RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/404': {
-      id: '/(errors)/404'
-      path: '/404'
-      fullPath: '/404'
-      preLoaderRoute: typeof errors404RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(errors)/403': {
@@ -527,11 +527,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
-    '/_authenticated/properties/$propertyId': {
-      id: '/_authenticated/properties/$propertyId'
-      path: '/properties/$propertyId'
-      fullPath: '/properties/$propertyId'
-      preLoaderRoute: typeof AuthenticatedPropertiesPropertyIdRouteImport
+    '/_authenticated/properties/$propertySlug': {
+      id: '/_authenticated/properties/$propertySlug'
+      path: '/properties/$propertySlug'
+      fullPath: '/properties/$propertySlug'
+      preLoaderRoute: typeof AuthenticatedPropertiesPropertySlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/errors/$error': {
@@ -574,7 +574,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
-  AuthenticatedPropertiesPropertyIdRoute: typeof AuthenticatedPropertiesPropertyIdRoute
+  AuthenticatedPropertiesPropertySlugRoute: typeof AuthenticatedPropertiesPropertySlugRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedPropertiesIndexRoute: typeof AuthenticatedPropertiesIndexRoute
@@ -586,8 +586,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
-  AuthenticatedPropertiesPropertyIdRoute:
-    AuthenticatedPropertiesPropertyIdRoute,
+  AuthenticatedPropertiesPropertySlugRoute:
+    AuthenticatedPropertiesPropertySlugRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedPropertiesIndexRoute: AuthenticatedPropertiesIndexRoute,
@@ -607,9 +607,9 @@ const rootRouteChildren: RootRouteChildren = {
   authSignUpRoute: authSignUpRoute,
   errors401Route: errors401Route,
   errors403Route: errors403Route,
-  errors404Route: errors404Route,
   errors500Route: errors500Route,
   errors503Route: errors503Route,
+  errorsNotFoundRoute: errorsNotFoundRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
