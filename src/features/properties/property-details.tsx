@@ -388,7 +388,9 @@ const PropertyDetails = () => {
         >
           <TabsList className='inline-flex h-auto gap-2 overflow-x-auto p-1'>
             <TabsTrigger value='overview'>Overview</TabsTrigger>
-            <TabsTrigger value='units'>Units</TabsTrigger>
+            {property.property_type === 'apartment' && (
+              <TabsTrigger value='units'>Units</TabsTrigger>
+            )}
             <TabsTrigger value='leases'>Leases</TabsTrigger>
             <TabsTrigger value='contacts'>Contacts</TabsTrigger>
             <TabsTrigger value='accounting'>Accounting</TabsTrigger>
