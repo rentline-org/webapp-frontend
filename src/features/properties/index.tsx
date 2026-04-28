@@ -189,26 +189,6 @@ export function Properties() {
           </div>
         </div>
 
-        {/* <div className='flex justify-end gap-2'>
-          <Button
-            type='button'
-            variant={viewMode === 'table' ? 'default' : 'outline'}
-            onClick={() => setViewMode('table')}
-          >
-            <Table2 className='size-4' />
-            Table
-          </Button>
-
-          <Button
-            type='button'
-            variant={viewMode === 'large_cards' ? 'default' : 'outline'}
-            onClick={() => setViewMode('large_cards')}
-          >
-            <LayoutGrid className='size-4' />
-            Cards
-          </Button>
-        </div> */}
-
         {viewMode === 'large_cards' && (
           <div className='flex flex-col gap-4'>
             <Tabs

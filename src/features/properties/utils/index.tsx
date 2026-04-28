@@ -51,3 +51,26 @@ export function occupancyLabel(value: PropertyOccupancy) {
       return 'High occupancy'
   }
 }
+
+export function formatDate(value?: string | null) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'medium',
+  }).format(date)
+}
+
+export function typeBadgeVariant(type: TPropertyType) {
+  const map: Record<TPropertyType, 'info' | 'success' | 'outline'> = {
+    house: 'info',
+    apartment: 'success',
+    land: 'outline',
+  }
+
+  return map[type]
+}
+
+export function statusBadgeVariant(isAvailable: boolean) {
+  return isAvailable ? 'success' : 'warning'
+}

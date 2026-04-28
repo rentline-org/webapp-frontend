@@ -66,7 +66,7 @@ function DrawerContent({
           'data-[vaul-drawer-direction=right]:inset-y-3 data-[vaul-drawer-direction=right]:right-5 data-[vaul-drawer-direction=right]:h-[calc(100vh-1.5rem)] data-[vaul-drawer-direction=right]:w-105 data-[vaul-drawer-direction=right]:max-w-[92vw] data-[vaul-drawer-direction=right]:rounded-3xl',
 
           // LEFT SIDE
-          'data-[vaul-drawer-direction=left]:inset-y-8 data-[vaul-drawer-direction=left]:left-8 data-[vaul-drawer-direction=left]:w-105 data-[vaul-drawer-direction=left]:max-w-[92vw] data-[vaul-drawer-direction=left]:rounded-3xl',
+          'data-[vaul-drawer-direction=left]:inset-y-3 data-[vaul-drawer-direction=left]:left-5 data-[vaul-drawer-direction=left]:h-[calc(100vh-1.5rem)] data-[vaul-drawer-direction=left]:w-105 data-[vaul-drawer-direction=left]:max-w-[92vw] data-[vaul-drawer-direction=left]:rounded-3xl',
 
           className
         )}
