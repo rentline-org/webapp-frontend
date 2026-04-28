@@ -66,7 +66,11 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
                     <span className='capitalize'>{property.property_type}</span>
                   </Badge>
 
-                  <Badge variant='outline'>{property.units_count} units</Badge>
+                  {property.property_type === 'apartment' && (
+                    <Badge variant='outline'>
+                      {property.units_count} units
+                    </Badge>
+                  )}
                 </div>
               </div>
 
@@ -89,9 +93,6 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
                     <p className='text-sm text-muted-foreground'>Sale price</p>
                     <p className='text-lg font-semibold sm:text-xl'>
                       {currency(property.sale_price, 'pt-BR', 'BRL')}
-                      {/* <span className='text-sm font-normal text-muted-foreground'>
-                        /mo
-                      </span> */}
                     </p>
                   </div>
                 )}

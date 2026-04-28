@@ -1,7 +1,9 @@
+// Properties.tsx
 import { useMemo, useState } from 'react'
 import { Cross2Icon } from '@radix-ui/react-icons'
 import { getRouteApi } from '@tanstack/react-router'
 import { Loader2, Plus } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -14,13 +16,14 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FacetedFilter } from '@/components/filter'
 import { Main } from '@/components/layout/main'
+import PropertiesTable from './components/properties-table'
 import PropertyItem from './components/property-item'
 import { useGetProperties } from './query'
 import type {
-  PropertyOccupancy,
   PropertySort,
   PropertyStatus,
   TPropertyTypeFilter,
+  IProperty,
 } from './types'
 import { propertyTypes, statusOptions } from './utils/constants'
 
@@ -28,28 +31,19 @@ const route = getRouteApi('/_authenticated/properties/')
 
 export function Properties() {
   const { data: properties, isLoading } = useGetProperties()
+  const navigate = route.useNavigate()
 
   const {
     filter = '',
     type = 'all',
     sort: initialSort = 'newly_added',
   } = route.useSearch()
-  const navigate = route.useNavigate()
 
+  const [viewMode, setViewMode] = useState<'table' | 'large_cards'>('table')
   const [searchTerm, setSearchTerm] = useState(filter)
   const [propertyType, setPropertyType] = useState<TPropertyTypeFilter>(type)
   const [sort, setSort] = useState<PropertySort>(initialSort)
   const [statusFilter, setStatusFilter] = useState<PropertyStatus[]>([])
-  const [occupancyFilter, setOccupancyFilter] = useState<PropertyOccupancy[]>(
-    []
-  )
-
-  const isFiltered =
-    searchTerm.length > 0 ||
-    propertyType !== 'all' ||
-    statusFilter.length > 0 ||
-    occupancyFilter.length > 0 ||
-    sort !== 'newly_added'
 
   const filteredProperties = useMemo(() => {
     if (!properties) return []
@@ -68,11 +62,6 @@ export function Properties() {
                 property.is_available ? 'vacant' : 'occupied'
               )
 
-        // const matchesOccupancy =
-        //   occupancyFilter.length === 0
-        //     ? true
-        //     : occupancyFilter.includes(property.)
-
         const matchesSearch = [property.title, property.address]
           .join(' ')
           .toLowerCase()
@@ -86,6 +75,12 @@ export function Properties() {
         return Number(b.id) - Number(a.id)
       })
   }, [properties, propertyType, searchTerm, sort, statusFilter])
+
+  const isFiltered =
+    searchTerm.length > 0 ||
+    propertyType !== 'all' ||
+    statusFilter.length > 0 ||
+    sort !== 'newly_added'
 
   const handleSearch = (value: string) => {
     setSearchTerm(value)
@@ -122,7 +117,6 @@ export function Properties() {
     setPropertyType('all')
     setSort('newly_added')
     setStatusFilter([])
-    setOccupancyFilter([])
 
     navigate({
       search: (prev) => ({
@@ -132,6 +126,41 @@ export function Properties() {
         sort: undefined,
       }),
     })
+  }
+
+  const openProperty = (property: IProperty) => {
+    navigate({
+      to: '/properties/$propertySlug',
+      params: { propertySlug: property.slug },
+    })
+  }
+
+  const renderViewMode = () => {
+    if (isLoading) {
+      return (
+        <div className='flex w-full items-center justify-center py-16'>
+          <Loader2 className='size-5 animate-spin' />
+        </div>
+      )
+    }
+
+    if (viewMode === 'large_cards') {
+      return filteredProperties.length ? (
+        <div className='grid grid-cols-1 gap-4 pb-10 lg:grid-cols-2 2xl:grid-cols-3'>
+          {filteredProperties.map((property) => (
+            <PropertyItem key={property.id} property={property} />
+          ))}
+        </div>
+      ) : (
+        <div className='rounded-2xl border bg-card p-10 text-center text-sm text-muted-foreground shadow-sm'>
+          No properties found.
+        </div>
+      )
+    }
+
+    return (
+      <PropertiesTable data={filteredProperties} onRowClick={openProperty} />
+    )
   }
 
   return (
@@ -153,93 +182,102 @@ export function Properties() {
           </Button>
         </div>
 
-        <div className='w-full overflow-x-auto'>
-          <Tabs
-            value={propertyType}
-            onValueChange={(value) =>
-              handleTypeChange(value as TPropertyTypeFilter)
-            }
-            className='min-w-max lg:min-w-full'
-          >
-            <TabsList className='h-10 w-max justify-start gap-1 rounded-2xl border bg-muted/20 p-1 lg:w-full'>
-              {propertyTypes.map((item) => (
-                <TabsTrigger
-                  key={item.value}
-                  value={item.value}
-                  className='h-8 rounded-xl px-4 whitespace-nowrap data-[state=active]:shadow-sm'
+        <div className='rounded-2xl border bg-card/80 p-4 shadow-sm backdrop-blur'>
+          <div className='flex flex-col gap-4'>
+            <div className='w-full overflow-x-auto'>
+              <Tabs
+                value={propertyType}
+                onValueChange={(value) =>
+                  handleTypeChange(value as TPropertyTypeFilter)
+                }
+                className='min-w-max lg:min-w-full'
+              >
+                <TabsList className='h-11 w-max justify-start gap-1 rounded-2xl border bg-muted/20 p-1 lg:w-full'>
+                  {propertyTypes.map((item) => (
+                    <TabsTrigger
+                      key={item.value}
+                      value={item.value}
+                      className='h-9 rounded-xl px-4 whitespace-nowrap data-[state=active]:shadow-sm'
+                    >
+                      {item.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
+
+            <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
+              <div className='flex w-full flex-col gap-3 lg:flex-row lg:items-center'>
+                <Input
+                  placeholder='Search properties...'
+                  value={searchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className='h-10 w-full lg:w-80'
+                />
+
+                <div className='flex flex-wrap gap-2'>
+                  <FacetedFilter
+                    title='Status'
+                    options={statusOptions}
+                    selectedValues={statusFilter}
+                    onChange={setStatusFilter}
+                  />
+                </div>
+              </div>
+
+              <div className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center'>
+                <Select
+                  value={sort}
+                  onValueChange={(v) => handleSortChange(v as PropertySort)}
                 >
-                  {item.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        </div>
+                  <SelectTrigger className='h-10 w-full sm:w-52'>
+                    <SelectValue placeholder='Sort by' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='newly_added'>Newest</SelectItem>
+                    <SelectItem value='name_asc'>Name ascending</SelectItem>
+                    <SelectItem value='name_desc'>Name descending</SelectItem>
+                  </SelectContent>
+                </Select>
 
-        <div className='flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between'>
-          <div className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center'>
-            <Input
-              placeholder='Search properties...'
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className='h-9 w-full sm:w-60 lg:w-80'
-            />
+                <Select
+                  value={viewMode}
+                  onValueChange={(v) =>
+                    setViewMode(v as 'table' | 'large_cards')
+                  }
+                >
+                  <SelectTrigger className='h-10 w-full sm:w-52'>
+                    <SelectValue placeholder='Change view mode' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='table'>Table view</SelectItem>
+                    <SelectItem value='large_cards'>Large cards</SelectItem>
+                  </SelectContent>
+                </Select>
 
-            <div className='flex flex-wrap gap-2'>
-              <FacetedFilter
-                title='Status'
-                options={statusOptions}
-                selectedValues={statusFilter}
-                onChange={setStatusFilter}
-              />
+                {isFiltered && (
+                  <Button
+                    variant='ghost'
+                    onClick={resetFilters}
+                    className='h-10 self-start px-3 sm:self-auto'
+                  >
+                    Reset
+                    <Cross2Icon className='ms-2 h-4 w-4' />
+                  </Button>
+                )}
+              </div>
+            </div>
 
-              {/* <FacetedFilter
-                title='Occupancy'
-                options={occupancyOptions}
-                selectedValues={occupancyFilter}
-                onChange={setOccupancyFilter}
-              /> */}
+            <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+              <span>{filteredProperties.length} properties</span>
+              <Badge variant='outline' className='rounded-full px-2 py-0'>
+                {viewMode === 'table' ? 'Table' : 'Cards'}
+              </Badge>
             </div>
           </div>
-
-          <div className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center'>
-            <Select
-              value={sort}
-              onValueChange={(v) => handleSortChange(v as PropertySort)}
-            >
-              <SelectTrigger className='w-full sm:w-45'>
-                <SelectValue placeholder='Sort by' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='newly_added'>by: Newest</SelectItem>
-                <SelectItem value='name_asc'>by: Name ascending</SelectItem>
-                <SelectItem value='name_desc'>by: Name descending</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {isFiltered && (
-              <Button
-                variant='ghost'
-                onClick={resetFilters}
-                className='h-9 self-start px-3 sm:self-auto'
-              >
-                Reset
-                <Cross2Icon className='ms-2 h-4 w-4' />
-              </Button>
-            )}
-          </div>
         </div>
 
-        {isLoading ? (
-          <div className='flex w-full items-center justify-center'>
-            <Loader2 className='animate-spin' />
-          </div>
-        ) : (
-          <div className='grid grid-cols-1 gap-4 pb-10 md:grid-cols-2 xl:grid-cols-2'>
-            {filteredProperties.map((property) => (
-              <PropertyItem key={property.id} property={property} />
-            ))}
-          </div>
-        )}
+        {renderViewMode()}
       </div>
     </Main>
   )

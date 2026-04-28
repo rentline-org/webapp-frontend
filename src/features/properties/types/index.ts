@@ -12,6 +12,7 @@ export type TPropertyType = (typeof PROPERTY_TYPES)[keyof typeof PROPERTY_TYPES]
 export type TPropertyTypeFilter = TPropertyType | 'all'
 
 export type IPropertyResponse = IResponse<IProperty[]>
+
 export interface IProperty {
   id: number
   organization_id: number
