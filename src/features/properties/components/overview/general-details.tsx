@@ -36,14 +36,20 @@ const GeneralDetails = ({ property }: Props) => {
             label='Address'
             value={property.address}
             icon={<MapPin className='size-4' />}
+            editable
           />
           <DetailRow
             label='City'
             value={property.city}
             icon={<Building2 className='size-4' />}
+            editable
           />
-          <DetailRow label='State' value={property.state ?? '—'} />
-          <DetailRow label='Postal code' value={property.postal_code} />
+          <DetailRow label='State' value={property.state ?? '—'} editable />
+          <DetailRow
+            label='Postal code'
+            value={property.postal_code}
+            editable
+          />
         </div>
 
         <Separator />

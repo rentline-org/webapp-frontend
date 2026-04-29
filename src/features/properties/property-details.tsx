@@ -4,11 +4,9 @@ import {
   Archive,
   ChevronLeft,
   Copy,
-  Edit3,
   ImageIcon,
   Loader2,
   MoreHorizontal,
-  PencilLine,
   Upload,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -23,14 +21,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from '@/components/ui/drawer'
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -41,99 +31,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
+import InlineText from '@/components/inline-text'
 import { Main } from '@/components/layout/main'
 import ModulePlaceholder from './components/module-placeholder'
 import PropertyOverviewTab from './components/property-overview-tab'
-// import PropertyGallery from './components/property-gallery'
 import UnitsTab from './components/units-tab'
 import { useGetPropertyBySlug } from './query'
 import type { IProperty, TabKey } from './types'
 import { statusBadgeVariant, typeBadgeVariant } from './utils'
 
 const routeApi = getRouteApi('/_authenticated/properties/$propertySlug')
-
-function PropertyEditDialog({
-  open,
-  onOpenChange,
-  property,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  property: IProperty
-}) {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    toast.success('Edit form ready for API integration.')
-    onOpenChange(false)
-  }
-
-  return (
-    <Drawer open={open} onOpenChange={onOpenChange} direction='left'>
-      <DrawerContent className='min-w-160'>
-        <DrawerHeader>
-          <DrawerTitle>Edit property</DrawerTitle>
-          <DrawerDescription>
-            Update the core details for {property.title}.
-          </DrawerDescription>
-        </DrawerHeader>
-
-        <form onSubmit={handleSubmit} className='grid gap-4 px-6'>
-          <div className='grid gap-4 sm:grid-cols-2'>
-            <div className='grid gap-2 sm:col-span-2'>
-              <Label htmlFor='title'>Title</Label>
-              <Input id='title' defaultValue={property.title} />
-            </div>
-
-            <div className='grid gap-2 sm:col-span-2'>
-              <Label htmlFor='description'>Description</Label>
-              <Textarea
-                id='description'
-                defaultValue={property.description ?? ''}
-              />
-            </div>
-
-            <div className='grid gap-2 sm:col-span-2'>
-              <Label htmlFor='address'>Address</Label>
-              <Input id='address' defaultValue={property.address} />
-            </div>
-
-            <div className='grid gap-2'>
-              <Label htmlFor='city'>City</Label>
-              <Input id='city' defaultValue={property.city} />
-            </div>
-
-            <div className='grid gap-2'>
-              <Label htmlFor='state'>State</Label>
-              <Input id='state' defaultValue={property.state ?? ''} />
-            </div>
-
-            <div className='grid gap-2'>
-              <Label htmlFor='postal_code'>Postal code</Label>
-              <Input id='postal_code' defaultValue={property.postal_code} />
-            </div>
-
-            <div className='grid gap-2'>
-              <Label htmlFor='country'>Country</Label>
-              <Input id='country' defaultValue={property.country} />
-            </div>
-          </div>
-
-          <DrawerFooter>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type='submit'>Save changes</Button>
-          </DrawerFooter>
-        </form>
-      </DrawerContent>
-    </Drawer>
-  )
-}
 
 function PropertyImagesDialog({
   open,
@@ -213,11 +120,9 @@ function PropertyImagesDialog({
 
 function PropertyActionsMenu({
   property,
-  onEdit,
   onUploadImages,
 }: {
   property: IProperty
-  onEdit: () => void
   onUploadImages: () => void
   onGoToTab: (tab: TabKey) => void
 }) {
@@ -235,11 +140,6 @@ function PropertyActionsMenu({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align='end' className='w-56'>
-        <DropdownMenuItem onSelect={onEdit}>
-          <Edit3 className='mr-2 size-4' />
-          Edit property
-        </DropdownMenuItem>
-
         <DropdownMenuItem onSelect={onUploadImages}>
           <Upload className='mr-2 size-4' />
           Upload images
@@ -273,7 +173,7 @@ const PropertyDetails = () => {
   const { data: property, isLoading } = useGetPropertyBySlug(propertySlug)
 
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
-  const [editOpen, setEditOpen] = useState(false)
+  // const [editOpen, setEditOpen] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
 
   const handleBackRouting = () => {
@@ -328,18 +228,11 @@ const PropertyDetails = () => {
 
               <div className='space-y-3'>
                 <div className='flex flex-wrap items-center gap-2'>
-                  <h1 className='text-2xl font-semibold tracking-tight sm:text-3xl'>
-                    {property.title}
-                  </h1>
-
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 shrink-0'
-                    onClick={() => setEditOpen(true)}
-                  >
-                    <PencilLine className='size-4' />
-                  </Button>
+                  <InlineText
+                    className='text-2xl font-semibold tracking-tight sm:text-3xl'
+                    value={property.title}
+                    editable
+                  />
                 </div>
 
                 <p className='max-w-4xl text-sm text-muted-foreground'>
@@ -375,7 +268,7 @@ const PropertyDetails = () => {
 
           <PropertyActionsMenu
             property={property}
-            onEdit={() => setEditOpen(true)}
+            // onEdit={() => conso}
             onUploadImages={() => setUploadOpen(true)}
             onGoToTab={setActiveTab}
           />
@@ -476,11 +369,11 @@ const PropertyDetails = () => {
         </Tabs>
       </div>
 
-      <PropertyEditDialog
+      {/* <PropertyEditDialog
         open={editOpen}
         onOpenChange={setEditOpen}
         property={property}
-      />
+      /> */}
 
       <PropertyImagesDialog
         open={uploadOpen}

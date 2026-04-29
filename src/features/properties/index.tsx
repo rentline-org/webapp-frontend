@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Cross2Icon } from '@radix-ui/react-icons'
+import { Cross2Icon, DotsVerticalIcon } from '@radix-ui/react-icons'
 import { getRouteApi } from '@tanstack/react-router'
 import {
+  Download,
+  FileInput,
+  FileJson,
+  FileSpreadsheet,
+  Import,
   LayoutGrid,
   Loader2,
   Plus,
@@ -11,6 +16,16 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -162,18 +177,56 @@ export function Properties() {
           </div>
 
           <div className='flex items-center gap-4'>
-            <Button
-              className='w-full sm:w-auto'
-              size='sm'
-              onClick={() => {
-                navigate({
-                  to: '/properties/new',
-                })
-              }}
-            >
-              <Plus className='size-4' />
-              Add Property
-            </Button>
+            <div className='flex items-center gap-2'>
+              <Button
+                className='w-full sm:w-auto'
+                size='sm'
+                onClick={() => {
+                  navigate({
+                    to: '/properties/new',
+                  })
+                }}
+              >
+                <Plus className='size-4' />
+                Add Property
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='secondary' size='sm'>
+                    <DotsVerticalIcon />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem>
+                    <Import />
+                    Import properties
+                  </DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Download />
+                      Export properties
+                      {/* <DropdownMenuSub */}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem>
+                          <FileInput />
+                          CSV
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <FileSpreadsheet />
+                          Excel
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <FileJson />
+                          JSON
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <Separator orientation='vertical' className='h-6' />
             <ToggleGroup
               type='single'
