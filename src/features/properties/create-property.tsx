@@ -56,6 +56,7 @@ function NumberField({
   name,
   label,
   disabled = false,
+  showCurrency = false,
 }: {
   form: ReturnType<typeof useForm<TCreatePropertySchema>>
   name:
@@ -68,7 +69,10 @@ function NumberField({
   label: string
   placeholder?: string
   disabled?: boolean
+  showCurrency?: boolean
 }) {
+  const isPriceField = ['rent_price', 'sale_price', 'buy_price'].includes(name)
+
   return (
     <FormField
       control={form.control}
@@ -79,12 +83,15 @@ function NumberField({
           <FormControl>
             <InputWithEndButtons
               minValue={0}
-              step={1}
+              step={showCurrency && isPriceField ? 0.01 : 1}
               isDisabled={disabled}
-              value={field.value ?? 1}
-              onChange={field.onChange}
+              value={field.value ?? (isPriceField ? 0 : 1)}
+              onChange={(e) => field.onChange(e)}
               onBlur={field.onBlur}
               name={field.name}
+              currency={showCurrency && isPriceField ? 'BRL' : undefined}
+              autoFormat={showCurrency && isPriceField}
+              locale='pt-BR'
             />
           </FormControl>
           <FormMessage />
@@ -571,22 +578,25 @@ const CreateProperty = () => {
 
                   {isHouse ? (
                     <div className='grid gap-4 md:grid-cols-3'>
-                      <InputWithEndButtons />
-                      {/* <NumberField
+                      {/* <InputWithEndButtons  /> */}
+                      <NumberField
                         form={form}
                         name='rent_price'
                         label='Rent price'
-                      /> */}
+                        showCurrency
+                      />
 
                       <NumberField
                         form={form}
                         name='sale_price'
                         label='Sale price'
+                        showCurrency
                       />
                       <NumberField
                         form={form}
                         name='buy_price'
                         label='Buy price'
+                        showCurrency
                       />
                     </div>
                   ) : (
@@ -595,11 +605,13 @@ const CreateProperty = () => {
                         form={form}
                         name='sale_price'
                         label='Sale price'
+                        showCurrency
                       />
                       <NumberField
                         form={form}
                         name='buy_price'
                         label='Buy price'
+                        showCurrency
                       />
                     </div>
                   )}
