@@ -19,7 +19,6 @@ const InputWithEndButtons = ({
   locale = 'pt-BR',
   ...props
 }: CurrencyInputProps) => {
-  // derive fraction digits from step if step < 1 (e.g. 0.01 -> 2 digits)
   const fractionDigits = useMemo(() => {
     const stepVal =
       typeof props.step === 'number' ? props.step : Number(props.step ?? 1)
@@ -169,6 +168,7 @@ const InputWithEndButtons = ({
           placeholder={formatter ? formatValue(0) : undefined}
         />
         <Button
+          type='button'
           slot='decrement'
           className='mr-1.5 ml-auto flex aspect-square h-5 items-center justify-center rounded-sm border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50'
         >
@@ -176,6 +176,7 @@ const InputWithEndButtons = ({
           <span className='sr-only'>Decrement</span>
         </Button>
         <Button
+          type='button'
           slot='increment'
           className='mr-2 flex aspect-square h-5 items-center justify-center rounded-sm border border-input bg-background text-sm text-muted-foreground transition-[color,box-shadow] hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50'
         >

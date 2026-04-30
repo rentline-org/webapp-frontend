@@ -46,11 +46,26 @@ function Button({
   }) {
   const Comp = asChild ? Slot : 'button'
 
+  if (asChild) {
+    return (
+      <Comp
+        data-slot='button'
+        className={cn(buttonVariants({ variant, size, className }))}
+        {...props}
+      />
+    )
+  }
+
+  // Ensure native buttons default to type='button' to avoid accidental form submits
+  const { type, ...rest } = props as React.ComponentProps<'button'>
+  const resolvedType = (type as any) ?? 'button'
+
   return (
     <Comp
       data-slot='button'
       className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
+      type={resolvedType}
+      {...(rest as any)}
     />
   )
 }

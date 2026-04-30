@@ -251,6 +251,8 @@ const CreateProperty = () => {
   const isApartment = propertyType === 'apartment'
   const isLand = propertyType === 'land'
 
+  const lastStepIndex = steps.length - 1
+
   const isAvailable = form.watch('is_available')
 
   useEffect(() => {
@@ -325,21 +327,22 @@ const CreateProperty = () => {
     const fields = stepFields[
       step
     ] as unknown as (keyof TCreatePropertySchema)[]
-    return form.trigger(fields, { shouldFocus: true })
+    return await form.trigger(fields, { shouldFocus: false })
   }
 
   const next = async () => {
     const valid = await validateStep()
-    if (valid && step < steps.length - 1) {
-      setStep((current) => current + 1)
-    }
+    if (!valid) return
+    if (step < lastStepIndex) setStep((s) => s + 1)
   }
 
-  const prev = () => setStep((current) => Math.max(current - 1, 0))
+  const prev = () => {
+    setStep((current) => Math.max(current - 1, 0))
+  }
 
-  const onSubmit = (data: TCreatePropertySchema) => {
+  const onSubmit = async (data: TCreatePropertySchema) => {
     mutate(data, {
-      async onSuccess(result) {
+      onSuccess: async (result) => {
         await invalidatePropertiesQuery(queryClient)
         navigate({
           to: '/properties/$propertySlug',
@@ -399,7 +402,12 @@ const CreateProperty = () => {
 
         <CardContent>
           <Form {...form}>
-            <form className='grid gap-8' onSubmit={form.handleSubmit(onSubmit)}>
+            <form
+              className='grid gap-8'
+              onSubmit={(e) => {
+                e.preventDefault()
+              }}
+            >
               {step === 0 && (
                 <section className='grid gap-5'>
                   <div className='space-y-1'>
@@ -759,7 +767,7 @@ const CreateProperty = () => {
                         )}
                       />
 
-                      {isAvailable && (
+                      {!isAvailable && (
                         <FormField
                           control={form.control}
                           name='available_from'
@@ -813,7 +821,7 @@ const CreateProperty = () => {
                 )}
 
                 <div className='flex w-full flex-col gap-3 sm:w-auto sm:flex-row'>
-                  {step < steps.length - 1 ? (
+                  {step < lastStepIndex ? (
                     <Button
                       type='button'
                       onClick={next}
@@ -827,6 +835,7 @@ const CreateProperty = () => {
                       type='submit'
                       disabled={isPending}
                       className='w-full sm:w-auto'
+                      onClick={form.handleSubmit(onSubmit)}
                     >
                       {isPending && (
                         <Loader2 className='mr-2 size-4 animate-spin' />

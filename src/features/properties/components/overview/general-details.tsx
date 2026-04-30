@@ -8,7 +8,13 @@ import {
   Ruler,
   Settings2,
 } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import type { IProperty } from '../../types'
 import { formatDate } from '../../utils'
@@ -20,17 +26,12 @@ type Props = {
 
 const GeneralDetails = ({ property }: Props) => {
   return (
-    <Card className='overflow-hidden rounded-3xl border bg-card shadow-sm'>
-      <CardContent className='space-y-6 p-6'>
-        <div className='flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between'>
-          <div className='space-y-1'>
-            <h2 className='text-lg font-semibold'>Property details</h2>
-            <p className='text-sm text-muted-foreground'>
-              General information for this listing.
-            </p>
-          </div>
-        </div>
-
+    <Card>
+      <CardHeader>
+        <CardTitle>Property details</CardTitle>
+        <CardDescription>General information for this listing.</CardDescription>
+      </CardHeader>
+      <CardContent className='space-y-4'>
         <div className='grid gap-3 sm:grid-cols-2'>
           <DetailRow
             label='Address'
