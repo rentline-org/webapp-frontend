@@ -61,7 +61,7 @@ function Button({
   const resolvedType = (type as any) ?? 'button'
 
   return (
-    <Comp
+    <button
       data-slot='button'
       className={cn(buttonVariants({ variant, size, className }))}
       type={resolvedType}

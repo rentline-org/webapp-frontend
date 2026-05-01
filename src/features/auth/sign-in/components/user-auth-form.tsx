@@ -118,7 +118,7 @@ export function UserAuthForm({
             </FormItem>
           )}
         />
-        <Button className='mt-2' disabled={isPending}>
+        <Button className='mt-2' disabled={isPending} type='submit'>
           {isPending ? <Loader2 className='animate-spin' /> : <LogIn />}
           Sign in
         </Button>
