@@ -105,7 +105,11 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
             </FormItem>
           )}
         />
-        <Button className='mt-2' disabled={otp.length < 6 || isPending}>
+        <Button
+          className='mt-2'
+          type='submit'
+          disabled={otp.length < 6 || isPending}
+        >
           {isPending ? <Loader2 className='animate-spin' /> : null}
           Verify
         </Button>
