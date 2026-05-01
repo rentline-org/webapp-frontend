@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { IResponse } from '@/api'
+import { ReverseMapping } from '@/lib/utils'
 import type { IOrganizationData } from '@/features/organizations/types'
 import { PROPERTY_TYPES, type UNIT_TYPES } from '../utils/constants'
 
@@ -217,3 +218,45 @@ export const createPropertySchema = z
   })
 
 export type TCreatePropertySchema = z.infer<typeof createPropertySchema>
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const reversedPropertyTypeMapping = ReverseMapping(PROPERTY_TYPES)
+export interface IUpdatePropertyInput {
+  title?: string
+  description?: string | null
+
+  address?: string
+  city?: string
+  state?: string
+  postal_code?: string
+  country?: string
+
+  property_type?: keyof typeof reversedPropertyTypeMapping
+
+  is_available?: boolean
+  is_furnished?: boolean
+  is_pet_friendly?: boolean
+
+  rent_price?: number | null
+  sale_price?: number | null
+  buy_price?: number | null
+
+  bedrooms?: number | null
+  bathrooms?: number | null
+  square_feet?: number | null
+
+  amenities?: string[] | null
+  sale_types?: ('sale' | 'rent')[] | null
+
+  available_from?: Date
+}
+
+export type TUpdateVariables = {
+  property: IProperty
+  payload: IUpdatePropertyInput
+}
+
+export type TUpdateContext = {
+  previousProperties?: IProperty[]
+  previousProperty?: IProperty
+}

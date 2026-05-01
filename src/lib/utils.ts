@@ -84,3 +84,16 @@ export function getDisplayNameInitials(displayName: string): string {
   const last = parts[parts.length - 1]?.[0] ?? ''
   return (first + last).toUpperCase()
 }
+
+export function ReverseMapping<
+  T extends Record<string, string | number | symbol>,
+>(obj: T): Record<T[keyof T], keyof T> {
+  const reversed = {} as Record<T[keyof T], keyof T>
+
+  for (const key in obj) {
+    const value = obj[key]
+    reversed[value] = key
+  }
+
+  return reversed
+}

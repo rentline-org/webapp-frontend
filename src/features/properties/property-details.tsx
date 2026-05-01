@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import {
   Archive,
@@ -36,7 +37,7 @@ import { Main } from '@/components/layout/main'
 import ModulePlaceholder from './components/module-placeholder'
 import PropertyOverviewTab from './components/property-overview-tab'
 import UnitsTab from './components/units-tab'
-import { useGetPropertyBySlug } from './query'
+import { useGetPropertyBySlug, useUpdateProperty } from './query'
 import type { IProperty, TabKey } from './types'
 import { statusBadgeVariant, typeBadgeVariant } from './utils'
 
@@ -169,11 +170,12 @@ function PropertyActionsMenu({
 const PropertyDetails = () => {
   const { propertySlug } = routeApi.useParams()
   const navigate = routeApi.useNavigate()
+  const queryClient = useQueryClient()
 
   const { data: property, isLoading } = useGetPropertyBySlug(propertySlug)
+  const { mutate } = useUpdateProperty(queryClient)
 
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
-  // const [editOpen, setEditOpen] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
 
   const handleBackRouting = () => {
@@ -231,6 +233,15 @@ const PropertyDetails = () => {
                   <InlineText
                     className='text-2xl font-semibold tracking-tight sm:text-3xl'
                     value={property.title}
+                    onSubmit={(value) => {
+                      mutate({
+                        payload: {
+                          title: value,
+                        },
+                        property,
+                      })
+                    }}
+                    inputClassName='text-2xl! sm:text-3xl!'
                     editable
                   />
                 </div>
@@ -268,7 +279,6 @@ const PropertyDetails = () => {
 
           <PropertyActionsMenu
             property={property}
-            // onEdit={() => conso}
             onUploadImages={() => setUploadOpen(true)}
             onGoToTab={setActiveTab}
           />

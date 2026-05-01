@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useRef, useState } from 'react'
 import { PenLine } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 type InlineTextProps = {
   value: string
   editable?: boolean
-  onChange?: (value: string) => void
+  onSubmit?: (value: string) => void
   className?: string
   textClassName?: string
   inputClassName?: string
@@ -17,7 +17,7 @@ type InlineTextProps = {
 function InlineText({
   value,
   editable = false,
-  onChange,
+  onSubmit,
   className,
   textClassName,
   inputClassName,
@@ -25,22 +25,33 @@ function InlineText({
 }: InlineTextProps) {
   const [showEditButton, setShowEditButton] = useState(false)
   const [editState, setEditState] = useState(false)
-  const [newValue, setNewValue] = useState(value)
+  const [draft, setDraft] = useState(value)
 
-  const canShowButton = useMemo(
-    () => editable && showEditButton && !editState,
-    [editState, editable, showEditButton]
-  )
+  const hasCommittedRef = useRef(false)
 
-  useEffect(() => {
-    const handleChange = (value: string) => {
-      if (onChange) {
-        onChange(value)
-      }
+  const canShowButton = editable && showEditButton && !editState
+
+  const startEdit = () => {
+    hasCommittedRef.current = false
+    setDraft(value)
+    setEditState(true)
+  }
+
+  const commitEdit = () => {
+    if (hasCommittedRef.current) return
+    hasCommittedRef.current = true
+
+    setEditState(false)
+
+    if (draft !== value) {
+      onSubmit?.(draft)
     }
+  }
 
-    handleChange(newValue)
-  }, [newValue, onChange])
+  const cancelEdit = () => {
+    hasCommittedRef.current = true
+    setEditState(false)
+  }
 
   return (
     <div
@@ -49,23 +60,30 @@ function InlineText({
         !canShowButton && 'pr-10',
         className
       )}
-      onMouseOver={() => setShowEditButton(true)}
+      onMouseEnter={() => setShowEditButton(true)}
       onMouseLeave={() => setShowEditButton(false)}
     >
       {editable && editState ? (
         <Input
-          value={newValue}
+          value={draft}
           autoFocus
           placeholder={placeholder}
           className={cn(
             'h-auto min-w-0 border-0 bg-transparent px-4 shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
             inputClassName
           )}
-          onChange={(e) => setNewValue(e.target.value)}
-          onBlur={() => setEditState(false)}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commitEdit}
           onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              commitEdit()
+              e.currentTarget.blur()
+            }
+
             if (e.key === 'Escape') {
-              setEditState(false)
+              e.preventDefault()
+              cancelEdit()
             }
           }}
         />
@@ -73,11 +91,11 @@ function InlineText({
         <div
           className={cn(
             'font-inherit min-w-0 leading-tight wrap-break-word',
-            !newValue && 'text-muted-foreground',
+            !value && 'text-muted-foreground',
             textClassName
           )}
         >
-          {newValue || placeholder}
+          {value || placeholder}
         </div>
       )}
 
@@ -87,7 +105,7 @@ function InlineText({
           variant='ghost'
           size='icon'
           className='-mt-0.5 size-7 shrink-0'
-          onClick={() => setEditState(true)}
+          onClick={startEdit}
         >
           <PenLine className='size-4' />
         </Button>
