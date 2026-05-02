@@ -91,6 +91,7 @@ const InputWithEndButtons = ({
     if (/^[0-9]$/.test(key)) {
       e.preventDefault()
       const newDigits = (rawRef.current || '') + key
+
       applyDigits(newDigits)
       return
     }
@@ -145,17 +146,14 @@ const InputWithEndButtons = ({
           </span>
         )}
         <Input
-          className='w-full grow px-3 py-2 pr-14 text-left tabular-nums outline-none selection:bg-primary selection:text-primary-foreground'
+          className='w-full grow px-3 py-1 text-left tabular-nums outline-none selection:bg-primary selection:text-primary-foreground'
           aria-label={props.name ?? props['aria-label']}
           inputMode={fractionDigits > 0 ? 'decimal' : 'numeric'}
           pattern={fractionDigits > 0 ? '[0-9.,]*' : '[0-9]*'}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           onBlur={props.onBlur}
-          onChange={(e) => {
-            props.onChange?.(Number(e.target.value))
-            /* noop: handled via keyDown for auto-format */
-          }}
+          onChange={() => {}}
           value={
             autoFormat
               ? rawDigits === ''

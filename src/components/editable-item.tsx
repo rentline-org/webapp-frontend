@@ -1,4 +1,4 @@
-import { type ReactNode, useRef, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { PenLine } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,6 +37,7 @@ type EditableItemProps = {
   options?: SelectOption[]
   placeholder?: string
   defaultContent?: ReactNode
+  isCurrency?: boolean
   onSubmit?: (value: string | number | boolean | Date | null) => void
 }
 
@@ -49,11 +50,13 @@ function EditableItem({
   options = [],
   placeholder = 'Not set',
   onSubmit,
+  isCurrency = false,
   defaultContent,
 }: EditableItemProps) {
   const [showEditButton, setShowEditButton] = useState(false)
   const [editState, setEditState] = useState(false)
   const [draft, setDraft] = useState(value)
+  const rootRef = useRef<HTMLDivElement>(null)
 
   const hasCommittedRef = useRef(false)
 
@@ -65,18 +68,37 @@ function EditableItem({
     setEditState(true)
   }
 
-  const commitEdit = (nextValue?: typeof draft) => {
-    if (hasCommittedRef.current) return
-    hasCommittedRef.current = true
+  const commitEdit = useCallback(
+    (nextValue?: typeof draft) => {
+      if (hasCommittedRef.current) return
+      hasCommittedRef.current = true
 
-    const finalValue = nextValue !== undefined ? nextValue : draft
+      const finalValue = nextValue !== undefined ? nextValue : draft
 
-    setEditState(false)
+      setEditState(false)
 
-    if (finalValue !== value) {
-      onSubmit?.(finalValue)
+      if (finalValue !== value) {
+        onSubmit?.(finalValue)
+      }
+    },
+    [draft, onSubmit, value]
+  )
+
+  useEffect(() => {
+    if (!editState) return
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!rootRef.current) return
+      if (!rootRef.current.contains(e.target as Node)) {
+        commitEdit()
+      }
     }
-  }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [commitEdit, editState])
 
   const cancelEdit = () => {
     hasCommittedRef.current = true
@@ -95,9 +117,10 @@ function EditableItem({
   return (
     <Item
       variant='outline'
-      className='group'
+      className='group w-full'
       onMouseEnter={() => setShowEditButton(true)}
       onMouseLeave={() => setShowEditButton(false)}
+      ref={rootRef}
     >
       {icon && <ItemMedia variant='icon'>{icon}</ItemMedia>}
 
@@ -110,7 +133,7 @@ function EditableItem({
               <Input
                 value={String(draft ?? '')}
                 autoFocus
-                className='h-8 w-full border-0 bg-transparent px-0 text-sm shadow-none ring-0 outline-none'
+                className='h-8 w-full border-0 bg-transparent px-2 text-sm shadow-none ring-0 outline-none'
                 onChange={(e) => setDraft(e.target.value)}
                 onBlur={handleBlurCommit}
                 onKeyDown={(e) => {
@@ -128,11 +151,13 @@ function EditableItem({
 
             {kind === 'number' && (
               <InputWithEndButtons
-                value={draft === null ? 0 : (draft as number)}
+                value={draft === null ? 0 : Number(draft)}
                 autoFocus
-                className='h-8 w-full border-0 bg-transparent px-0 text-sm shadow-none ring-0 outline-none'
-                onChange={(val) => setDraft(val === 0 ? null : val)}
+                autoFormat
+                onChange={(val) => setDraft(val === 0 ? null : Number(val))}
                 onBlur={handleBlurCommit}
+                currency={isCurrency ? 'BRL' : undefined}
+                locale={'pt-BR'}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()
@@ -187,6 +212,7 @@ function EditableItem({
             {kind === 'date' && (
               <DatePicker
                 selected={draft ? new Date(String(draft)) : undefined}
+                onBlur={handleBlurCommit}
                 onSelect={(date) => {
                   setDraft(date as Date)
                   commitEdit(date as Date)

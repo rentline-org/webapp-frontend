@@ -71,7 +71,7 @@ function InlineText({
             autoFocus
             placeholder={placeholder}
             className={cn(
-              'min-h-20 w-full resize-none border-0 bg-transparent px-0 py-0 text-inherit shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
+              'min-h-20 w-full resize-none rounded-md border-0 bg-secondary/50 p-2 text-inherit shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
               inputClassName
             )}
             onChange={(e) => setDraft(e.target.value)}
@@ -95,7 +95,7 @@ function InlineText({
             autoFocus
             placeholder={placeholder}
             className={cn(
-              'h-auto w-full min-w-0 border-0 bg-transparent px-0 shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
+              'h-auto w-full min-w-0 border-0 bg-secondary/50 px-2 shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
               inputClassName
             )}
             onChange={(e) => setDraft(e.target.value)}

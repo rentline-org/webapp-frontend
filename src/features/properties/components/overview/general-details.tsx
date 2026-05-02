@@ -4,6 +4,7 @@ import {
   BedDouble,
   Building2,
   CalendarDays,
+  CircleDollarSign,
   Layers3,
   MapPin,
   Ruler,
@@ -19,8 +20,8 @@ import {
 import { Separator } from '@/components/ui/separator'
 import EditableItem from '@/components/editable-item'
 import { useUpdateProperty } from '../../query'
-import type { IProperty } from '../../types'
-import { formatDate } from '../../utils'
+import type { IProperty, IUpdatePropertyInput } from '../../types'
+import { currency, formatDate } from '../../utils'
 
 type Props = {
   property: IProperty
@@ -30,7 +31,7 @@ const GeneralDetails = ({ property }: Props) => {
   const queryClient = useQueryClient()
   const { mutate } = useUpdateProperty(queryClient)
 
-  const updateProperty = (payload: Record<string, unknown>) => {
+  const updateProperty = (payload: IUpdatePropertyInput) => {
     mutate({ payload: payload as never, property })
   }
 
@@ -42,6 +43,46 @@ const GeneralDetails = ({ property }: Props) => {
       </CardHeader>
 
       <CardContent className='space-y-4'>
+        <div className='grid gap-3 md:grid-cols-2'>
+          {/* {property.rent_price && ( */}
+          <EditableItem
+            label='Rent Value'
+            kind='number'
+            icon={<CircleDollarSign />}
+            value={property.rent_price ?? 0}
+            editable
+            isCurrency
+            defaultContent={
+              property.rent_price
+                ? currency(property.rent_price, 'pt-BR', 'BRL')
+                : '-'
+            }
+            onSubmit={(value) =>
+              updateProperty({
+                rent_price: value as number,
+              })
+            }
+          />
+          {/* )} */}
+          <EditableItem
+            label='Sale Value'
+            kind='number'
+            value={property.sale_price ?? 0}
+            editable
+            isCurrency
+            defaultContent={
+              property.sale_price
+                ? currency(property.sale_price ?? 0, 'pt-BR', 'BRL')
+                : '-'
+            }
+            onSubmit={(value) =>
+              updateProperty({
+                sale_price: value as number,
+              })
+            }
+          />
+        </div>
+        <Separator />
         <div className='grid gap-3 sm:grid-cols-2'>
           <EditableItem
             label='Address'
@@ -49,7 +90,7 @@ const GeneralDetails = ({ property }: Props) => {
             value={property.address}
             editable
             icon={<MapPin className='size-4' />}
-            onSubmit={(value) => updateProperty({ address: value })}
+            onSubmit={(value) => updateProperty({ address: value as string })}
           />
 
           <EditableItem
@@ -58,7 +99,7 @@ const GeneralDetails = ({ property }: Props) => {
             value={property.city}
             editable
             icon={<Building2 className='size-4' />}
-            onSubmit={(value) => updateProperty({ city: value })}
+            onSubmit={(value) => updateProperty({ city: value as string })}
           />
 
           <EditableItem
@@ -66,7 +107,7 @@ const GeneralDetails = ({ property }: Props) => {
             kind='text'
             value={property.state as string}
             editable
-            onSubmit={(value) => updateProperty({ state: value })}
+            onSubmit={(value) => updateProperty({ state: value as string })}
           />
 
           <EditableItem
@@ -74,7 +115,9 @@ const GeneralDetails = ({ property }: Props) => {
             kind='text'
             value={property.postal_code}
             editable
-            onSubmit={(value) => updateProperty({ postal_code: value })}
+            onSubmit={(value) =>
+              updateProperty({ postal_code: value as string })
+            }
           />
         </div>
 
@@ -137,11 +180,6 @@ const GeneralDetails = ({ property }: Props) => {
               kind='number'
               value={property.units_count ?? null}
               icon={<Layers3 className='size-4' />}
-              onSubmit={(value) =>
-                updateProperty({
-                  units_count: value === null ? null : Number(value),
-                })
-              }
               editable={false}
             />
           )}
@@ -153,7 +191,9 @@ const GeneralDetails = ({ property }: Props) => {
             editable
             defaultContent={<span>{formatDate(property.available_from)}</span>}
             icon={<CalendarDays className='size-4' />}
-            onSubmit={(value) => updateProperty({ available_from: value })}
+            onSubmit={(value) =>
+              updateProperty({ available_from: value as Date })
+            }
           />
         </div>
       </CardContent>
