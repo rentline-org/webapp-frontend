@@ -151,7 +151,9 @@ const InputWithEndButtons = ({
           pattern={fractionDigits > 0 ? '[0-9.,]*' : '[0-9]*'}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          onChange={() => {
+          onBlur={props.onBlur}
+          onChange={(e) => {
+            props.onChange?.(Number(e.target.value))
             /* noop: handled via keyDown for auto-format */
           }}
           value={

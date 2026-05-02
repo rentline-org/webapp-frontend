@@ -12,6 +12,7 @@ type InlineTextProps = {
   textClassName?: string
   inputClassName?: string
   placeholder?: string
+  multiline?: boolean
 }
 
 function InlineText({
@@ -22,11 +23,11 @@ function InlineText({
   textClassName,
   inputClassName,
   placeholder = 'Untitled',
+  multiline = false,
 }: InlineTextProps) {
   const [showEditButton, setShowEditButton] = useState(false)
   const [editState, setEditState] = useState(false)
   const [draft, setDraft] = useState(value)
-
   const hasCommittedRef = useRef(false)
 
   const canShowButton = editable && showEditButton && !editState
@@ -40,7 +41,6 @@ function InlineText({
   const commitEdit = () => {
     if (hasCommittedRef.current) return
     hasCommittedRef.current = true
-
     setEditState(false)
 
     if (draft !== value) {
@@ -50,13 +50,14 @@ function InlineText({
 
   const cancelEdit = () => {
     hasCommittedRef.current = true
+    setDraft(value)
     setEditState(false)
   }
 
   return (
     <div
       className={cn(
-        'group flex items-center gap-6',
+        'group flex w-full items-center gap-3',
         !canShowButton && 'pr-10',
         className
       )}
@@ -64,33 +65,59 @@ function InlineText({
       onMouseLeave={() => setShowEditButton(false)}
     >
       {editable && editState ? (
-        <Input
-          value={draft}
-          autoFocus
-          placeholder={placeholder}
-          className={cn(
-            'h-auto min-w-0 border-0 bg-transparent px-4 shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
-            inputClassName
-          )}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commitEdit}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              commitEdit()
-              e.currentTarget.blur()
-            }
+        multiline ? (
+          <textarea
+            value={draft}
+            autoFocus
+            placeholder={placeholder}
+            className={cn(
+              'min-h-20 w-full resize-none border-0 bg-transparent px-0 py-0 text-inherit shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
+              inputClassName
+            )}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault()
+                cancelEdit()
+              }
 
-            if (e.key === 'Escape') {
-              e.preventDefault()
-              cancelEdit()
-            }
-          }}
-        />
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                commitEdit()
+                e.currentTarget.blur()
+              }
+            }}
+          />
+        ) : (
+          <Input
+            value={draft}
+            autoFocus
+            placeholder={placeholder}
+            className={cn(
+              'h-auto w-full min-w-0 border-0 bg-transparent px-0 shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
+              inputClassName
+            )}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                commitEdit()
+                e.currentTarget.blur()
+              }
+
+              if (e.key === 'Escape') {
+                e.preventDefault()
+                cancelEdit()
+              }
+            }}
+          />
+        )
       ) : (
         <div
           className={cn(
-            'font-inherit min-w-0 leading-tight wrap-break-word',
+            'min-w-0 leading-relaxed wrap-break-word whitespace-pre-wrap',
             !value && 'text-muted-foreground',
             textClassName
           )}

@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Bath,
   BedDouble,
@@ -16,78 +17,143 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import EditableItem from '@/components/editable-item'
+import { useUpdateProperty } from '../../query'
 import type { IProperty } from '../../types'
 import { formatDate } from '../../utils'
-import DetailRow from '../detail-row'
 
 type Props = {
   property: IProperty
 }
 
 const GeneralDetails = ({ property }: Props) => {
+  const queryClient = useQueryClient()
+  const { mutate } = useUpdateProperty(queryClient)
+
+  const updateProperty = (payload: Record<string, unknown>) => {
+    mutate({ payload: payload as never, property })
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Property details</CardTitle>
         <CardDescription>General information for this listing.</CardDescription>
       </CardHeader>
+
       <CardContent className='space-y-4'>
         <div className='grid gap-3 sm:grid-cols-2'>
-          <DetailRow
+          <EditableItem
             label='Address'
+            kind='text'
             value={property.address}
+            editable
             icon={<MapPin className='size-4' />}
-            editable
+            onSubmit={(value) => updateProperty({ address: value })}
           />
-          <DetailRow
+
+          <EditableItem
             label='City'
+            kind='text'
             value={property.city}
-            icon={<Building2 className='size-4' />}
             editable
+            icon={<Building2 className='size-4' />}
+            onSubmit={(value) => updateProperty({ city: value })}
           />
-          <DetailRow label='State' value={property.state ?? '—'} editable />
-          <DetailRow
+
+          <EditableItem
+            label='State'
+            kind='text'
+            value={property.state as string}
+            editable
+            onSubmit={(value) => updateProperty({ state: value })}
+          />
+
+          <EditableItem
             label='Postal code'
+            kind='text'
             value={property.postal_code}
             editable
+            onSubmit={(value) => updateProperty({ postal_code: value })}
           />
         </div>
 
         <Separator />
 
         <div className='grid gap-3 sm:grid-cols-2 xl:grid-cols-3'>
-          <DetailRow
+          <EditableItem
             label='Furnished'
-            value={property.is_furnished ? 'Yes' : 'No'}
+            kind='checkbox'
+            value={property.is_furnished}
+            editable
             icon={<Settings2 className='size-4' />}
+            onSubmit={(value) =>
+              updateProperty({ is_furnished: Boolean(value) })
+            }
           />
 
-          <DetailRow
+          <EditableItem
             label='Bedrooms'
-            value={String(property.bedrooms ?? '—')}
+            kind='number'
+            value={property.bedrooms ?? null}
+            editable
             icon={<BedDouble className='size-4' />}
+            onSubmit={(value) =>
+              updateProperty({
+                bedrooms: value === null ? null : Number(value),
+              })
+            }
           />
-          <DetailRow
+
+          <EditableItem
             label='Bathrooms'
-            value={String(property.bathrooms ?? '—')}
+            kind='number'
+            value={property.bathrooms ?? null}
+            editable
             icon={<Bath className='size-4' />}
+            onSubmit={(value) =>
+              updateProperty({
+                bathrooms: value === null ? null : Number(value),
+              })
+            }
           />
-          <DetailRow
+
+          <EditableItem
             label='Size'
-            value={property.square_feet ? `${property.square_feet} ft²` : '—'}
+            kind='number'
+            value={property.square_feet ?? null}
+            editable
             icon={<Ruler className='size-4' />}
+            onSubmit={(value) =>
+              updateProperty({
+                square_feet: value === null ? null : Number(value),
+              })
+            }
           />
-          {property.property_type === 'apartment' && property?.units_count && (
-            <DetailRow
+
+          {property.property_type === 'apartment' && (
+            <EditableItem
               label='Units'
-              value={property.units_count?.toFixed(2)}
+              kind='number'
+              value={property.units_count ?? null}
               icon={<Layers3 className='size-4' />}
+              onSubmit={(value) =>
+                updateProperty({
+                  units_count: value === null ? null : Number(value),
+                })
+              }
+              editable={false}
             />
           )}
-          <DetailRow
+
+          <EditableItem
             label='Available from'
-            value={formatDate(property.available_from)}
+            kind='date'
+            value={property.available_from ?? null}
+            editable
+            defaultContent={<span>{formatDate(property.available_from)}</span>}
             icon={<CalendarDays className='size-4' />}
+            onSubmit={(value) => updateProperty({ available_from: value })}
           />
         </div>
       </CardContent>

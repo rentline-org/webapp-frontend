@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge'
+import EditableItem from '../../../components/editable-item'
 import type { IUnitData } from '../types'
 import { currency } from '../utils'
-import DetailRow from './detail-row'
 
 function UnitRow({ unit }: { unit: IUnitData }) {
   return (
@@ -27,21 +27,24 @@ function UnitRow({ unit }: { unit: IUnitData }) {
         </div>
 
         <div className='grid gap-3 sm:grid-cols-2 lg:min-w-[360px]'>
-          <DetailRow
+          <EditableItem
             label='Rent'
             value={currency(Number(unit.rent_price ?? null))}
           />
-          <DetailRow
+          <EditableItem
             label='Sale'
             value={currency(Number(unit.sale_price ?? null))}
           />
-          <DetailRow label='Bedrooms' value={String(unit.bedrooms ?? '—')} />
-          <DetailRow label='Bathrooms' value={String(unit.bathrooms ?? '—')} />
-          <DetailRow
+          <EditableItem label='Bedrooms' value={String(unit.bedrooms ?? '—')} />
+          <EditableItem
+            label='Bathrooms'
+            value={String(unit.bathrooms ?? '—')}
+          />
+          <EditableItem
             label='Size'
             value={unit.square_feet ? `${unit.square_feet} ft²` : '—'}
           />
-          <DetailRow
+          <EditableItem
             label='Pet friendly'
             value={unit.is_pet_friendly ? 'Yes' : 'No'}
           />
