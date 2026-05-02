@@ -1,5 +1,11 @@
 import { type QueryClient, useMutation, useQuery } from '@tanstack/react-query'
-import { handleGet, handlePost, handlePut, type IResponse } from '@/api'
+import {
+  handleDelete,
+  handleGet,
+  handlePost,
+  handlePut,
+  type IResponse,
+} from '@/api'
 import type {
   IProperty,
   IPropertyResponse,
@@ -10,8 +16,8 @@ import type {
 
 const PROPERTIES_ENDPOINT = '/properties'
 const propertiesKey = [PROPERTIES_ENDPOINT] as const
-const propertyKey = (slug: string) =>
-  [PROPERTIES_ENDPOINT, 'slug', slug] as const
+const propertyKey = (value: string, type: 'slug' | 'id' = 'slug') =>
+  [PROPERTIES_ENDPOINT, type, value] as const
 
 async function handleGetProperties(): Promise<IProperty[]> {
   const result = await handleGet<IPropertyResponse>(PROPERTIES_ENDPOINT)
@@ -46,6 +52,12 @@ async function handleUpdateProperty(
 
   return result.data
 }
+
+async function handleDeleteProperty(propertyId: number) {
+  return await handleDelete<unknown>(`${PROPERTIES_ENDPOINT}/${propertyId}`)
+}
+
+// hooks
 
 export function useGetProperties() {
   return useQuery<IProperty[]>({
@@ -140,16 +152,17 @@ export function useUpdateProperty(queryClient?: QueryClient) {
   })
 }
 
-export async function invalidatePropertiesQuery(
-  queryClient: QueryClient,
-  slug: string = ''
-) {
-  await Promise.all([
-    queryClient.invalidateQueries({ queryKey: [PROPERTIES_ENDPOINT] }),
-    queryClient.invalidateQueries({
-      queryKey: [`${PROPERTIES_ENDPOINT}/slug/${slug}`],
-    }),
-  ])
+export function useDeleteProperty(id: number) {
+  return useMutation({
+    mutationKey: propertyKey(id.toString(), 'id'),
+    mutationFn: async () => {
+      return await handleDeleteProperty(id)
+    },
+  })
+}
+
+export async function invalidatePropertiesQuery(queryClient: QueryClient) {
+  await queryClient.invalidateQueries({ queryKey: propertiesKey })
 }
 
 export async function invalidatePropertyBySlug(

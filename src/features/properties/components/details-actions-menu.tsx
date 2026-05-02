@@ -1,4 +1,13 @@
-import { Archive, Copy, MoreHorizontal, Trash2, Upload } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { getRouteApi } from '@tanstack/react-router'
+import {
+  Archive,
+  Copy,
+  Loader2,
+  MoreHorizontal,
+  Trash2,
+  Upload,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,25 +17,49 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { invalidatePropertiesQuery, useDeleteProperty } from '../query'
 import type { IProperty } from '../types'
+
+const routeApi = getRouteApi('/_authenticated/properties/$propertySlug')
 
 function DetailsActionsMenu({
   property,
-  // onUploadImages,
 }: {
   property: IProperty
   // onUploadImages: () => void
 }) {
+  const queryClient = useQueryClient()
+  const { mutate, isPending: isDeleting } = useDeleteProperty(property.id)
+  const navigate = routeApi.useNavigate()
+
   const copyLink = async () => {
     await navigator.clipboard.writeText(window.location.href)
     toast.success('Property link copied.')
   }
 
+  const onDelete = () => {
+    mutate(undefined, {
+      async onSuccess() {
+        await invalidatePropertiesQuery(queryClient)
+        toast.success('Property Deleted')
+
+        navigate({
+          to: '/properties',
+        })
+      },
+    })
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant='secondary' size='icon' className='shrink-0'>
-          <MoreHorizontal className='size-4' />
+        <Button
+          disabled={isDeleting}
+          variant={isDeleting ? 'destructive' : 'secondary'}
+          size='icon'
+          className='shrink-0'
+        >
+          {isDeleting ? <Loader2 /> : <MoreHorizontal className='size-4' />}
         </Button>
       </DropdownMenuTrigger>
 
@@ -53,7 +86,7 @@ function DetailsActionsMenu({
           Copy slug
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant='destructive'>
+        <DropdownMenuItem variant='destructive' onClick={onDelete}>
           <Trash2 />
           Delete Property
         </DropdownMenuItem>
