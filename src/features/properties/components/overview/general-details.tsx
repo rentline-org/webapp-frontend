@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarDays,
   CircleDollarSign,
+  Dog,
   Layers3,
   MapPin,
   Ruler,
@@ -132,6 +133,16 @@ const GeneralDetails = ({ property }: Props) => {
             icon={<Settings2 className='size-4' />}
             onSubmit={(value) =>
               updateProperty({ is_furnished: Boolean(value) })
+            }
+          />
+          <EditableItem
+            label='Pet Friendly'
+            kind='checkbox'
+            value={property.is_pet_friendly}
+            editable
+            icon={<Dog className='size-4' />}
+            onSubmit={(value) =>
+              updateProperty({ is_pet_friendly: Boolean(value) })
             }
           />
 
