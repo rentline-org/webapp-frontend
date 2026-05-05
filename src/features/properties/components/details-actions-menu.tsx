@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import {
   Archive,
@@ -17,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { invalidatePropertiesQuery, useDeleteProperty } from '../query'
+import { useDeleteProperty } from '../query'
 import type { IProperty } from '../types'
 
 const routeApi = getRouteApi('/_authenticated/properties/$propertySlug')
@@ -28,8 +27,7 @@ function DetailsActionsMenu({
   property: IProperty
   // onUploadImages: () => void
 }) {
-  const queryClient = useQueryClient()
-  const { mutate, isPending: isDeleting } = useDeleteProperty(property.id)
+  const { mutate, isPending: isDeleting } = useDeleteProperty(property)
   const navigate = routeApi.useNavigate()
 
   const copyLink = async () => {
@@ -40,7 +38,6 @@ function DetailsActionsMenu({
   const onDelete = () => {
     mutate(undefined, {
       async onSuccess() {
-        await invalidatePropertiesQuery(queryClient)
         toast.success('Property Deleted')
 
         navigate({

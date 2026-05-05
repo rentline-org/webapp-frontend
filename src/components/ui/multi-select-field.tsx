@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form'
 // import { PopoverTrigger, PopoverContent } from "@radix-ui/react-popover";
 import { ChevronDown } from 'lucide-react'
-import { TCreatePropertySchema } from '@/features/properties/types'
+import { TCreateUnitSchema } from '@/features/units/types'
 import { Button } from './button'
 import { Checkbox } from './checkbox'
 import {
@@ -23,12 +23,12 @@ export function MultiSelectField({
   placeholder,
   form,
 }: {
-  name: 'amenities' | 'sale_types'
+  name: 'amenities'
   label: string
   description?: string
   options: readonly { label: string; value: string }[]
   placeholder: string
-  form: ReturnType<typeof useForm<TCreatePropertySchema>>
+  form: ReturnType<typeof useForm<TCreateUnitSchema>>
 }) {
   return (
     <FormField

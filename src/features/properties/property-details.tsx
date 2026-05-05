@@ -8,6 +8,7 @@ import PropertyImagesDialog from './components/images-dialog'
 import ModulePlaceholder from './components/module-placeholder'
 import PropertyOverviewTab from './components/property-overview-tab'
 import UnitsTab from './components/units-tab'
+import { useSingleUnit } from './hooks/use-single-unit'
 import { useGetPropertyBySlug } from './query'
 import type { TabKey } from './types'
 
@@ -22,6 +23,8 @@ const PropertyDetails = () => {
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [uploadOpen, setUploadOpen] = useState(false)
 
+  const { isReady } = useSingleUnit(property)
+
   useEffect(() => {
     if (!isLoading && !property) {
       navigate({
@@ -33,7 +36,7 @@ const PropertyDetails = () => {
     }
   }, [isLoading, navigate, property])
 
-  if (isLoading) {
+  if (isLoading || !isReady) {
     return (
       <Main fixed>
         <div className='flex h-[50vh] w-full items-center justify-center'>
@@ -57,7 +60,7 @@ const PropertyDetails = () => {
         >
           <TabsList className='inline-flex h-auto gap-2 overflow-x-auto p-1'>
             <TabsTrigger value='overview'>Overview</TabsTrigger>
-            {property.property_type === 'apartment' && (
+            {property.property_type === 'multi_unit' && (
               <TabsTrigger value='units'>Units</TabsTrigger>
             )}
             <TabsTrigger value='leases'>Leases</TabsTrigger>
@@ -81,6 +84,7 @@ const PropertyDetails = () => {
             className='mt-6 focus-visible:outline-none'
           >
             <UnitsTab property={property} />
+            {/* coming soon */}
           </TabsContent>
 
           <TabsContent

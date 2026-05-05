@@ -1,9 +1,15 @@
-import { useEffect, useState } from 'react'
-import { type Resolver, useForm } from 'react-hook-form'
+/* eslint-disable react-hooks/incompatible-library */
+import { useEffect } from 'react'
+import {
+  type Resolver,
+  useFieldArray,
+  useForm,
+  useWatch,
+} from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { ChevronLeft, Loader2, Plus, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,30 +19,394 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Form } from '@/components/ui/form'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import InputWithEndButtons from '@/components/ui/input-number'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Main } from '@/components/layout/main'
-import { ApartmentsStep } from './components/apartments-step'
-import { FeaturesStep } from './components/features-step'
+import type { TUnitType } from '../units/types'
 import { GeneralStep } from './components/general-step'
-import { PricingStep } from './components/pricing-step'
-import { invalidatePropertiesQuery, useCreateProperty } from './query'
-import { createPropertySchema, type TCreatePropertySchema } from './types'
+import { useCreateProperty, invalidatePropertiesQuery } from './query'
+import {
+  createPropertySchema,
+  type TPropertyType,
+  type TCreatePropertySchema,
+  type TCreatePropertyUnitSchema,
+} from './types'
 
 const route = getRouteApi('/_authenticated/properties/new')
+
+const defaultUnitTypeByProperty: Record<TPropertyType, TUnitType> = {
+  single_unit: 'house',
+  multi_unit: 'apartment',
+  land: 'other',
+} as const
+
+const allowedUnitTypesByProperty = {
+  single_unit: [
+    { value: 'house', label: 'House' },
+    { value: 'studio', label: 'Studio' },
+    { value: 'office', label: 'Office' },
+  ],
+  multi_unit: [
+    { value: 'apartment', label: 'Apartment' },
+    { value: 'studio', label: 'Studio' },
+    { value: 'room', label: 'Room' },
+    { value: 'office', label: 'Office' },
+    { value: 'retail', label: 'Retail' },
+    { value: 'warehouse', label: 'Warehouse' },
+  ],
+  land: [{ value: 'land', label: 'Land' }],
+} as const
+
+function createEmptyUnit(
+  propertyType: TCreatePropertySchema['property_type'],
+  name: string = ''
+): TCreatePropertyUnitSchema {
+  return {
+    name,
+    unit_type: defaultUnitTypeByProperty[propertyType],
+    rent_price: null,
+    sale_price: null,
+    bedrooms: null,
+    bathrooms: null,
+    square_feet: null,
+  }
+}
+
+function UnitsSection({
+  form,
+}: {
+  form: ReturnType<typeof useForm<TCreatePropertySchema>>
+}) {
+  const propertyType = useWatch({
+    control: form.control,
+    name: 'property_type',
+  })
+
+  const isMultiUnit = propertyType === 'multi_unit'
+
+  const { fields, append, remove, replace } = useFieldArray({
+    control: form.control,
+    name: 'units',
+  })
+
+  useEffect(() => {
+    const currentUnits = form.getValues('units') ?? []
+    const defaultUnitType = defaultUnitTypeByProperty[propertyType]
+
+    if (propertyType === 'multi_unit') {
+      if (currentUnits.length === 0) {
+        replace([createEmptyUnit(propertyType)])
+        return
+      }
+
+      const first = currentUnits[0]
+      if (first && first.unit_type === 'house') {
+        form.setValue('units.0.unit_type', defaultUnitType, {
+          shouldDirty: true,
+          shouldValidate: true,
+        })
+      }
+
+      return
+    }
+
+    const first =
+      currentUnits[0] ?? createEmptyUnit(propertyType, form.getValues('title'))
+
+    replace([
+      {
+        ...first,
+        unit_type: defaultUnitType,
+      },
+    ])
+  }, [form, propertyType, replace])
+
+  return (
+    <div className='space-y-6'>
+      <div>
+        <h3 className='text-lg font-semibold'>Units</h3>
+        <p className='text-sm text-muted-foreground'>
+          Add the unit data that belongs to this property.
+        </p>
+      </div>
+
+      <div className='space-y-4'>
+        {fields.map((field, index) => (
+          <Card key={field.id} className='border-dashed'>
+            <CardHeader className='pb-3'>
+              <div className='flex items-center justify-between gap-3'>
+                {isMultiUnit && (
+                  <div>
+                    <CardTitle className='text-base'>
+                      Unit {index + 1}
+                    </CardTitle>
+                  </div>
+                )}
+
+                {isMultiUnit && fields.length > 1 && (
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    onClick={() => remove(index)}
+                  >
+                    <Trash2 className='size-4' />
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+
+            <CardContent
+              className={cn(
+                'grid gap-4',
+                propertyType === 'single_unit'
+                  ? 'md:grid-cols-3'
+                  : 'md:grid-cols-4'
+              )}
+            >
+              {isMultiUnit && (
+                <FormField
+                  control={form.control}
+                  name={`units.${index}.name`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder='Main unit, Apt 2B...' />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <FormField
+                control={form.control}
+                name={`units.${index}.unit_type`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unit Type</FormLabel>
+                    <FormControl>
+                      <Select
+                        {...field}
+                        onValueChange={(v) => field.onChange(v)}
+                      >
+                        <SelectTrigger className='w-full capitalize'>
+                          <SelectValue placeholder='What will this unit be?' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {allowedUnitTypesByProperty[propertyType].map((u) => (
+                            <SelectItem
+                              key={u.value}
+                              value={u.value}
+                              className='capitalize'
+                            >
+                              {u.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {/* {isMultiUnit ? (
+                <FormField
+                  control={form.control}
+                  name={`units.${index}.unit_type`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit type</FormLabel>
+                      <Select
+                        {...field}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select type' />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {allowedUnitTypesByProperty.multi_unit.map(
+                            (option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null} */}
+
+              <FormField
+                control={form.control}
+                name={`units.${index}.rent_price`}
+                defaultValue={0}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rent price</FormLabel>
+                    <FormControl>
+                      <InputWithEndButtons
+                        {...field}
+                        value={field.value!}
+                        aria-label={field.name}
+                        aria-labelledby={field.name}
+                        // onChange={field.onChange}
+                        currency='BRL'
+                        autoFormat
+                        locale='pt-BR'
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name={`units.${index}.sale_price`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sale price (Optional)</FormLabel>
+                    <FormControl>
+                      <InputWithEndButtons
+                        {...field}
+                        value={field.value!}
+                        currency='BRL'
+                        autoFormat
+                        locale='pt-BR'
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div
+                className={cn(
+                  'grid grid-cols-3 gap-4',
+                  propertyType === 'single_unit' ? 'col-span-3' : 'col-span-4'
+                )}
+              >
+                <FormField
+                  control={form.control}
+                  name={`units.${index}.bedrooms`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rooms</FormLabel>
+                      <FormControl>
+                        <InputWithEndButtons
+                          {...field}
+                          value={field.value ?? 0}
+                          onChange={(value) =>
+                            field.onChange(value === 0 ? null : value)
+                          }
+                          step={1}
+                          locale='pt-BR'
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name={`units.${index}.bathrooms`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bathrooms</FormLabel>
+                      <FormControl>
+                        <InputWithEndButtons
+                          {...field}
+                          value={field.value ?? 0}
+                          onChange={(value) =>
+                            field.onChange(value === 0 ? null : value)
+                          }
+                          step={1}
+                          locale='pt-BR'
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name={`units.${index}.square_feet`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Square feet</FormLabel>
+                      <FormControl>
+                        <InputWithEndButtons
+                          {...field}
+                          value={field.value ?? 0}
+                          onChange={(value) =>
+                            field.onChange(value === 0 ? null : value)
+                          }
+                          locale='pt-BR'
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {isMultiUnit && (
+        <Button
+          type='button'
+          variant='outline'
+          onClick={() => append(createEmptyUnit('multi_unit'))}
+        >
+          <Plus className='mr-2 size-4' />
+          Add unit
+        </Button>
+      )}
+    </div>
+  )
+}
 
 const CreateProperty = () => {
   const navigate = route.useNavigate()
   const queryClient = useQueryClient()
   const { mutate, isPending } = useCreateProperty()
 
-  const [step, setStep] = useState(0)
-
   const form = useForm<TCreatePropertySchema>({
     resolver: zodResolver(
       createPropertySchema
     ) as Resolver<TCreatePropertySchema>,
-    mode: 'onTouched',
+    mode: 'onBlur',
     defaultValues: {
       title: '',
       description: '',
@@ -45,119 +415,21 @@ const CreateProperty = () => {
       state: '',
       postal_code: '',
       country: 'BR',
-      property_type: 'house',
-      is_available: true,
-      is_furnished: false,
-      is_pet_friendly: false,
-      rent_price: null,
-      sale_price: null,
-      buy_price: null,
-      bedrooms: null,
-      bathrooms: null,
-      square_feet: null,
-      amenities: [],
-      sale_types: [],
-      available_from: undefined,
+      property_type: 'single_unit',
+      slug: '',
+      units: [createEmptyUnit('single_unit')],
     },
   })
 
-  const propertyType = form.watch('property_type')
-  const isHouse = propertyType === 'house'
-  const isApartment = propertyType === 'apartment'
-  const isLand = propertyType === 'land'
-  const isAvailable = form.watch('is_available')
-
-  // Determine total steps based on property type
-  const totalSteps = isApartment ? 4 : 3
-
-  // Step field validation mapping
-  const stepFields: Record<number, (keyof TCreatePropertySchema)[]> = {
-    0: [
-      'property_type',
-      'title',
-      'description',
-      'country',
-      'postal_code',
-      'state',
-      'city',
-      'address',
-    ],
-    1: isHouse
-      ? ['rent_price', 'sale_price', 'buy_price']
-      : ['sale_price', 'buy_price'],
-    2:
-      isApartment || isLand
-        ? [
-            'square_feet',
-            'is_furnished',
-            'is_pet_friendly',
-            'available_from',
-            'amenities',
-            'sale_types',
-          ]
-        : [
-            'square_feet',
-            'bedrooms',
-            'bathrooms',
-            'is_furnished',
-            'is_pet_friendly',
-            'available_from',
-            'amenities',
-            'sale_types',
-          ],
-    3: [],
-  }
+  const propertyTitle = form.watch('title')
 
   useEffect(() => {
-    if (!isHouse) {
-      form.setValue('rent_price', null, {
-        shouldDirty: true,
-        shouldValidate: false,
-      })
-      form.clearErrors('rent_price')
+    const type = form.getValues('property_type')
+
+    if (type !== 'multi_unit') {
+      form.setValue('units.0.name', propertyTitle)
     }
-  }, [isHouse, form])
-
-  useEffect(() => {
-    if (isApartment || isLand) {
-      form.setValue('bedrooms', null, {
-        shouldDirty: true,
-        shouldValidate: false,
-      })
-      form.setValue('bathrooms', null, {
-        shouldDirty: true,
-        shouldValidate: false,
-      })
-      form.clearErrors(['bedrooms', 'bathrooms'])
-    }
-  }, [isApartment, isLand, form])
-
-  // Reset available_from when is_available changes
-  useEffect(() => {
-    if (!isAvailable) {
-      form.setValue('available_from', undefined, {
-        shouldDirty: true,
-        shouldValidate: false,
-      })
-      form.clearErrors('available_from')
-    }
-  }, [isAvailable, form])
-
-  const validateStep = async () => {
-    const fields = stepFields[step] as (keyof TCreatePropertySchema)[]
-    return await form.trigger(fields, { shouldFocus: true })
-  }
-
-  const next = async () => {
-    const valid = await validateStep()
-    if (valid && step < totalSteps - 1) {
-      setStep((s) => s + 1)
-    }
-  }
-
-  const prev = () => {
-    setStep((current) => Math.max(current - 1, 0))
-  }
+  }, [form, propertyTitle])
 
   const onSubmit = async (data: TCreatePropertySchema) => {
     mutate(data, {
@@ -169,14 +441,6 @@ const CreateProperty = () => {
         })
       },
     })
-  }
-
-  const getStepLabel = (): string => {
-    if (step === 0) return 'General information'
-    if (step === 1) return 'Pricing'
-    if (step === 2) return 'Features & characteristics'
-    if (step === 3) return 'Building units'
-    return ''
   }
 
   return (
@@ -193,241 +457,48 @@ const CreateProperty = () => {
         </Button>
       </div>
 
-      <div className='w-full'>
-        <div className='grid grid-cols-1 gap-6 lg:grid-cols-12'>
-          {/* Main Form */}
-          <div className='lg:col-span-8'>
-            <Card className='h-full'>
-              <CardHeader className='pb-4'>
-                <div className='space-y-4'>
-                  <div>
-                    <CardTitle className='text-2xl'>
-                      Create new property
-                    </CardTitle>
-                    <CardDescription className='mt-1'>
-                      {step === 0 &&
-                        'Start by describing your property and its location.'}
-                      {step === 1 &&
-                        'Set the pricing for your property based on its type.'}
-                      {step === 2 &&
-                        'Add features and details about your property.'}
-                      {step === 3 && 'Manage the units in your building.'}
-                    </CardDescription>
-                  </div>
+      <div className='flex items-center'>
+        <div className='lg:col-span-8'>
+          <Card>
+            <CardHeader>
+              <CardTitle>Create new property</CardTitle>
+              <CardDescription>
+                Property is now only structural. Units handle everything else.
+              </CardDescription>
+            </CardHeader>
 
-                  {/* Progress Bar */}
-                  <div className='space-y-2'>
-                    <div className='flex items-center justify-between text-xs font-medium text-muted-foreground'>
-                      <span className='tracking-wide uppercase'>
-                        {getStepLabel()}
-                      </span>
-                      <span>
-                        {step + 1} / {totalSteps}
-                      </span>
-                    </div>
-                    <div className='flex gap-1.5'>
-                      {Array.from({ length: totalSteps }).map((_, index) => (
-                        <div
-                          key={index}
-                          className={cn(
-                            'h-1.5 flex-1 rounded-full transition-all duration-300',
-                            index <= step ? 'bg-primary' : 'bg-muted'
-                          )}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
+            <CardContent className='space-y-6'>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className='space-y-6'
+                >
+                  <GeneralStep form={form} />
 
-                <Separator className='mt-4' />
-              </CardHeader>
+                  <Separator />
 
-              <CardContent className='pb-6'>
-                <Form {...form}>
-                  <form className='space-y-8'>
-                    {/* Step 0: General */}
-                    {step === 0 && <GeneralStep form={form} />}
+                  <UnitsSection form={form} />
 
-                    {/* Step 1: Pricing */}
-                    {step === 1 && (
-                      <PricingStep
-                        form={form}
-                        isHouse={isHouse}
-                        isApartment={isApartment}
-                        isLand={isLand}
-                      />
-                    )}
-
-                    {/* Step 2: Features */}
-                    {step === 2 && (
-                      <FeaturesStep
-                        form={form}
-                        isApartment={isApartment}
-                        isLand={isLand}
-                        isAvailable={isAvailable}
-                      />
-                    )}
-
-                    {/* Step 3: Apartments (only for apartments) */}
-                    {step === 3 && isApartment && (
-                      <ApartmentsStep form={form} />
-                    )}
-                  </form>
-                </Form>
-              </CardContent>
-
-              <div className='border-t bg-muted/30 px-6 py-4'>
-                <div className='flex flex-col-reverse gap-3 sm:flex-row sm:justify-between'>
-                  {step > 0 ? (
+                  <div className='flex justify-end gap-2'>
                     <Button
                       type='button'
-                      variant='outline'
-                      onClick={prev}
-                      className='w-full sm:w-auto'
+                      variant='ghost'
+                      onClick={() => navigate({ to: '/properties' })}
                     >
-                      <ChevronLeft className='mr-2 size-4' />
-                      Back
+                      Cancel
                     </Button>
-                  ) : (
-                    <div className='hidden sm:block' />
-                  )}
 
-                  <div className='flex w-full flex-col gap-3 sm:w-auto sm:flex-row'>
-                    {step < totalSteps - 1 ? (
-                      <Button
-                        type='button'
-                        onClick={next}
-                        className='w-full sm:w-auto'
-                      >
-                        Next
-                        <ChevronRight className='ml-2 size-4' />
-                      </Button>
-                    ) : (
-                      <Button
-                        type='button'
-                        disabled={isPending}
-                        className='w-full sm:w-auto'
-                        onClick={form.handleSubmit(onSubmit)}
-                      >
-                        {isPending && (
-                          <Loader2 className='mr-2 size-4 animate-spin' />
-                        )}
-                        Create property
-                      </Button>
-                    )}
+                    <Button type='submit' disabled={isPending}>
+                      {isPending && (
+                        <Loader2 className='mr-2 size-4 animate-spin' />
+                      )}
+                      Create property
+                    </Button>
                   </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Sidebar Info */}
-          <div className='hidden space-y-4 lg:col-span-4 lg:flex lg:flex-col'>
-            {/* Step Summary */}
-            <Card className='bg-gradient-to-br from-primary/5 to-primary/10 p-4'>
-              <div className='space-y-3'>
-                <h3 className='font-semibold'>Step Summary</h3>
-                <div className='space-y-2 text-sm'>
-                  {step === 0 && (
-                    <>
-                      <p className='text-muted-foreground'>
-                        Tell us about your property basics:
-                      </p>
-                      <ul className='space-y-1 pl-4'>
-                        <li className='list-disc text-xs'>
-                          Property type (House, Apartment, Land)
-                        </li>
-                        <li className='list-disc text-xs'>
-                          Title and description
-                        </li>
-                        <li className='list-disc text-xs'>Location details</li>
-                      </ul>
-                    </>
-                  )}
-                  {step === 1 && (
-                    <>
-                      <p className='text-muted-foreground'>
-                        Set pricing for your property:
-                      </p>
-                      <ul className='space-y-1 pl-4'>
-                        <li className='list-disc text-xs'>
-                          Rent pricing (houses only)
-                        </li>
-                        <li className='list-disc text-xs'>Sale pricing</li>
-                        <li className='list-disc text-xs'>Purchase pricing</li>
-                      </ul>
-                    </>
-                  )}
-                  {step === 2 && (
-                    <>
-                      <p className='text-muted-foreground'>
-                        Add property features:
-                      </p>
-                      <ul className='space-y-1 pl-4'>
-                        <li className='list-disc text-xs'>Size and layout</li>
-                        <li className='list-disc text-xs'>Amenities</li>
-                        <li className='list-disc text-xs'>Availability</li>
-                      </ul>
-                    </>
-                  )}
-                  {step === 3 && (
-                    <>
-                      <p className='text-muted-foreground'>
-                        Manage building units:
-                      </p>
-                      <ul className='space-y-1 pl-4'>
-                        <li className='list-disc text-xs'>
-                          Individual unit details
-                        </li>
-                        <li className='list-disc text-xs'>
-                          Unit-specific pricing
-                        </li>
-                      </ul>
-                    </>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            {/* Tips Card */}
-            <Card className='p-4'>
-              <div className='space-y-3'>
-                <h3 className='text-sm font-semibold'>💡 Tips</h3>
-                <ul className='space-y-2 text-xs text-muted-foreground'>
-                  <li>
-                    • Fill in all required fields before moving to the next step
-                  </li>
-                  <li>• You can edit your property details after creation</li>
-                  <li>
-                    • Adding clear descriptions helps attract potential tenants
-                  </li>
-                  <li>
-                    • Use the postal code lookup for quick location filling
-                  </li>
-                </ul>
-              </div>
-            </Card>
-
-            {/* Progress Details */}
-            <Card className='border-dashed p-4'>
-              <div className='space-y-3 text-xs'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>Progress</span>
-                  <span className='font-semibold'>
-                    {Math.round((step / totalSteps) * 100)}%
-                  </span>
-                </div>
-                <div className='h-2 w-full overflow-hidden rounded-full bg-muted'>
-                  <div
-                    className={cn(
-                      'h-full rounded-full bg-primary transition-all duration-300',
-                      `w-[${(step / totalSteps) * 100}%]`
-                    )}
-                  />
-                </div>
-              </div>
-            </Card>
-          </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </Main>

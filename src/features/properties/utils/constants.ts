@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Building2, Home, Layers3, List, type LucideIcon } from 'lucide-react'
+import { cleanSnakecase } from '@/lib/utils'
 import type {
-  PropertyOccupancy,
-  PropertyStatus,
+  // PropertyOccupancy,
+  // PropertyStatus,
   TPropertyTypeFilter,
 } from '../types'
 
@@ -18,13 +20,13 @@ export const propertyTypes: {
     icon: List,
   },
   {
-    value: 'house',
+    value: 'single_unit',
     label: 'House',
     description: 'Standalone property with rooms and full pricing options.',
     icon: Home,
   },
   {
-    value: 'apartment',
+    value: 'multi_unit',
     label: 'Apartment',
     description: 'Room details live in units, not on the parent property.',
     icon: Building2,
@@ -37,9 +39,18 @@ export const propertyTypes: {
   },
 ]
 
+export const getPropertyTypes = () => {
+  return Object.entries(PROPERTY_TYPES).map(([_, key]) => {
+    return {
+      label: cleanSnakecase(key),
+      value: key,
+    }
+  })
+}
+
 export const statusOptions: {
   label: string
-  value: PropertyStatus
+  value: any
   icon?: React.ComponentType<{ className?: string }>
 }[] = [
   { label: 'Vacant', value: 'vacant' },
@@ -49,7 +60,7 @@ export const statusOptions: {
 
 export const occupancyOptions: {
   label: string
-  value: PropertyOccupancy
+  value: any
   icon?: React.ComponentType<{ className?: string }>
 }[] = [
   { label: 'Low occupancy', value: 'low' },
@@ -57,21 +68,9 @@ export const occupancyOptions: {
   { label: 'High occupancy', value: 'high' },
 ]
 
-export const UNIT_TYPES = {
-  STUDIO: 'studio',
-  ONE_BEDROOM: 'one_bedroom',
-  TWO_BEDROOM: 'two_bedroom',
-  THREE_BEDROOM: 'three_bedroom',
-  PENTHOUSE: 'penthouse',
-  OFFICE: 'office',
-  RETAIL: 'retail',
-  WAREHOUSE: 'warehouse',
-  OTHER: 'other',
-} as const
-
 export const PROPERTY_TYPES = {
-  HOUSE: 'house',
-  APARTMENT: 'apartment',
+  SINGLE_UNIT: 'single_unit',
+  MULTI_UNIT: 'multi_unit',
   LAND: 'land',
 } as const
 

@@ -57,7 +57,7 @@ const propertyGlobalFilterFn: FilterFn<IProperty> = (
   const title = String(row.original.title ?? '').toLowerCase()
   const address = String(row.original.address ?? '').toLowerCase()
   const propertyType = String(row.original.property_type ?? '').toLowerCase()
-  const status = row.original.is_available ? 'vacant' : 'occupied'
+  // const status = row.original.is_available ? 'vacant' : 'occupied'
 
   return [title, address, propertyType, status].some((value) =>
     value.includes(query)

@@ -1,4 +1,10 @@
-import { type QueryClient, useMutation, useQuery } from '@tanstack/react-query'
+// properties/query.ts
+import {
+  type QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import {
   handleDelete,
   handleGet,
@@ -13,15 +19,17 @@ import type {
   TCreatePropertySchema,
   TUpdateVariables,
 } from '../types'
+import {
+  getPropertyCache,
+  PROPERTIES_ENDPOINT,
+  propertiesKey,
+  propertyKey,
+} from './cache'
 
-const PROPERTIES_ENDPOINT = '/properties'
-const propertiesKey = [PROPERTIES_ENDPOINT] as const
-const propertyKey = (value: string, type: 'slug' | 'id' = 'slug') =>
-  [PROPERTIES_ENDPOINT, type, value] as const
+// --- data fetchers --- //
 
 async function handleGetProperties(): Promise<IProperty[]> {
   const result = await handleGet<IPropertyResponse>(PROPERTIES_ENDPOINT)
-
   return result.data
 }
 
@@ -32,12 +40,13 @@ async function handleGetPropertyBySlug(slug: string): Promise<IProperty> {
   return result.data
 }
 
-async function handleCreateProperty(payload: TCreatePropertySchema) {
+async function handleCreateProperty(
+  payload: TCreatePropertySchema
+): Promise<IProperty> {
   const result = await handlePost<IResponse<IProperty>, TCreatePropertySchema>(
     PROPERTIES_ENDPOINT,
     payload
   )
-
   return result.data
 }
 
@@ -49,15 +58,12 @@ async function handleUpdateProperty(
     `${PROPERTIES_ENDPOINT}/${property.id}`,
     payload
   )
-
   return result.data
 }
 
-async function handleDeleteProperty(propertyId: number) {
-  return await handleDelete<unknown>(`${PROPERTIES_ENDPOINT}/${propertyId}`)
+async function handleDeleteProperty(propertyId: number): Promise<void> {
+  await handleDelete<unknown>(`${PROPERTIES_ENDPOINT}/${propertyId}`)
 }
-
-// hooks
 
 export function useGetProperties() {
   return useQuery<IProperty[]>({
@@ -68,7 +74,7 @@ export function useGetProperties() {
 
 export function useGetPropertyBySlug(slug: string) {
   return useQuery<IProperty>({
-    queryKey: propertyKey(slug),
+    queryKey: propertyKey(slug, 'slug'),
     queryFn: () => handleGetPropertyBySlug(slug),
   })
 }
@@ -82,81 +88,75 @@ export function useCreateProperty() {
   })
 }
 
-export function useUpdateProperty(queryClient?: QueryClient) {
+export function useUpdateProperty(queryClient: QueryClient, slug: string) {
+  const { snapshot, restore, patch } = getPropertyCache(slug)
+
   return useMutation({
     mutationKey: [PROPERTIES_ENDPOINT, 'update'],
     mutationFn: ({ property, payload }: TUpdateVariables) =>
       handleUpdateProperty(property, payload),
 
     onMutate: async ({ property, payload }) => {
-      if (!queryClient) return {}
+      await queryClient.cancelQueries({ queryKey: propertiesKey })
+      await queryClient.cancelQueries({ queryKey: propertyKey(slug, 'slug') })
 
-      const oldKey = propertyKey(property.slug)
+      const previous = snapshot(queryClient)
 
-      await Promise.all([
-        queryClient.cancelQueries({ queryKey: propertiesKey }),
-        queryClient.cancelQueries({ queryKey: oldKey }),
-      ])
+      patch(queryClient, property, (p) => ({
+        ...p,
+        ...payload,
+        slug,
+      }))
 
-      const previousProperties =
-        queryClient.getQueryData<IProperty[]>(propertiesKey)
-      const previousProperty = queryClient.getQueryData<IProperty>(oldKey)
-
-      const optimisticProperty = { ...property, ...payload }
-
-      queryClient.setQueryData<IProperty[]>(propertiesKey, (current) =>
-        (current as IProperty[] | undefined)?.map((item) =>
-          item.id === property.id
-            ? ({ ...item, ...payload } as IProperty)
-            : item
-        )
-      )
-
-      queryClient.setQueryData(oldKey, optimisticProperty)
-
-      return { previousProperties, previousProperty }
+      return { previous }
     },
-
-    onError: (_error, { property }, context) => {
-      if (!queryClient) return
-
-      const oldKey = propertyKey(property.slug)
-
-      queryClient.setQueryData(propertiesKey, context?.previousProperties)
-      queryClient.setQueryData(oldKey, context?.previousProperty)
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        restore(queryClient, context.previous)
+      }
     },
-
     onSuccess: async (result, { property }) => {
-      if (!queryClient) return
-
-      const oldKey = propertyKey(property.slug)
-      const newKey = propertyKey(result.slug)
-
-      queryClient.setQueryData<IProperty[]>(propertiesKey, (current) =>
-        (current as IProperty[] | undefined)?.map((item) =>
-          item.id === result.id ? result : item
-        )
-      )
-
-      queryClient.setQueryData(newKey, result)
-
-      if (result.slug !== property.slug) {
-        queryClient.removeQueries({ queryKey: oldKey, exact: true })
+      // handled through page navigation
+      if (result.title !== property.title) {
+        return
       }
 
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: propertiesKey }),
-        queryClient.invalidateQueries({ queryKey: newKey }),
-      ])
+      await queryClient.invalidateQueries({ queryKey: propertiesKey })
     },
   })
 }
 
-export function useDeleteProperty(id: number) {
+export function useDeleteProperty(property: IProperty) {
+  const queryClient = useQueryClient()
+  const id = property.id
+  const { snapshot, restore, remove } = getPropertyCache(id.toString())
+
   return useMutation({
-    mutationKey: propertyKey(id.toString(), 'id'),
+    mutationKey: [...propertyKey(property.slug, 'slug'), 'delete'],
     mutationFn: async () => {
       return await handleDeleteProperty(id)
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: propertiesKey })
+      await queryClient.cancelQueries({
+        queryKey: propertyKey(property.slug, 'slug'),
+      })
+      const previous = snapshot(queryClient)
+
+      const listData = queryClient.getQueryData(propertiesKey)
+      const list = listData ? (listData as IProperty[]) : []
+
+      const itemToDelete = list.find((p) => p.id === id)
+      if (itemToDelete) {
+        remove(queryClient, itemToDelete)
+      }
+
+      return { previous }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        restore(queryClient, context.previous)
+      }
     },
   })
 }
@@ -170,6 +170,6 @@ export async function invalidatePropertyBySlug(
   slug: string = ''
 ) {
   await queryClient.invalidateQueries({
-    queryKey: [`${PROPERTIES_ENDPOINT}/slug/${slug}`],
+    queryKey: propertyKey(slug, 'slug'),
   })
 }

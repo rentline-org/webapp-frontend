@@ -21,16 +21,9 @@ interface GeneralStepProps {
 
 export const GeneralStep = ({ form }: GeneralStepProps) => {
   return (
-    <div className='space-y-8'>
+    <div className='space-y-6'>
       {/* Property Type Selection */}
       <div className='space-y-4'>
-        <div>
-          <h3 className='text-lg font-semibold'>Property type</h3>
-          <p className='text-sm text-muted-foreground'>
-            Choose the type that best describes this property.
-          </p>
-        </div>
-
         <FormField
           control={form.control}
           name='property_type'
@@ -146,7 +139,11 @@ export const GeneralStep = ({ form }: GeneralStepProps) => {
               <FormItem>
                 <FormLabel>Country</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder='Country' />
+                  <Input
+                    {...field}
+                    value={field.value ?? 'BR'}
+                    placeholder='Country'
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

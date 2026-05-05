@@ -49,8 +49,9 @@ const InputWithEndButtons = ({
     return numberFormatter.format(value)
   }
 
-  // Auto-formatting: maintain an internal digits buffer (cents) when enabled.
+  // Auto-formatting: keep internal `rawDigits` only for display.
   const { autoFormat } = props as CurrencyInputProps
+  // Convert incoming controlled value to raw digits (cents) for display.
   const [rawDigits, setRawDigits] = useState<string>(() => {
     const v =
       typeof props.value === 'number' ? props.value : Number(props.value ?? NaN)
@@ -64,7 +65,7 @@ const InputWithEndButtons = ({
     rawRef.current = rawDigits
   }, [rawDigits])
 
-  // sync if controlled value changes externally
+  // Sync rawDigits if controlled value changes externally (e.g., RHF reset, defaultValues).
   useEffect(() => {
     const v =
       typeof props.value === 'number' ? props.value : Number(props.value ?? NaN)
@@ -75,7 +76,7 @@ const InputWithEndButtons = ({
     const cents = Math.round(v * Math.pow(10, fractionDigits))
     const s = cents > 0 ? String(cents) : ''
     if (s !== rawRef.current) setRawDigits(s)
-  }, [props.value, fractionDigits])
+  }, [props.value, fractionDigits]) // note: `props.value` is controlled
 
   const applyDigits = (digits: string) => {
     rawRef.current = digits
@@ -91,7 +92,6 @@ const InputWithEndButtons = ({
     if (/^[0-9]$/.test(key)) {
       e.preventDefault()
       const newDigits = (rawRef.current || '') + key
-
       applyDigits(newDigits)
       return
     }
@@ -106,7 +106,7 @@ const InputWithEndButtons = ({
       applyDigits('')
       return
     }
-    // allow navigation and control keys
+    // Allow other keys (navigation, etc.).
   }
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -124,12 +124,19 @@ const InputWithEndButtons = ({
 
   return (
     <NumberField
+      {...props}
       defaultValue={0}
+      name={props.name}
       minValue={0}
+      aria-label={props.name}
       step={step}
+      validationBehavior='native'
+      validate={() => null}
+      isInvalid={false}
       className='w-full space-y-2'
       value={props.value}
       onChange={props.onChange}
+      // pass down all NumberFieldProps (e.g., `isRequired`, `validationBehavior`, etc.)
     >
       <Group className='relative inline-flex h-9 w-full min-w-0 items-center overflow-hidden rounded-md border border-input bg-transparent text-base whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50 data-focus-within:border-ring data-focus-within:ring-[3px] data-focus-within:ring-ring/50 data-focus-within:has-aria-invalid:border-destructive data-focus-within:has-aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:data-focus-within:has-aria-invalid:ring-destructive/40'>
         {currencyCode && (
@@ -149,22 +156,8 @@ const InputWithEndButtons = ({
           className='w-full grow px-3 py-1 text-left tabular-nums outline-none selection:bg-primary selection:text-primary-foreground'
           aria-label={props.name ?? props['aria-label']}
           inputMode={fractionDigits > 0 ? 'decimal' : 'numeric'}
-          pattern={fractionDigits > 0 ? '[0-9.,]*' : '[0-9]*'}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          onBlur={props.onBlur}
-          onChange={() => {}}
-          value={
-            autoFormat
-              ? rawDigits === ''
-                ? numberFormatter.format(0)
-                : numberFormatter.format(
-                    parseInt(rawDigits, 10) / Math.pow(10, fractionDigits)
-                  )
-              : formatter
-                ? formatValue(props.value as number | undefined)
-                : (props.value ?? '').toString()
-          }
           placeholder={formatter ? formatValue(0) : undefined}
         />
         <Button

@@ -97,3 +97,7 @@ export function ReverseMapping<
 
   return reversed
 }
+
+export function cleanSnakecase(key: string) {
+  return key.split('_').join(' ').toLowerCase()
+}

@@ -1,7 +1,8 @@
 import { Badge } from '@/components/ui/badge'
 import EditableItem from '../../../components/editable-item'
+// import type { IUnitData } from '../../properties/types'
+import { currency } from '../../properties/utils'
 import type { IUnitData } from '../types'
-import { currency } from '../utils'
 
 function UnitRow({ unit }: { unit: IUnitData }) {
   return (

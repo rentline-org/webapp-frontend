@@ -1,13 +1,15 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { ChevronLeft, ImageIcon } from 'lucide-react'
+import { cleanSnakecase } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import InlineText from '@/components/inline-text'
+import { useSingleUnit } from '../hooks/use-single-unit'
 import { useUpdateProperty } from '../query'
 import type { IProperty } from '../types'
-import { statusBadgeVariant, typeBadgeVariant } from '../utils'
+import { typeBadgeVariant } from '../utils'
 import DetailsActionsMenu from './details-actions-menu'
 
 type TDetailsHeaderProps = {
@@ -18,7 +20,8 @@ const routeApi = getRouteApi('/_authenticated/properties/$propertySlug')
 
 const DetailsHeader = ({ property }: TDetailsHeaderProps) => {
   const queryClient = useQueryClient()
-  const { mutate } = useUpdateProperty(queryClient)
+  const { mutate } = useUpdateProperty(queryClient, property.slug)
+  const { isSingleUnit, unit, isReady } = useSingleUnit(property)
 
   const navigate = routeApi.useNavigate()
   const handleBackRouting = () => {
@@ -84,7 +87,7 @@ const DetailsHeader = ({ property }: TDetailsHeaderProps) => {
                   multiline
                   className='w-full'
                   textClassName='w-full text-sm text-muted-foreground'
-                  inputClassName='w-full text-sm leading-6'
+                  inputClassName='w-full md:min-w-60 text-sm leading-6'
                   placeholder='Add a description'
                   onSubmit={(value) => {
                     mutate({
@@ -99,25 +102,28 @@ const DetailsHeader = ({ property }: TDetailsHeaderProps) => {
             <div className='flex flex-wrap items-center gap-2'>
               <Badge
                 variant={typeBadgeVariant(property.property_type)}
-                className='rounded-full capitalize'
+                className='capitalize'
               >
-                {property.property_type}
+                {cleanSnakecase(property.property_type)}
               </Badge>
 
-              <Badge
-                variant={statusBadgeVariant(property.is_available)}
-                className='rounded-full'
-              >
-                {property.is_available ? 'Vacant' : 'Occupied'}
-              </Badge>
+              {isSingleUnit && isReady && (
+                <>
+                  {/* <Badge
+                    variant={statusBadgeVariant(unit!.is_available ?? true)}
+                  >
+                    {unit?.is_available ? 'Vacant' : 'Occupied'}
+                  </Badge> */}
 
-              <Badge variant='outline' className='rounded-full'>
-                {property.is_furnished ? 'Furnished' : 'Unfurnished'}
-              </Badge>
+                  <Badge variant='outline'>
+                    {unit?.is_furnished ? 'Furnished' : 'Unfurnished'}
+                  </Badge>
 
-              <Badge variant='outline' className='rounded-full'>
-                {property.is_pet_friendly ? 'Pet friendly' : 'No pets'}
-              </Badge>
+                  <Badge variant='outline'>
+                    {unit?.is_pet_friendly ? 'Pet friendly' : 'No pets'}
+                  </Badge>
+                </>
+              )}
             </div>
           </div>
         </div>

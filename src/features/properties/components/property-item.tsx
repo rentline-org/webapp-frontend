@@ -1,5 +1,5 @@
+import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
-import type { VariantProps } from 'class-variance-authority'
 import {
   Building2,
   Image as ImageIcon,
@@ -7,40 +7,37 @@ import {
   House,
   Layers3,
 } from 'lucide-react'
-import { Badge, type badgeVariants } from '@/components/ui/badge'
+import { cleanSnakecase } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import type { IProperty } from '../types'
-import { currency, statusStyles } from '../utils'
+import { currency } from '../utils'
 
 type PropertyCardProps = {
   property: IProperty
 }
 
 const PropertyItem = ({ property }: PropertyCardProps) => {
-  const isApartment = property.property_type === 'apartment'
+  const isApartment = property.property_type === 'multi_unit'
 
-  const typeLabel =
-    property.property_type === 'house'
-      ? 'House'
-      : property.property_type === 'apartment'
-        ? 'Apartment'
-        : 'Land'
+  const unitData = useMemo(() => {
+    if (property.property_type === 'single_unit') {
+      return property.units?.[0]
+    }
 
-  const typeVariant: VariantProps<typeof badgeVariants>['variant'] =
-    property.property_type === 'house'
-      ? 'info'
-      : property.property_type === 'apartment'
-        ? 'success'
-        : 'outline'
+    return null
+  }, [property.property_type, property.units])
 
   const typeIcon =
-    property.property_type === 'house' ? (
+    property.property_type === 'single_unit' ? (
       <House className='size-3.5' />
-    ) : property.property_type === 'apartment' ? (
+    ) : property.property_type === 'multi_unit' ? (
       <Building2 className='size-3.5' />
     ) : (
       <Landmark className='size-3.5' />
     )
+
+  // const typeLa
 
   return (
     <Link
@@ -82,8 +79,8 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
                 </div>
 
                 <div className='flex flex-wrap gap-2'>
-                  <Badge variant={typeVariant}>
-                    {typeIcon} {typeLabel}
+                  <Badge variant='default'>
+                    {typeIcon} {cleanSnakecase(property.property_type)}
                   </Badge>
 
                   {isApartment && (
@@ -92,36 +89,32 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
                       {property.units_count} units
                     </Badge>
                   )}
-
-                  <Badge
-                    variant={statusStyles(
-                      property.is_available ? 'vacant' : 'occupied'
-                    )}
-                  >
-                    {property.is_available ? 'Vacant' : 'Occupied'}
-                  </Badge>
                 </div>
               </div>
 
-              <div className='grid gap-3 sm:grid-cols-2'>
-                <div className='p-3'>
-                  <p className='text-xs text-muted-foreground'>Monthly rent</p>
-                  <p className='mt-1 text-base font-semibold'>
-                    {property.rent_price
-                      ? `${currency(property.rent_price, 'pt-BR', 'BRL')}`
-                      : '—'}
-                  </p>
-                </div>
+              {unitData && (
+                <div className='grid gap-3 sm:grid-cols-2'>
+                  <div className='p-3'>
+                    <p className='text-xs text-muted-foreground'>
+                      Monthly rent
+                    </p>
+                    <p className='mt-1 text-base font-semibold'>
+                      {unitData.rent_price
+                        ? `${currency(unitData.rent_price, 'pt-BR', 'BRL')}`
+                        : '—'}
+                    </p>
+                  </div>
 
-                <div className='p-3'>
-                  <p className='text-xs text-muted-foreground'>Sale price</p>
-                  <p className='mt-1 text-base font-semibold'>
-                    {property.sale_price
-                      ? currency(property.sale_price, 'pt-BR', 'BRL')
-                      : '—'}
-                  </p>
+                  {/* <div className='p-3'>
+                    <p className='text-xs text-muted-foreground'>Sale price</p>
+                    <p className='mt-1 text-base font-semibold'>
+                      {unitData.sale_price
+                        ? currency(unitData.sale_price, 'pt-BR', 'BRL')
+                        : '—'}
+                    </p>
+                  </div> */}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </CardContent>

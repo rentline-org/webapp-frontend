@@ -3,13 +3,12 @@ import { type VariantProps } from 'class-variance-authority'
 import {
   BadgeDollarSign,
   Building2,
-  CircleCheck,
   CircleDashed,
   House,
   Image as ImageIcon,
   Layers3,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cleanSnakecase, cn } from '@/lib/utils'
 import { Badge, type badgeVariants } from '@/components/ui/badge'
 // import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -125,21 +124,21 @@ export const propertiesColumns: ColumnDef<IProperty>[] = [
         TPropertyType,
         VariantProps<typeof badgeVariants>['variant']
       > = {
-        house: 'info',
-        apartment: 'success',
+        single_unit: 'info',
+        multi_unit: 'success',
         land: 'outline',
       }
 
       const icons: Record<TPropertyType, React.ReactNode> = {
-        house: <House className='mr-1 size-3.5' />,
-        apartment: <Building2 className='mr-1 size-3.5' />,
+        single_unit: <House className='mr-1 size-3.5' />,
+        multi_unit: <Building2 className='mr-1 size-3.5' />,
         land: <Layers3 className='mr-1 size-3.5' />,
       }
 
       return (
         <Badge variant={variants[property_type]} className='capitalize'>
           {icons[property_type]}
-          {property_type}
+          {cleanSnakecase(property_type)}
         </Badge>
       )
     },
@@ -161,7 +160,7 @@ export const propertiesColumns: ColumnDef<IProperty>[] = [
     cell: ({ row }) => {
       const { units_count, property_type } = row.original
 
-      if (property_type !== 'apartment') {
+      if (property_type !== 'multi_unit') {
         return (
           <Badge variant='warning' className='rounded-full'>
             N/A
@@ -190,15 +189,15 @@ export const propertiesColumns: ColumnDef<IProperty>[] = [
       </span>
     ),
     cell: ({ row }) => {
-      const { rent_price } = row.original
+      const data = row.original.units?.[0]
 
-      if (!rent_price) {
+      if (!data?.rent_price) {
         return <span className='text-muted-foreground'>—</span>
       }
 
       return (
         <span className='font-medium'>
-          {currency(rent_price, 'pt-BR', 'BRL')}
+          {currency(data!.rent_price, 'pt-BR', 'BRL')}
         </span>
       )
     },
@@ -208,59 +207,59 @@ export const propertiesColumns: ColumnDef<IProperty>[] = [
     },
     enableSorting: true,
   },
-  {
-    accessorKey: 'sale_price',
-    header: () => (
-      <span className='inline-flex items-center gap-2'>
-        <BadgeDollarSign className='size-3.5' />
-        Sale
-      </span>
-    ),
-    cell: ({ row }) => {
-      const { sale_price } = row.original
+  // {
+  //   accessorKey: 'sale_price',
+  //   header: () => (
+  //     <span className='inline-flex items-center gap-2'>
+  //       <BadgeDollarSign className='size-3.5' />
+  //       Sale
+  //     </span>
+  //   ),
+  //   cell: ({ row }) => {
+  //     const { sale_price } = row.original
 
-      if (!sale_price) {
-        return <span className='text-muted-foreground'>—</span>
-      }
+  //     if (!sale_price) {
+  //       return <span className='text-muted-foreground'>—</span>
+  //     }
 
-      return (
-        <span className='font-medium'>
-          {currency(sale_price, 'pt-BR', 'BRL')}
-        </span>
-      )
-    },
-    meta: {
-      className: 'w-36',
-      thClassName: 'w-36',
-    },
-    enableSorting: true,
-  },
-  {
-    id: 'status',
-    accessorFn: (row) => (row.is_available ? 'vacant' : 'occupied'),
-    header: () => (
-      <span className='inline-flex items-center gap-2'>
-        <CircleCheck className='size-3.5' />
-        Status
-      </span>
-    ),
-    cell: ({ row }) => {
-      const { is_available } = row.original
-      const statusText = is_available ? 'Vacant' : 'Occupied'
-      const badgeColor = is_available ? 'success' : 'info'
+  //     return (
+  //       <span className='font-medium'>
+  //         {currency(sale_price, 'pt-BR', 'BRL')}
+  //       </span>
+  //     )
+  //   },
+  //   meta: {
+  //     className: 'w-36',
+  //     thClassName: 'w-36',
+  //   },
+  //   enableSorting: true,
+  // },
+  // {
+  //   id: 'status',
+  //   accessorFn: (row) => (row.is_available ? 'vacant' : 'occupied'),
+  //   header: () => (
+  //     <span className='inline-flex items-center gap-2'>
+  //       <CircleCheck className='size-3.5' />
+  //       Status
+  //     </span>
+  //   ),
+  //   cell: ({ row }) => {
+  //     const { is_available } = row.original
+  //     const statusText = is_available ? 'Vacant' : 'Occupied'
+  //     const badgeColor = is_available ? 'success' : 'info'
 
-      return (
-        <Badge variant={badgeColor} className='rounded-full'>
-          {statusText}
-        </Badge>
-      )
-    },
-    filterFn: (row, id, value) => value.includes(row.getValue(id)),
-    meta: {
-      className: 'w-32',
-      thClassName: 'w-32',
-    },
-    enableHiding: false,
-    enableSorting: false,
-  },
+  //     return (
+  //       <Badge variant={badgeColor} className='rounded-full'>
+  //         {statusText}
+  //       </Badge>
+  //     )
+  //   },
+  //   filterFn: (row, id, value) => value.includes(row.getValue(id)),
+  //   meta: {
+  //     className: 'w-32',
+  //     thClassName: 'w-32',
+  //   },
+  //   enableHiding: false,
+  //   enableSorting: false,
+  // },
 ]

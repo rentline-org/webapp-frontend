@@ -1,7 +1,5 @@
-import type { VariantProps } from 'class-variance-authority'
 import { Building2, CircleSlash2, Home } from 'lucide-react'
-import type { badgeVariants } from '@/components/ui/badge'
-import type { PropertyOccupancy, PropertyStatus, TPropertyType } from '../types'
+import type { IProperty, TPropertyType } from '../types'
 
 export function currency(
   value: number,
@@ -17,38 +15,14 @@ export function currency(
 
 export function typeIcon(type: TPropertyType) {
   switch (type) {
-    case 'house':
+    case 'single_unit':
       return <Home className='h-4 w-4' />
-    case 'apartment':
+    case 'multi_unit':
       return <Building2 className='h-4 w-4' />
     case 'land':
       return <CircleSlash2 className='h-4 w-4' />
     default:
       return <Building2 className='h-4 w-4' />
-  }
-}
-
-export function statusStyles(
-  status: PropertyStatus
-): VariantProps<typeof badgeVariants>['variant'] {
-  switch (status) {
-    case 'vacant':
-      return 'info'
-    case 'occupied':
-      return 'success'
-    case 'maintenance':
-      return 'warning'
-  }
-}
-
-export function occupancyLabel(value: PropertyOccupancy) {
-  switch (value) {
-    case 'low':
-      return 'Low occupancy'
-    case 'medium':
-      return 'Medium occupancy'
-    case 'high':
-      return 'High occupancy'
   }
 }
 
@@ -63,8 +37,8 @@ export function formatDate(value?: string | null) {
 
 export function typeBadgeVariant(type: TPropertyType) {
   const map: Record<TPropertyType, 'info' | 'success' | 'outline'> = {
-    house: 'info',
-    apartment: 'success',
+    single_unit: 'info',
+    multi_unit: 'success',
     land: 'outline',
   }
 
@@ -73,4 +47,8 @@ export function typeBadgeVariant(type: TPropertyType) {
 
 export function statusBadgeVariant(isAvailable: boolean) {
   return isAvailable ? 'success' : 'warning'
+}
+
+export function checkPropertyIsHouse({ property_type }: IProperty) {
+  return property_type === 'single_unit'
 }
