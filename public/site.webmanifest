@@ -1,0 +1,28 @@
+{
+  "name": "Rentline - Property Management Platform",
+  "short_name": "Rentline",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+
+  "background_color": "#0f172a",
+  "theme_color": "#7c3aed",
+
+  "description": "Manage properties, tenants, payments, and maintenance in one modern platform.",
+
+  "icons": [
+    {
+      "src": "/images/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ]
+}
