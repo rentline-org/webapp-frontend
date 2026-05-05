@@ -1,10 +1,12 @@
 import { Link } from '@tanstack/react-router'
 import { LogoFull } from '@/assets/logo-full'
 import { cn } from '@/lib/utils'
+import { useTheme } from '@/context/theme-provider'
 import { Safari } from '@/components/ui/safari'
 import { UserAuthForm } from './components/user-auth-form'
 
 export function SignIn2() {
+  const { theme } = useTheme()
   return (
     <div className='relative container grid h-svh flex-col items-start justify-center lg:max-w-none lg:grid-cols-2 lg:px-0'>
       <div className='lg:px-8 lg:pt-20 lg:pb-8'>
@@ -52,29 +54,14 @@ export function SignIn2() {
       <div
         className={cn(
           'relative h-full overflow-hidden bg-muted max-lg:hidden',
-          '[&>*]:absolute [&>*]:top-[15%] [&>*]:left-20 [&>*]:w-[120%] [&>*]:max-w-none [&>*]:select-none'
+          '*:absolute *:top-[15%] *:left-20 *:w-[120%] *:max-w-none *:select-none'
         )}
       >
         <Safari
-          className='dark:hidden'
           mode='simple'
           url='app.rentline.io'
-          imageSrc='/images/dashboard_light.png'
+          imageSrc={`/images/dashboard_${theme === 'light' ? 'light' : 'dark'}.png`}
         />
-        {/* <img
-          src={dashboardLight}
-          className='dark:hidden'
-          width={1024}
-          height={1151}
-          alt='Rentline Platform'
-        />
-        <img
-          src={dashboardDark}
-          className='hidden dark:block'
-          width={1024}
-          height={1138}
-          alt='Rentline Platform'
-        /> */}
       </div>
     </div>
   )

@@ -1,20 +1,19 @@
 import { Link } from '@tanstack/react-router'
-import { Logo } from '@/assets/logo'
+import { LogoFull } from '@/assets/logo-full'
 import { cn } from '@/lib/utils'
-import dashboardDark from './assets/dashboard-dark.png'
-import dashboardLight from './assets/dashboard-light.png'
+import { useTheme } from '@/context/theme-provider'
+import { Safari } from '@/components/ui/safari'
 import { SignUpForm } from './components/sign-up-form'
 
-// import { UserAuthForm } from './components/user-auth-form'
-
 export function SignUp() {
+  const { theme } = useTheme()
+
   return (
     <div className='relative container grid h-svh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0'>
       <div className='w-full lg:p-8'>
         <div className='mx-auto flex w-full flex-col justify-center space-y-2 py-8 sm:w-120 sm:p-8'>
           <div className='mb-4 flex items-center justify-center'>
-            <Logo className='me-2' />
-            <h1 className='text-3xl font-medium'>Rentline</h1>
+            <LogoFull className='me-2' />
           </div>
         </div>
         <div className='mx-auto flex w-full max-w-md flex-col justify-center space-y-2'>
@@ -57,22 +56,13 @@ export function SignUp() {
       <div
         className={cn(
           'relative h-full overflow-hidden bg-muted max-lg:hidden',
-          '[&>img]:absolute [&>img]:top-[15%] [&>img]:left-20 [&>img]:h-full [&>img]:w-full [&>img]:object-cover [&>img]:object-top-left [&>img]:select-none'
+          '*:absolute *:top-[15%] *:left-20 *:w-[120%] *:max-w-none *:select-none'
         )}
       >
-        <img
-          src={dashboardLight}
-          className='dark:hidden'
-          width={1024}
-          height={1151}
-          alt='Shadcn-Admin'
-        />
-        <img
-          src={dashboardDark}
-          className='hidden dark:block'
-          width={1024}
-          height={1138}
-          alt='Shadcn-Admin'
+        <Safari
+          mode='simple'
+          url='app.rentline.io'
+          imageSrc={`/images/dashboard_${theme === 'light' ? 'light' : 'dark'}.png`}
         />
       </div>
     </div>
