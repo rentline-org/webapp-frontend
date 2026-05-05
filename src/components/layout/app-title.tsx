@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { Logo } from '@/assets/logo'
 import { cn } from '@/lib/utils'
 import {
   SidebarMenu,
@@ -15,18 +16,20 @@ export function AppTitle() {
       <SidebarMenuItem>
         <SidebarMenuButton
           size='lg'
-          className='gap-0 py-0 hover:bg-transparent active:bg-transparent'
+          className='mb-0 h-20 w-full gap-0 px-2 hover:bg-transparent active:bg-transparent'
           asChild
         >
-          <div>
-            <Link
-              to='/'
-              onClick={() => setOpenMobile(false)}
-              className='grid flex-1 text-start text-sm leading-tight'
-            >
-              <span className='truncate font-bold'>Rentline Logo</span>
-            </Link>
-          </div>
+          <Link
+            to='/'
+            onClick={() => setOpenMobile(false)}
+            className='flex items-center gap-3 px-3 py-2'
+          >
+            <Logo className='h-10 w-10 shrink-0' />
+            <div className='flex flex-col leading-tight'>
+              <span className='text-sm font-semibold'>Rentline</span>
+              <span className='text-xs text-muted-foreground'>Dashboard</span>
+            </div>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>

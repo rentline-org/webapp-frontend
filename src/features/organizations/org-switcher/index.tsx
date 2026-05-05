@@ -70,7 +70,7 @@ export function OrgSwitcher({ userProfile, isLoading, isFetching }: Props) {
           <DropdownMenuTrigger asChild disabled={showLoadingSkeleton}>
             <SidebarMenuButton
               size='lg'
-              className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+              className='border border-dotted border-neutral-500/30 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
             >
               {showLoadingSkeleton ? (
                 <>

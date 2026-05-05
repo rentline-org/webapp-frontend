@@ -55,7 +55,7 @@ export function NavUser({ user, isLoading, isFetching }: NavUserProps) {
             >
               <SidebarMenuButton
                 size='lg'
-                className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+                className='border border-dotted border-neutral-500/30 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
               >
                 {showLoadingSkeleton ? (
                   <div className='h-10 w-full'>

@@ -1,18 +1,16 @@
 import { Link } from '@tanstack/react-router'
-import { Logo } from '@/assets/logo'
+import { LogoFull } from '@/assets/logo-full'
 import { cn } from '@/lib/utils'
-import dashboardDark from './assets/dashboard-dark.png'
-import dashboardLight from './assets/dashboard-light.png'
+import { Safari } from '@/components/ui/safari'
 import { UserAuthForm } from './components/user-auth-form'
 
 export function SignIn2() {
   return (
-    <div className='relative container grid h-svh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0'>
-      <div className='lg:p-8'>
-        <div className='mx-auto flex w-full flex-col justify-center space-y-2 py-8 sm:w-120 sm:p-8'>
+    <div className='relative container grid h-svh flex-col items-start justify-center lg:max-w-none lg:grid-cols-2 lg:px-0'>
+      <div className='lg:px-8 lg:pt-20 lg:pb-8'>
+        <div className='mx-auto flex w-full flex-col items-center justify-center space-y-2 py-8 sm:w-120 sm:p-8'>
           <div className='mb-4 flex items-center justify-center'>
-            <Logo className='me-2' />
-            <h1 className='text-3xl font-medium'>Rentline</h1>
+            <LogoFull className='me-2' />
           </div>
         </div>
         <div className='mx-auto flex w-full max-w-sm flex-col justify-center space-y-2'>
@@ -54,10 +52,16 @@ export function SignIn2() {
       <div
         className={cn(
           'relative h-full overflow-hidden bg-muted max-lg:hidden',
-          '[&>img]:absolute [&>img]:top-[15%] [&>img]:left-20 [&>img]:h-full [&>img]:w-full [&>img]:object-cover [&>img]:object-top-left [&>img]:select-none'
+          '[&>*]:absolute [&>*]:top-[15%] [&>*]:left-20 [&>*]:w-[120%] [&>*]:max-w-none [&>*]:select-none'
         )}
       >
-        <img
+        <Safari
+          className='dark:hidden'
+          mode='simple'
+          url='app.rentline.io'
+          imageSrc='/images/dashboard_light.png'
+        />
+        {/* <img
           src={dashboardLight}
           className='dark:hidden'
           width={1024}
@@ -70,7 +74,7 @@ export function SignIn2() {
           width={1024}
           height={1138}
           alt='Rentline Platform'
-        />
+        /> */}
       </div>
     </div>
   )
