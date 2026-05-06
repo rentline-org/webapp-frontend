@@ -17,4 +17,7 @@ const appsSearchSchema = z.object({
 export const Route = createFileRoute('/_authenticated/properties/')({
   validateSearch: appsSearchSchema,
   component: Properties,
+  staticData: {
+    breadcrumbKey: 'properties',
+  },
 })

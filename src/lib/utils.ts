@@ -101,3 +101,9 @@ export function ReverseMapping<
 export function cleanSnakecase(key: string) {
   return key.split('_').join(' ').toLowerCase()
 }
+
+export function normalizeSlug(slug?: string) {
+  if (!slug) return ''
+
+  return slug.split('-').join(' ')
+}

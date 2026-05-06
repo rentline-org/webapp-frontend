@@ -22,6 +22,7 @@ import { Route as authOtpRouteImport } from './routes/(auth)/otp'
 import { Route as authOnboardingRouteImport } from './routes/(auth)/onboarding'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
+import { Route as AuthenticatedPropertiesRouteRouteImport } from './routes/_authenticated/properties/route'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
@@ -33,9 +34,12 @@ import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
-import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties/new'
-import { Route as AuthenticatedPropertiesPropertySlugRouteImport } from './routes/_authenticated/properties/$propertySlug'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
+import { Route as AuthenticatedPropertiesNewRouteRouteImport } from './routes/_authenticated/properties/new/route'
+import { Route as AuthenticatedPropertiesPropertySlugRouteRouteImport } from './routes/_authenticated/properties/$propertySlug/route'
+import { Route as AuthenticatedPropertiesPropertySlugIndexRouteImport } from './routes/_authenticated/properties/$propertySlug/index'
+import { Route as AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteImport } from './routes/_authenticated/properties/$propertySlug/units/$unitSlug/route'
+import { Route as AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRouteImport } from './routes/_authenticated/properties/$propertySlug/units/$unitSlug/index'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -102,6 +106,12 @@ const AuthenticatedSettingsRouteRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPropertiesRouteRoute =
+  AuthenticatedPropertiesRouteRouteImport.update({
+    id: '/properties',
+    path: '/properties',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -120,9 +130,9 @@ const AuthenticatedSettingsIndexRoute =
   } as any)
 const AuthenticatedPropertiesIndexRoute =
   AuthenticatedPropertiesIndexRouteImport.update({
-    id: '/properties/',
-    path: '/properties/',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPropertiesRouteRoute,
   } as any)
 const AuthenticatedHelpCenterIndexRoute =
   AuthenticatedHelpCenterIndexRouteImport.update({
@@ -165,27 +175,47 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
-const AuthenticatedPropertiesNewRoute =
-  AuthenticatedPropertiesNewRouteImport.update({
-    id: '/properties/new',
-    path: '/properties/new',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPropertiesPropertySlugRoute =
-  AuthenticatedPropertiesPropertySlugRouteImport.update({
-    id: '/properties/$propertySlug',
-    path: '/properties/$propertySlug',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedErrorsErrorRoute =
   AuthenticatedErrorsErrorRouteImport.update({
     id: '/errors/$error',
     path: '/errors/$error',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPropertiesNewRouteRoute =
+  AuthenticatedPropertiesNewRouteRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedPropertiesRouteRoute,
+  } as any)
+const AuthenticatedPropertiesPropertySlugRouteRoute =
+  AuthenticatedPropertiesPropertySlugRouteRouteImport.update({
+    id: '/$propertySlug',
+    path: '/$propertySlug',
+    getParentRoute: () => AuthenticatedPropertiesRouteRoute,
+  } as any)
+const AuthenticatedPropertiesPropertySlugIndexRoute =
+  AuthenticatedPropertiesPropertySlugIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPropertiesPropertySlugRouteRoute,
+  } as any)
+const AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRoute =
+  AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteImport.update({
+    id: '/units/$unitSlug',
+    path: '/units/$unitSlug',
+    getParentRoute: () => AuthenticatedPropertiesPropertySlugRouteRoute,
+  } as any)
+const AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute =
+  AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () =>
+      AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/onboarding': typeof authOnboardingRoute
@@ -197,9 +227,9 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/not-found': typeof errorsNotFoundRoute
+  '/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRouteRouteWithChildren
+  '/properties/new': typeof AuthenticatedPropertiesNewRouteRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRoute
-  '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -211,6 +241,9 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks/': typeof AuthenticatedTasksIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
+  '/properties/$propertySlug/': typeof AuthenticatedPropertiesPropertySlugIndexRoute
+  '/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteWithChildren
+  '/properties/$propertySlug/units/$unitSlug/': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof authForgotPasswordRoute
@@ -224,9 +257,8 @@ export interface FileRoutesByTo {
   '/503': typeof errors503Route
   '/not-found': typeof errorsNotFoundRoute
   '/': typeof AuthenticatedIndexRoute
+  '/properties/new': typeof AuthenticatedPropertiesNewRouteRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRoute
-  '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -238,10 +270,13 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugIndexRoute
+  '/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/onboarding': typeof authOnboardingRoute
@@ -254,9 +289,9 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/(errors)/not-found': typeof errorsNotFoundRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRouteRouteWithChildren
+  '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRouteRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/_authenticated/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRoute
-  '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -268,11 +303,15 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/properties/$propertySlug/': typeof AuthenticatedPropertiesPropertySlugIndexRoute
+  '/_authenticated/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteWithChildren
+  '/_authenticated/properties/$propertySlug/units/$unitSlug/': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/properties'
     | '/settings'
     | '/forgot-password'
     | '/onboarding'
@@ -284,9 +323,9 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/not-found'
-    | '/errors/$error'
     | '/properties/$propertySlug'
     | '/properties/new'
+    | '/errors/$error'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -298,6 +337,9 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/tasks/'
     | '/users/'
+    | '/properties/$propertySlug/'
+    | '/properties/$propertySlug/units/$unitSlug'
+    | '/properties/$propertySlug/units/$unitSlug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -311,9 +353,8 @@ export interface FileRouteTypes {
     | '/503'
     | '/not-found'
     | '/'
-    | '/errors/$error'
-    | '/properties/$propertySlug'
     | '/properties/new'
+    | '/errors/$error'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -325,9 +366,12 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/users'
+    | '/properties/$propertySlug'
+    | '/properties/$propertySlug/units/$unitSlug'
   id:
     | '__root__'
     | '/_authenticated'
+    | '/_authenticated/properties'
     | '/_authenticated/settings'
     | '/(auth)/forgot-password'
     | '/(auth)/onboarding'
@@ -340,9 +384,9 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/(errors)/not-found'
     | '/_authenticated/'
-    | '/_authenticated/errors/$error'
     | '/_authenticated/properties/$propertySlug'
     | '/_authenticated/properties/new'
+    | '/_authenticated/errors/$error'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
@@ -354,6 +398,9 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
+    | '/_authenticated/properties/$propertySlug/'
+    | '/_authenticated/properties/$propertySlug/units/$unitSlug'
+    | '/_authenticated/properties/$propertySlug/units/$unitSlug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -463,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/properties': {
+      id: '/_authenticated/properties'
+      path: '/properties'
+      fullPath: '/properties'
+      preLoaderRoute: typeof AuthenticatedPropertiesRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/users/': {
       id: '/_authenticated/users/'
       path: '/users'
@@ -486,10 +540,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/properties/': {
       id: '/_authenticated/properties/'
-      path: '/properties'
+      path: '/'
       fullPath: '/properties/'
       preLoaderRoute: typeof AuthenticatedPropertiesIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedPropertiesRouteRoute
     }
     '/_authenticated/help-center/': {
       id: '/_authenticated/help-center/'
@@ -540,20 +594,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
-    '/_authenticated/properties/new': {
-      id: '/_authenticated/properties/new'
-      path: '/properties/new'
-      fullPath: '/properties/new'
-      preLoaderRoute: typeof AuthenticatedPropertiesNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/properties/$propertySlug': {
-      id: '/_authenticated/properties/$propertySlug'
-      path: '/properties/$propertySlug'
-      fullPath: '/properties/$propertySlug'
-      preLoaderRoute: typeof AuthenticatedPropertiesPropertySlugRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/errors/$error': {
       id: '/_authenticated/errors/$error'
       path: '/errors/$error'
@@ -561,8 +601,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedErrorsErrorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/properties/new': {
+      id: '/_authenticated/properties/new'
+      path: '/new'
+      fullPath: '/properties/new'
+      preLoaderRoute: typeof AuthenticatedPropertiesNewRouteRouteImport
+      parentRoute: typeof AuthenticatedPropertiesRouteRoute
+    }
+    '/_authenticated/properties/$propertySlug': {
+      id: '/_authenticated/properties/$propertySlug'
+      path: '/$propertySlug'
+      fullPath: '/properties/$propertySlug'
+      preLoaderRoute: typeof AuthenticatedPropertiesPropertySlugRouteRouteImport
+      parentRoute: typeof AuthenticatedPropertiesRouteRoute
+    }
+    '/_authenticated/properties/$propertySlug/': {
+      id: '/_authenticated/properties/$propertySlug/'
+      path: '/'
+      fullPath: '/properties/$propertySlug/'
+      preLoaderRoute: typeof AuthenticatedPropertiesPropertySlugIndexRouteImport
+      parentRoute: typeof AuthenticatedPropertiesPropertySlugRouteRoute
+    }
+    '/_authenticated/properties/$propertySlug/units/$unitSlug': {
+      id: '/_authenticated/properties/$propertySlug/units/$unitSlug'
+      path: '/units/$unitSlug'
+      fullPath: '/properties/$propertySlug/units/$unitSlug'
+      preLoaderRoute: typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteImport
+      parentRoute: typeof AuthenticatedPropertiesPropertySlugRouteRoute
+    }
+    '/_authenticated/properties/$propertySlug/units/$unitSlug/': {
+      id: '/_authenticated/properties/$propertySlug/units/$unitSlug/'
+      path: '/'
+      fullPath: '/properties/$propertySlug/units/$unitSlug/'
+      preLoaderRoute: typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRouteImport
+      parentRoute: typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRoute
+    }
   }
 }
+
+interface AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteChildren {
+  AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute: typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
+}
+
+const AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteChildren: AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteChildren =
+  {
+    AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute:
+      AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute,
+  }
+
+const AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteWithChildren =
+  AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRoute._addFileChildren(
+    AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteChildren,
+  )
+
+interface AuthenticatedPropertiesPropertySlugRouteRouteChildren {
+  AuthenticatedPropertiesPropertySlugIndexRoute: typeof AuthenticatedPropertiesPropertySlugIndexRoute
+  AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRoute: typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteWithChildren
+}
+
+const AuthenticatedPropertiesPropertySlugRouteRouteChildren: AuthenticatedPropertiesPropertySlugRouteRouteChildren =
+  {
+    AuthenticatedPropertiesPropertySlugIndexRoute:
+      AuthenticatedPropertiesPropertySlugIndexRoute,
+    AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRoute:
+      AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteWithChildren,
+  }
+
+const AuthenticatedPropertiesPropertySlugRouteRouteWithChildren =
+  AuthenticatedPropertiesPropertySlugRouteRoute._addFileChildren(
+    AuthenticatedPropertiesPropertySlugRouteRouteChildren,
+  )
+
+interface AuthenticatedPropertiesRouteRouteChildren {
+  AuthenticatedPropertiesPropertySlugRouteRoute: typeof AuthenticatedPropertiesPropertySlugRouteRouteWithChildren
+  AuthenticatedPropertiesNewRouteRoute: typeof AuthenticatedPropertiesNewRouteRoute
+  AuthenticatedPropertiesIndexRoute: typeof AuthenticatedPropertiesIndexRoute
+}
+
+const AuthenticatedPropertiesRouteRouteChildren: AuthenticatedPropertiesRouteRouteChildren =
+  {
+    AuthenticatedPropertiesPropertySlugRouteRoute:
+      AuthenticatedPropertiesPropertySlugRouteRouteWithChildren,
+    AuthenticatedPropertiesNewRouteRoute: AuthenticatedPropertiesNewRouteRoute,
+    AuthenticatedPropertiesIndexRoute: AuthenticatedPropertiesIndexRoute,
+  }
+
+const AuthenticatedPropertiesRouteRouteWithChildren =
+  AuthenticatedPropertiesRouteRoute._addFileChildren(
+    AuthenticatedPropertiesRouteRouteChildren,
+  )
 
 interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
@@ -591,28 +718,24 @@ const AuthenticatedSettingsRouteRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedPropertiesRouteRoute: typeof AuthenticatedPropertiesRouteRouteWithChildren
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
-  AuthenticatedPropertiesPropertySlugRoute: typeof AuthenticatedPropertiesPropertySlugRoute
-  AuthenticatedPropertiesNewRoute: typeof AuthenticatedPropertiesNewRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
-  AuthenticatedPropertiesIndexRoute: typeof AuthenticatedPropertiesIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedPropertiesRouteRoute:
+    AuthenticatedPropertiesRouteRouteWithChildren,
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
-  AuthenticatedPropertiesPropertySlugRoute:
-    AuthenticatedPropertiesPropertySlugRoute,
-  AuthenticatedPropertiesNewRoute: AuthenticatedPropertiesNewRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
-  AuthenticatedPropertiesIndexRoute: AuthenticatedPropertiesIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
 }

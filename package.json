@@ -50,6 +50,7 @@
     "date-fns": "^4.1.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^1.8.0",
+    "motion": "^12.38.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.5",
     "react-aria-components": "^1.17.0",

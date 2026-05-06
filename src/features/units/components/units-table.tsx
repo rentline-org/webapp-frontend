@@ -1,4 +1,8 @@
-import { useState } from 'react'
+'use client'
+
+import { useState, useMemo } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,10 +14,16 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import type { IProperty } from '@/features/properties/types'
-import { useCreateUnit, useDeleteUnit, useUpdateUnit } from '../query'
-import type { IUnitData, IUpdateUnitInput, TCreateUnitSchema } from '../types'
-import UnitDetailsDrawer from './unit-details-drawer'
+import {
+  invalidateUnitList,
+  useCreateUnit,
+  useDeleteUnit,
+  useGetUnits,
+} from '../query'
+import { makeOptimisticUnit, toCreatePayload } from '../query/dto'
+import type { IUnitData, TCreateUnitSchema } from '../types'
 import UnitEditRow from './unit-edit-row'
 import UnitTableRow from './unit-table-row'
 
@@ -21,294 +31,156 @@ type Props = {
   property: IProperty
 }
 
-const toCreatePayload = (payload: TCreateUnitSchema): TCreateUnitSchema => ({
-  name: payload.name,
-  description: payload.description ?? null,
-  unit_type: payload.unit_type ?? 'residential',
-  is_available: payload.is_available ?? true,
-  is_furnished: payload.is_furnished ?? false,
-  is_pet_friendly: payload.is_pet_friendly ?? false,
-  rent_price: payload.rent_price == null ? null : Number(payload.rent_price),
-  bedrooms: payload.bedrooms == null ? null : Number(payload.bedrooms),
-  bathrooms: payload.bathrooms == null ? null : Number(payload.bathrooms),
-  square_feet: payload.square_feet == null ? null : Number(payload.square_feet),
-  amenities: payload.amenities ?? undefined,
-})
-
-const makeOptimisticUnit = (
-  propertyId: number,
-  payload: TCreateUnitSchema,
-  tempId: number
-): IUnitData => ({
-  id: tempId,
-  property_id: propertyId,
-  name: payload.name,
-  description: payload.description,
-  unit_type: payload.unit_type,
-  is_available: payload.is_available,
-  is_furnished: payload.is_furnished,
-  is_pet_friendly: payload.is_pet_friendly,
-  rent_price: payload.rent_price,
-  sale_price: null,
-  bedrooms: payload.bedrooms,
-  bathrooms: payload.bathrooms,
-  square_feet: payload.square_feet,
-  amenities: payload.amenities ?? null,
-  available_from: null,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-})
-
-const normalizeFieldValue = (
-  field: keyof IUpdateUnitInput,
-  value: string | number | boolean | null
-) => {
-  if (
-    field === 'rent_price' ||
-    field === 'sale_price' ||
-    field === 'bedrooms' ||
-    field === 'bathrooms' ||
-    field === 'square_feet'
-  ) {
-    return value == null || value === '' ? null : Number(value)
-  }
-
-  if (
-    field === 'is_available' ||
-    field === 'is_furnished' ||
-    field === 'is_pet_friendly'
-  ) {
-    return Boolean(value)
-  }
-
-  return value
-}
-
-const buildUpdatePayload = (
-  field: keyof IUpdateUnitInput,
-  value: string | number | boolean | null
-): IUpdateUnitInput => {
-  const payload: IUpdateUnitInput = {}
-  const normalized = normalizeFieldValue(field, value)
-
-  switch (field) {
-    case 'name':
-      if (typeof normalized === 'string') payload.name = normalized
-      break
-    case 'description':
-      payload.description = normalized == null ? null : String(normalized)
-      break
-    case 'unit_type':
-      if (typeof normalized === 'string') {
-        payload.unit_type = normalized as IUpdateUnitInput['unit_type']
-      }
-      break
-    case 'rent_price':
-      payload.rent_price = normalized as number | null
-      break
-    case 'sale_price':
-      payload.sale_price = normalized as number | null
-      break
-    case 'bedrooms':
-      payload.bedrooms = normalized as number | null
-      break
-    case 'bathrooms':
-      payload.bathrooms = normalized as number | null
-      break
-    case 'square_feet':
-      payload.square_feet = normalized as number | null
-      break
-    case 'is_available':
-    case 'is_furnished':
-    case 'is_pet_friendly':
-      payload[field] = Boolean(normalized) as never
-      break
-    case 'amenities':
-      payload.amenities = normalized as IUpdateUnitInput['amenities']
-      break
-  }
-
-  return payload
-}
-
 export default function UnitsTable({ property }: Props) {
-  const [units, setUnits] = useState<IUnitData[]>(property.units ?? [])
   const [creating, setCreating] = useState(false)
-  const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedUnit, setSelectedUnit] = useState<IUnitData | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
+  const queryClient = useQueryClient()
+
+  const [optimisticUnits, setOptimisticUnits] = useState<IUnitData[]>([])
+  const [deletedIds, setDeletedIds] = useState<number[]>([])
+
+  const { data: queryUnits = [], isLoading } = useGetUnits(property.id)
   const { mutate: createUnit, isPending: isCreating } = useCreateUnit(property)
-  const { mutate: updateUnit } = useUpdateUnit(property)
   const { mutate: deleteUnit } = useDeleteUnit(property)
 
-  // useEffect(() => {
-  //   setUnits(property.units ?? [])
-  // }, [property.id, property.units])
+  const units = useMemo(() => {
+    const filtered = queryUnits.filter((u) => !deletedIds.includes(u.id))
 
-  const replaceUnitById = (unitId: number, nextUnit: IUnitData) => {
-    setUnits((current) => current.map((u) => (u.id === unitId ? nextUnit : u)))
-    setSelectedUnit((current) => (current?.id === unitId ? nextUnit : current))
-  }
-
-  const removeUnit = (unitId: number) => {
-    setUnits((current) => current.filter((u) => u.id !== unitId))
-    setSelectedUnit((current) => (current?.id === unitId ? null : current))
-  }
+    return [...optimisticUnits, ...filtered].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      })
+    )
+  }, [queryUnits, optimisticUnits, deletedIds])
 
   const handleSave = (payload: TCreateUnitSchema) => {
     const apiPayload = toCreatePayload(payload)
     const tempId = -Date.now()
+
     const optimisticUnit = makeOptimisticUnit(property.id, apiPayload, tempId)
 
-    setUnits((current) => [optimisticUnit, ...current])
+    setOptimisticUnits((prev) => [optimisticUnit, ...prev])
     setCreating(false)
 
     createUnit(apiPayload, {
-      onSuccess(result) {
-        replaceUnitById(tempId, result)
+      async onSuccess(result) {
+        setOptimisticUnits((prev) => prev.filter((u) => u.id !== tempId))
+        await invalidateUnitList(property.id.toString(), queryClient)
         toast.success(`Unit ${result.name} created`)
       },
       onError() {
-        removeUnit(tempId)
+        setOptimisticUnits((prev) => prev.filter((u) => u.id !== tempId))
         toast.error('Error creating unit')
       },
     })
   }
 
   const handleDelete = (unitId: number) => {
-    if (!window.confirm('Delete this unit?')) return
+    setConfirmDelete(false)
 
-    const previous = units
-    removeUnit(unitId)
+    // optimistic remove
+    setDeletedIds((prev) => [...prev, unitId])
+    setOptimisticUnits((prev) => prev.filter((u) => u.id !== unitId))
 
     if (unitId < 0) return
 
     deleteUnit(unitId, {
-      onSuccess() {
+      async onSuccess() {
         toast.success('Unit deleted')
-        if (selectedUnit?.id === unitId) {
-          setDrawerOpen(false)
-          setSelectedUnit(null)
-        }
+        await invalidateUnitList(property.id.toString(), queryClient)
       },
       onError() {
-        setUnits(previous)
-        if (selectedUnit?.id === unitId) {
-          setSelectedUnit(previous.find((u) => u.id === unitId) ?? null)
-        }
+        // rollback
+        setDeletedIds((prev) => prev.filter((id) => id !== unitId))
         toast.error('Error deleting unit')
       },
     })
   }
 
-  const handleFieldUpdate = (
-    field: keyof IUpdateUnitInput,
-    value: string | number | boolean | null
-  ) => {
-    if (!selectedUnit) return
-
-    const unitId = selectedUnit.id
-    const previous = units
-    const payload = buildUpdatePayload(field, value)
-
-    const optimisticUnit: IUnitData = {
-      ...selectedUnit,
-      [field]: normalizeFieldValue(field, value),
-      updated_at: new Date().toISOString(),
-    } as IUnitData
-
-    replaceUnitById(unitId, optimisticUnit)
-
-    updateUnit(
-      { unitId, payload },
-      {
-        onSuccess(result) {
-          replaceUnitById(unitId, result)
-          toast.success('Unit updated')
-        },
-        onError() {
-          setUnits(previous)
-          setSelectedUnit(previous.find((u) => u.id === unitId) ?? null)
-          toast.error('Error updating unit')
-        },
-      }
-    )
+  const openDeleteDialog = (unit: IUnitData) => {
+    setSelectedUnit(unit)
+    setConfirmDelete(true)
   }
 
   return (
-    <Card>
-      <CardHeader className='flex items-center justify-between gap-3'>
-        <CardTitle>Property Units</CardTitle>
+    <>
+      <Card>
+        <CardHeader className='flex items-center justify-between gap-3'>
+          <CardTitle>Property Units</CardTitle>
 
-        <Button size='sm' onClick={() => setCreating(true)}>
-          Add unit
-        </Button>
-      </CardHeader>
+          <Button size='sm' onClick={() => setCreating(true)}>
+            Add unit
+          </Button>
+        </CardHeader>
 
-      <CardContent>
-        <div className='overflow-hidden rounded-md border'>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Rent</TableHead>
-                <TableHead>Bedrooms</TableHead>
-                <TableHead>Bathrooms</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {creating && (
-                <UnitEditRow
-                  onSave={handleSave}
-                  onCancel={() => setCreating(false)}
-                  isSaving={isCreating}
-                />
-              )}
-
-              {units.length === 0 && !creating ? (
+        <CardContent>
+          <div className='overflow-hidden rounded-md border'>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className='h-24 text-center'>
-                    No units yet.
-                  </TableCell>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Rent</TableHead>
+                  <TableHead>Bedrooms</TableHead>
+                  <TableHead>Bathrooms</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ) : (
-                units.map((u) => (
-                  <UnitTableRow
-                    key={u.id}
-                    unit={u}
-                    onDelete={() => handleDelete(u.id)}
-                    propertySlug={property.slug}
-                    // onOpen={() => {
-                    //   setSelectedUnit(u)
-                    //   setDrawerOpen(true)
-                    // }}
+              </TableHeader>
+
+              <TableBody>
+                {creating && (
+                  <UnitEditRow
+                    onSave={handleSave}
+                    onCancel={() => setCreating(false)}
+                    isSaving={isCreating}
                   />
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
+                )}
 
-      <UnitDetailsDrawer
-        unit={selectedUnit}
-        open={drawerOpen}
-        // isSaving={isUpdating || isDeleting}
+                {isLoading && units.length === 0 && !creating ? (
+                  <TableRow className='w-full'>
+                    <TableCell
+                      colSpan={6}
+                      className='flex h-24 w-full items-center justify-center text-center'
+                    >
+                      <Loader2 className='mx-auto size-6 animate-spin' />
+                    </TableCell>
+                  </TableRow>
+                ) : units.length === 0 && !creating ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className='h-24 text-center'>
+                      No units yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  units.map((u) => (
+                    <UnitTableRow
+                      key={u.id}
+                      unit={u}
+                      onDelete={() => openDeleteDialog(u)}
+                    />
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
-        onOpenChange={(open) => {
-          setDrawerOpen(open)
-          if (!open) setSelectedUnit(null)
-        }}
-        onFieldUpdate={handleFieldUpdate}
-        onDelete={() => {
+      <ConfirmDialog
+        title='Delete Unit'
+        desc='Are you sure you want to delete this unit?'
+        open={confirmDelete}
+        confirmText='Yes, Delete'
+        destructive
+        onOpenChange={setConfirmDelete}
+        handleConfirm={() => {
           if (!selectedUnit) return
           handleDelete(selectedUnit.id)
-          setDrawerOpen(false)
         }}
       />
-    </Card>
+    </>
   )
 }
