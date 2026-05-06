@@ -9,6 +9,7 @@ import { SkipToMain } from '@/components/skip-to-main'
 import NotificationsPanel from '@/features/notifications/components/notifications-panel'
 import { Search } from '../search'
 import { ThemeSwitch } from '../theme-switch'
+import { AppBreadcrumbs } from './app-breadcrumbs'
 import { Header } from './header'
 
 type AuthenticatedLayoutProps = {
@@ -39,7 +40,8 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
             )}
           >
             <Header>
-              <Search className='me-auto' />
+              <AppBreadcrumbs />
+              <Search className='ml-auto' />
               <NotificationsPanel />
               <ThemeSwitch />
             </Header>

@@ -13,6 +13,7 @@ export interface IUnitData {
   property_id: number
 
   name: string
+  slug: string
   description?: string | null
 
   unit_type: TUnitType

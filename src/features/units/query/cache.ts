@@ -18,12 +18,12 @@ export const unitKey = (value: string, slug: 'id' | 'slug' = 'id') => [
   value,
 ]
 
-export const getUnitsCache = (propertySlug: string = '') =>
+export const getUnitsCache = (propertyId: string = '') =>
   createOptimisticCache<IUnitData, 'id'>({
     caches: {
-      list: listCache(unitsKey),
+      list: listCache(unitKey(propertyId, 'slug')),
       detail: {
-        key: propertyKey(propertySlug, 'slug'),
+        key: propertyKey(propertyId, 'slug'),
 
         select: (data: unknown): IUnitData[] => {
           const property = data as PropertyWithUnits

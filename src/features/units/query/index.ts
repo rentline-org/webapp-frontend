@@ -1,11 +1,39 @@
-// features/units/query.ts
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { handleDelete, handlePost, handlePut, type IResponse } from '@/api'
+import {
+  type QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
+import {
+  handleDelete,
+  handleGet,
+  handlePost,
+  handlePut,
+  type IResponse,
+} from '@/api'
 import { invalidatePropertyBySlug } from '@/features/properties/query'
-import { propertyKey } from '@/features/properties/query/cache'
+import {
+  PROPERTIES_ENDPOINT,
+  propertyKey,
+} from '@/features/properties/query/cache'
 import { type IProperty } from '@/features/properties/types'
 import type { IUnitData, TCreateUnitSchema, IUpdateUnitInput } from '../types'
 import { getUnitsCache, unitKey, UNITS_ENDPOINT, unitsKey } from './cache'
+
+async function handleGetUnits(propertyId: number) {
+  const res = await handleGet<IResponse<IUnitData[]>>(
+    `${PROPERTIES_ENDPOINT}/${propertyId.toString()}${UNITS_ENDPOINT}`
+  )
+
+  return res.data
+}
+
+export function useGetUnits(propertyId: number) {
+  return useQuery({
+    queryKey: [...unitKey(propertyId.toString(), 'id')],
+    queryFn: async () => await handleGetUnits(propertyId),
+  })
+}
 
 async function handleCreateUnit(
   propertyId: number,
@@ -40,7 +68,7 @@ async function handleDeleteUnit(propertyId: number, unitId: number) {
 
 export function useCreateUnit(property: IProperty) {
   return useMutation({
-    mutationKey: unitKey(property.id.toString(), 'id'),
+    mutationKey: [...unitKey(property.id.toString(), 'id'), 'create'],
     mutationFn: (payload: TCreateUnitSchema) =>
       handleCreateUnit(property.id, payload),
   })
@@ -48,7 +76,7 @@ export function useCreateUnit(property: IProperty) {
 
 export function useUpdateUnit(property: IProperty) {
   const queryClient = useQueryClient()
-  const { snapshot, patch, restore } = getUnitsCache(property.slug)
+  const { snapshot, patch, restore } = getUnitsCache(property.id.toString())
 
   return useMutation({
     mutationKey: [UNITS_ENDPOINT, 'update', property.id],
@@ -90,7 +118,7 @@ export function useUpdateUnit(property: IProperty) {
 
 export function useDeleteUnit(property: IProperty) {
   const queryClient = useQueryClient()
-  const { snapshot, remove, restore } = getUnitsCache(property.slug)
+  const { snapshot, remove, restore } = getUnitsCache(property.id.toString())
 
   return useMutation({
     mutationKey: [UNITS_ENDPOINT, 'delete', property.id],
@@ -118,5 +146,14 @@ export function useDeleteUnit(property: IProperty) {
     onSuccess: async () => {
       await invalidatePropertyBySlug(queryClient, property.slug)
     },
+  })
+}
+
+export async function invalidateUnitList(
+  propertyId: string,
+  queryClient: QueryClient
+) {
+  await queryClient.invalidateQueries({
+    queryKey: [...unitKey(propertyId, 'id')],
   })
 }
