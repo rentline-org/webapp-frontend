@@ -68,7 +68,6 @@ export default function UnitsTable({ property }: Props) {
     createUnit(apiPayload, {
       async onSuccess(result) {
         setOptimisticUnits((prev) => prev.filter((u) => u.id !== tempId))
-        await invalidateUnitList(property.id.toString(), queryClient)
         toast.success(`Unit ${result.name} created`)
       },
       onError() {

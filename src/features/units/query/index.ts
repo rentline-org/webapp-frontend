@@ -88,10 +88,35 @@ async function handleDeleteUnit(propertyId: number, unitId: number) {
 }
 
 export function useCreateUnit(property: IProperty) {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationKey: [...unitKey(property.id.toString(), 'id'), 'create'],
     mutationFn: (payload: TCreateUnitSchema) =>
       handleCreateUnit(property.id, payload),
+    onSuccess: async (result) => {
+      // Instantly add to the property's units list cache
+      applyOptimisticUpdate<IProperty>({
+        queryClient,
+        queryKey: propertiesKey,
+        matchValue: property.id,
+        updater: (p) => {
+          const updated = { ...p }
+          if (Array.isArray(updated.units)) {
+            updated.units = [result, ...updated.units]
+          }
+          return updated
+        },
+      })
+
+      // Instantly add to the units list cache
+      queryClient.setQueryData(
+        [...unitKey(property.id.toString(), 'id')],
+        (old: any) => {
+          if (Array.isArray(old)) return [result, ...old]
+          return [result]
+        }
+      )
+    },
   })
 }
 
