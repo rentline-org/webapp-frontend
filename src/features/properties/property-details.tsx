@@ -12,18 +12,27 @@ import { useSingleUnit } from './hooks/use-single-unit'
 import { useGetPropertyBySlug } from './query'
 import type { TabKey } from './types'
 
-const routeApi = getRouteApi('/_authenticated/properties/$propertySlug')
+const routeApi = getRouteApi('/_authenticated/properties/$propertySlug/')
 
 const PropertyDetails = () => {
   const { propertySlug } = routeApi.useParams()
+  const { tab: searchTab } = routeApi.useSearch()
   const navigate = routeApi.useNavigate()
 
   const { data: property, isLoading } = useGetPropertyBySlug(propertySlug)
 
-  const [activeTab, setActiveTab] = useState<TabKey>('overview')
+  const activeTab = searchTab || 'overview'
+
   const [uploadOpen, setUploadOpen] = useState(false)
 
   const { isReady } = useSingleUnit(property)
+
+  const handleTabChange = (value: string) => {
+    navigate({
+      search: { tab: value as TabKey },
+      replace: true, // replace instead of push to avoid cluttering history
+    })
+  }
 
   useEffect(() => {
     if (!isLoading && !property) {
@@ -53,11 +62,7 @@ const PropertyDetails = () => {
       <div className='mx-auto flex w-full max-w-7xl flex-col gap-6'>
         <DetailsHeader property={property} />
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => setActiveTab(value as TabKey)}
-          className=''
-        >
+        <Tabs value={activeTab} onValueChange={handleTabChange} className=''>
           <TabsList className='inline-flex h-auto gap-2 overflow-x-auto p-1'>
             <TabsTrigger value='overview'>Overview</TabsTrigger>
             {property.property_type === 'multi_unit' && (
@@ -74,7 +79,7 @@ const PropertyDetails = () => {
           >
             <PropertyOverviewTab
               property={property}
-              setActiveTab={setActiveTab}
+              setActiveTab={handleTabChange}
               setUploadOpen={setUploadOpen}
             />
           </TabsContent>

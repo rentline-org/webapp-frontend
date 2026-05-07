@@ -12,6 +12,11 @@ import {
   handlePut,
   type IResponse,
 } from '@/api'
+import {
+  applyOptimisticDelete,
+  applyOptimisticUpdate,
+  restoreOptimisticData,
+} from '@/api/cache'
 import type {
   IProperty,
   IPropertyResponse,
@@ -19,14 +24,7 @@ import type {
   TCreatePropertySchema,
   TUpdateVariables,
 } from '../types'
-import {
-  getPropertyCache,
-  PROPERTIES_ENDPOINT,
-  propertiesKey,
-  propertyKey,
-} from './cache'
-
-// --- data fetchers --- //
+import { PROPERTIES_ENDPOINT, propertiesKey, propertyKey } from './cache'
 
 async function handleGetProperties(): Promise<IProperty[]> {
   const result = await handleGet<IPropertyResponse>(PROPERTIES_ENDPOINT)
@@ -89,8 +87,6 @@ export function useCreateProperty() {
 }
 
 export function useUpdateProperty(queryClient: QueryClient, slug: string) {
-  const { snapshot, restore, patch } = getPropertyCache(slug)
-
   return useMutation({
     mutationKey: [PROPERTIES_ENDPOINT, 'update'],
     mutationFn: ({ property, payload }: TUpdateVariables) =>
@@ -98,21 +94,19 @@ export function useUpdateProperty(queryClient: QueryClient, slug: string) {
 
     onMutate: async ({ property, payload }) => {
       await queryClient.cancelQueries({ queryKey: propertiesKey })
-      await queryClient.cancelQueries({ queryKey: propertyKey(slug, 'slug') })
 
-      const previous = snapshot(queryClient)
+      const previousProperties = applyOptimisticUpdate<IProperty>({
+        queryClient,
+        queryKey: propertiesKey,
+        matchValue: property.id,
+        updater: (p) => ({ ...p, ...payload, slug }),
+      })
 
-      patch(queryClient, property, (p) => ({
-        ...p,
-        ...payload,
-        slug,
-      }))
-
-      return { previous }
+      return { previousProperties }
     },
     onError: (_error, _variables, context) => {
-      if (context?.previous) {
-        restore(queryClient, context.previous)
+      if (context?.previousProperties) {
+        restoreOptimisticData(queryClient, context.previousProperties)
       }
     },
     onSuccess: async (result, { property }) => {
@@ -129,7 +123,6 @@ export function useUpdateProperty(queryClient: QueryClient, slug: string) {
 export function useDeleteProperty(property: IProperty) {
   const queryClient = useQueryClient()
   const id = property.id
-  const { snapshot, restore, remove } = getPropertyCache(id.toString())
 
   return useMutation({
     mutationKey: [...propertyKey(property.slug, 'slug'), 'delete'],
@@ -138,25 +131,22 @@ export function useDeleteProperty(property: IProperty) {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: propertiesKey })
-      await queryClient.cancelQueries({
-        queryKey: propertyKey(property.slug, 'slug'),
+
+      const previousProperties = applyOptimisticDelete<IProperty>({
+        queryClient,
+        queryKey: propertiesKey,
+        matchValue: id,
       })
-      const previous = snapshot(queryClient)
 
-      const listData = queryClient.getQueryData(propertiesKey)
-      const list = listData ? (listData as IProperty[]) : []
-
-      const itemToDelete = list.find((p) => p.id === id)
-      if (itemToDelete) {
-        remove(queryClient, itemToDelete)
-      }
-
-      return { previous }
+      return { previousProperties }
     },
     onError: (_error, _variables, context) => {
-      if (context?.previous) {
-        restore(queryClient, context.previous)
+      if (context?.previousProperties) {
+        restoreOptimisticData(queryClient, context.previousProperties)
       }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: propertiesKey })
     },
   })
 }

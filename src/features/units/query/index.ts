@@ -11,14 +11,19 @@ import {
   handlePut,
   type IResponse,
 } from '@/api'
+import {
+  applyOptimisticDelete,
+  applyOptimisticUpdate,
+  restoreOptimisticData,
+} from '@/api/cache'
 import { invalidatePropertyBySlug } from '@/features/properties/query'
 import {
   PROPERTIES_ENDPOINT,
-  propertyKey,
+  propertiesKey,
 } from '@/features/properties/query/cache'
 import { type IProperty } from '@/features/properties/types'
 import type { IUnitData, TCreateUnitSchema, IUpdateUnitInput } from '../types'
-import { getUnitsCache, unitKey, UNITS_ENDPOINT, unitsKey } from './cache'
+import { unitKey, UNITS_ENDPOINT, unitsKey } from './cache'
 
 async function handleGetUnits(propertyId: number) {
   const res = await handleGet<IResponse<IUnitData[]>>(
@@ -28,10 +33,26 @@ async function handleGetUnits(propertyId: number) {
   return res.data
 }
 
+async function handleGetUnitBySlug(propertyId: number, unitId: number) {
+  const res = await handleGet<IResponse<IUnitData>>(
+    `${PROPERTIES_ENDPOINT}/${propertyId.toString()}${UNITS_ENDPOINT}/${unitId.toString()}`
+  )
+
+  return res.data
+}
+
 export function useGetUnits(propertyId: number) {
   return useQuery({
     queryKey: [...unitKey(propertyId.toString(), 'id')],
     queryFn: async () => await handleGetUnits(propertyId),
+  })
+}
+
+export function useGetUnitBySlug(propertyId: number, unitId: number) {
+  return useQuery({
+    queryKey: [UNITS_ENDPOINT, 'detail', propertyId, unitId],
+    queryFn: async () => await handleGetUnitBySlug(propertyId, unitId),
+    enabled: !!propertyId && !!unitId,
   })
 }
 
@@ -76,7 +97,6 @@ export function useCreateUnit(property: IProperty) {
 
 export function useUpdateUnit(property: IProperty) {
   const queryClient = useQueryClient()
-  const { snapshot, patch, restore } = getUnitsCache(property.id.toString())
 
   return useMutation({
     mutationKey: [UNITS_ENDPOINT, 'update', property.id],
@@ -89,62 +109,109 @@ export function useUpdateUnit(property: IProperty) {
     }) => handleUpdateUnit(property.id, unitId, payload),
 
     onMutate: async ({ unitId, payload }) => {
-      await queryClient.cancelQueries({
-        queryKey: propertyKey(property.slug, 'slug'),
-      })
+      await queryClient.cancelQueries({ queryKey: propertiesKey })
       await queryClient.cancelQueries({ queryKey: unitsKey })
 
-      const previous = snapshot(queryClient)
+      // Optimistically update all instances where this unit exists by itself
+      const previousUnits = applyOptimisticUpdate<IUnitData>({
+        queryClient,
+        queryKey: unitsKey,
+        matchValue: unitId,
+        updater: (old) => ({ ...old, ...payload }),
+      })
 
-      patch(queryClient, { id: unitId } as IUnitData, (current) => ({
-        ...current,
-        ...payload,
-      }))
+      // Optimistically update properties that might contain this unit
+      const previousProperties = applyOptimisticUpdate<
+        IProperty & { unit?: IUnitData | null }
+      >({
+        queryClient,
+        queryKey: propertiesKey,
+        matchValue: property.id,
+        updater: (p) => {
+          const updated = { ...p }
+          if (Array.isArray(updated.units)) {
+            updated.units = updated.units.map((u) =>
+              u.id === unitId ? { ...u, ...payload } : u
+            )
+          }
+          if (updated.unit && updated.unit.id === unitId) {
+            updated.unit = { ...updated.unit, ...payload } as IUnitData
+          }
+          return updated
+        },
+      })
 
-      return { previous }
+      return { previousProperties, previousUnits }
     },
 
     onError: (_error, _variables, context) => {
-      if (context?.previous) {
-        restore(queryClient, context.previous)
+      if (context?.previousProperties) {
+        restoreOptimisticData(queryClient, context.previousProperties)
+      }
+      if (context?.previousUnits) {
+        restoreOptimisticData(queryClient, context.previousUnits)
       }
     },
 
     onSuccess: async () => {
       await invalidatePropertyBySlug(queryClient, property.slug)
+      await queryClient.invalidateQueries({ queryKey: unitsKey })
     },
   })
 }
 
 export function useDeleteUnit(property: IProperty) {
   const queryClient = useQueryClient()
-  const { snapshot, remove, restore } = getUnitsCache(property.id.toString())
 
   return useMutation({
     mutationKey: [UNITS_ENDPOINT, 'delete', property.id],
     mutationFn: (unitId: number) => handleDeleteUnit(property.id, unitId),
 
     onMutate: async (unitId) => {
-      await queryClient.cancelQueries({
-        queryKey: propertyKey(property.slug, 'slug'),
-      })
+      await queryClient.cancelQueries({ queryKey: propertiesKey })
       await queryClient.cancelQueries({ queryKey: unitsKey })
 
-      const previous = snapshot(queryClient)
+      // Optimistically delete from units queries
+      const previousUnits = applyOptimisticDelete<IUnitData>({
+        queryClient,
+        queryKey: unitsKey,
+        matchValue: unitId,
+      })
 
-      remove(queryClient, { id: unitId } as IUnitData)
+      // Optimistically delete from properties queries that contain the unit
+      const previousProperties = applyOptimisticUpdate<
+        IProperty & { unit?: IUnitData | null }
+      >({
+        queryClient,
+        queryKey: propertiesKey,
+        matchValue: property.id,
+        updater: (p) => {
+          const updated = { ...p }
+          if (Array.isArray(updated.units)) {
+            updated.units = updated.units.filter((u) => u.id !== unitId)
+          }
+          if (updated.unit && updated.unit.id === unitId) {
+            updated.unit = null
+          }
+          return updated
+        },
+      })
 
-      return { previous }
+      return { previousProperties, previousUnits }
     },
 
     onError: (_error, _variables, context) => {
-      if (context?.previous) {
-        restore(queryClient, context.previous)
+      if (context?.previousProperties) {
+        restoreOptimisticData(queryClient, context.previousProperties)
+      }
+      if (context?.previousUnits) {
+        restoreOptimisticData(queryClient, context.previousUnits)
       }
     },
 
     onSuccess: async () => {
       await invalidatePropertyBySlug(queryClient, property.slug)
+      await queryClient.invalidateQueries({ queryKey: unitsKey })
     },
   })
 }

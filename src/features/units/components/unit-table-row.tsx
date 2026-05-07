@@ -20,6 +20,9 @@ export default function UnitTableRow({ unit, onDelete }: Props) {
       params: {
         unitSlug: unit.slug,
       },
+      search: {
+        id: unit.id,
+      },
     })
   }
 

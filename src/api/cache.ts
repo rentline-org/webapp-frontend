@@ -192,3 +192,82 @@ export function itemCache<TItem>(key: QueryKey): CacheConfig<TItem> {
     },
   }
 }
+
+// --- NEW REUSABLE OPTIMISTIC UPDATE HELPERS --- //
+
+type BaseEntity = Record<string, any>
+
+export function applyOptimisticUpdate<T extends BaseEntity>({
+  queryClient,
+  queryKey,
+  matchBy = 'id' as keyof T,
+  matchValue,
+  updater,
+}: {
+  queryClient: QueryClient
+  queryKey: QueryKey
+  matchBy?: keyof T
+  matchValue: any
+  updater: (item: T) => T
+}) {
+  const previousData = queryClient.getQueriesData({ queryKey })
+
+  queryClient.setQueriesData({ queryKey }, (old: any) => {
+    if (!old) return old
+
+    if (Array.isArray(old)) {
+      return old.map((item) =>
+        item[matchBy] === matchValue ? updater(item) : item
+      )
+    }
+
+    if (old[matchBy] === matchValue) {
+      return updater(old)
+    }
+
+    return old
+  })
+
+  return previousData
+}
+
+export function applyOptimisticDelete<T extends BaseEntity>({
+  queryClient,
+  queryKey,
+  matchBy = 'id' as keyof T,
+  matchValue,
+}: {
+  queryClient: QueryClient
+  queryKey: QueryKey
+  matchBy?: keyof T
+  matchValue: any
+}) {
+  const previousData = queryClient.getQueriesData({ queryKey })
+
+  queryClient.setQueriesData({ queryKey }, (old: any) => {
+    if (!old) return old
+
+    if (Array.isArray(old)) {
+      return old.filter((item) => item[matchBy] !== matchValue)
+    }
+
+    if (old[matchBy] === matchValue) {
+      return null
+    }
+
+    return old
+  })
+
+  return previousData
+}
+
+export function restoreOptimisticData(
+  queryClient: QueryClient,
+  previousData: Array<[QueryKey, any]>
+) {
+  if (previousData) {
+    previousData.forEach(([key, data]) => {
+      queryClient.setQueryData(key, data)
+    })
+  }
+}

@@ -39,6 +39,8 @@ export interface IUnitData {
   updated_at: string
 }
 
+export type UnitTabKey = 'overview' | 'leases' | 'contacts' | 'accounting'
+
 export const createUnitSchema = z
   .object({
     name: z.string().min(1, 'This field is required').max(255),
