@@ -52,14 +52,14 @@ export function OrgSwitcher({ userProfile, isLoading, isFetching }: Props) {
   const handleSelectOrg = (org: IOrganizationData) => {
     mutate(org.id, {
       async onSuccess() {
+        navigate({
+          to: '/',
+        })
+
         await Promise.all([
           invalidateUserProfile(queryClient),
           invalidatePropertiesQuery(queryClient),
         ])
-
-        navigate({
-          to: '/',
-        })
 
         toast.info(`Using organization: ${org.title}`)
       },
