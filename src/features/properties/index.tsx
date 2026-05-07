@@ -47,8 +47,17 @@ import { propertyTypes } from './utils/constants'
 const route = getRouteApi('/_authenticated/properties/')
 
 export function Properties() {
-  const { data: properties, isLoading } = useGetProperties()
+  const {
+    data: properties,
+    isLoading: isLoadingProperties,
+    isFetching: isFetchingProperties,
+  } = useGetProperties()
   const navigate = route.useNavigate()
+
+  const isLoading = useMemo(
+    () => isLoadingProperties || isFetchingProperties,
+    [isLoadingProperties, isFetchingProperties]
+  )
 
   const {
     filter = '',

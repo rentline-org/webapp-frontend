@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { Building2, ChevronsUpDown, List } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -30,8 +30,11 @@ type Props = {
   isFetching: boolean
 }
 
+// const routeApi =
+
 export function OrgSwitcher({ userProfile, isLoading, isFetching }: Props) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const { mutate, isPending } = useHandleSelectOrganization()
   const { isMobile } = useSidebar()
@@ -53,6 +56,10 @@ export function OrgSwitcher({ userProfile, isLoading, isFetching }: Props) {
           invalidateUserProfile(queryClient),
           invalidatePropertiesQuery(queryClient),
         ])
+
+        navigate({
+          to: '/',
+        })
 
         toast.info(`Using organization: ${org.title}`)
       },
