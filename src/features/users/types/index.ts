@@ -3,14 +3,15 @@ import type { IActiveOrganization } from '@/features/organizations/types'
 export interface User {
   id: number
 
-  first_name: string | null
-  last_name: string | null
-  user_name: string | null
+  first_name: string
+  last_name: string
   name: string
   active_organization: IActiveOrganization
 
   email: string
   email_verified_at: string | null
+
+  dob: Date | null
 
   phone: string | null
   phone_verified_at: string | null

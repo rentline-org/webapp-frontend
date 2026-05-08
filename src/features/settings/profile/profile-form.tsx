@@ -1,9 +1,10 @@
-import { z } from 'zod'
+import { format } from 'date-fns'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from '@tanstack/react-router'
-import { showSubmittedData } from '@/lib/show-submitted-data'
+import { useQueryClient } from '@tanstack/react-query'
+import { BadgeCheck, Loader2, MailWarning } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -15,51 +16,40 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { DatePicker } from '@/components/date-picker'
+import { invalidateUserProfile, useUpdateUserProfile } from './query'
+import {
+  type IUserProfileData,
+  profileFormSchema,
+  type TProfileFormSchema,
+} from './types'
 
-const profileFormSchema = z.object({
-  username: z
-    .string('Please enter your username.')
-    .min(2, 'Username must be at least 2 characters.')
-    .max(30, 'Username must not be longer than 30 characters.'),
-  email: z.email({
-    error: (iss) =>
-      iss.input === undefined
-        ? 'Please select an email to display.'
-        : undefined,
-  }),
-  bio: z.string().max(160).min(4),
-  urls: z
-    .array(
-      z.object({
-        value: z.url('Please enter a valid URL.'),
-      })
-    )
-    .optional(),
-})
-
-type ProfileFormValues = z.infer<typeof profileFormSchema>
-
-// This can come from your database or API.
-const defaultValues: Partial<ProfileFormValues> = {
-  bio: 'I own a computer.',
-  urls: [
-    { value: 'https://shadcn.com' },
-    { value: 'http://twitter.com/shadcn' },
-  ],
+const defaultValues: Partial<TProfileFormSchema> = {
+  phone: '',
+  dob: null,
 }
 
-export function ProfileForm() {
-  const form = useForm<ProfileFormValues>({
+type ProfileFormProps = {
+  user: IUserProfileData
+}
+
+export function ProfileForm({ user }: ProfileFormProps) {
+  const queryClient = useQueryClient()
+  const { mutate: updateProfile, isPending } = useUpdateUserProfile()
+
+  const form = useForm<TProfileFormSchema>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
+    defaultValues: {
+      ...defaultValues,
+      ...user,
+      dob: user?.dob ? new Date(user.dob) : null,
+    },
     mode: 'onChange',
   })
 
@@ -68,109 +58,172 @@ export function ProfileForm() {
     control: form.control,
   })
 
+  const onSubmit = (data: TProfileFormSchema) => {
+    updateProfile(
+      {
+        ...data,
+        name: `${data.first_name} ${data.last_name}`,
+        dob: data.dob ? format(data.dob, 'yyyy-MM-dd') : null,
+      },
+      {
+        async onSuccess() {
+          await invalidateUserProfile(queryClient)
+        },
+      }
+    )
+  }
+
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((data) => showSubmittedData(data))}
-        className='space-y-8'
-      >
-        <FormField
-          control={form.control}
-          name='username'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder='shadcn' {...field} />
-              </FormControl>
-              <FormDescription>
-                This is your public display name. It can be your real name or a
-                pseudonym. You can only change this once every 30 days.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='email'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select a verified email to display' />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value='m@example.com'>m@example.com</SelectItem>
-                  <SelectItem value='m@google.com'>m@google.com</SelectItem>
-                  <SelectItem value='m@support.com'>m@support.com</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                You can manage verified email addresses in your{' '}
-                <Link to='/'>email settings</Link>.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='bio'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bio</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder='Tell us a little bit about yourself'
-                  className='resize-none'
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                You can <span>@mention</span> other users and organizations to
-                link to them.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div>
-          {fields.map((field, index) => (
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className='space-y-8'>
+          <div className='grid w-full grid-cols-2 gap-4'>
             <FormField
               control={form.control}
-              key={field.id}
-              name={`urls.${index}.value`}
+              name='first_name'
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                    URLs
-                  </FormLabel>
-                  <FormDescription className={cn(index !== 0 && 'sr-only')}>
-                    Add links to your website, blog, or social media profiles.
-                  </FormDescription>
-                  <FormControl className={cn(index !== 0 && 'mt-1.5')}>
-                    <Input {...field} />
+                <FormItem className='w-full'>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input className='w-full' placeholder='James' {...field} />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='last_name'
+              render={({ field }) => (
+                <FormItem className='w-full'>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input className='w-full' placeholder='Orion' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          ))}
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            className='mt-2'
-            onClick={() => append({ value: '' })}
-          >
-            Add URL
+          </div>
+          <FormField
+            control={form.control}
+            name='email'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input {...field} type='email' />
+                </FormControl>
+                <FormDescription>
+                  {user.email_verified_at ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant={
+                            user.email_verified_at ? 'success' : 'warning'
+                          }
+                        >
+                          <BadgeCheck /> Email Verified
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent side='bottom'>
+                        Verified at:{' '}
+                        {format(user.email_verified_at, 'dd/MM/yyyy')}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <>
+                      <MailWarning /> Email not verified
+                    </>
+                  )}
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='phone'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone (Optional)</FormLabel>
+                <FormControl>
+                  <Input {...field} value={field.value ?? ''} />
+                </FormControl>
+                {user.phone && user.phone_verified_at && (
+                  <FormDescription>
+                    <Badge variant='success'>
+                      <BadgeCheck /> Phone Verified
+                    </Badge>
+                  </FormDescription>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='dob'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date of Birth (Optional)</FormLabel>
+                <FormControl>
+                  <DatePicker
+                    {...field}
+                    selected={field.value ?? undefined}
+                    onSelect={(d) => field.onChange(d)}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <div>
+            {fields.map((field, index) => (
+              <FormField
+                control={form.control}
+                key={field.id}
+                name={`urls.${index}.value`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className={cn(index !== 0 && 'sr-only')}>
+                      URLs
+                    </FormLabel>
+                    <FormDescription className={cn(index !== 0 && 'sr-only')}>
+                      Add links to your website, blog, or social media profiles.
+                    </FormDescription>
+                    <FormControl className={cn(index !== 0 && 'mt-1.5')}>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              className='mt-2'
+              onClick={() => append({ value: '' })}
+            >
+              Add URL
+            </Button>
+          </div>
+        </div>
+        <div className='mt-8 space-y-4'>
+          <Separator />
+          <Button size='lg' type='submit' disabled={isPending}>
+            {isPending ? (
+              <>
+                <Loader2 className='animate-spin' />
+                Updating profile
+              </>
+            ) : (
+              <>Update profile</>
+            )}
           </Button>
         </div>
-        <Button type='submit'>Update profile</Button>
       </form>
     </Form>
   )
