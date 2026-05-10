@@ -57,6 +57,7 @@ const OnboardingOrgList = ({ organizations, activeOrganization }: Props) => {
       mutate(id, {
         async onSuccess() {
           await invalidateUserProfile(queryClient)
+
           navigate({ to: '/' })
         },
       })

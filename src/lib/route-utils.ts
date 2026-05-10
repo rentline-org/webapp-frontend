@@ -4,8 +4,6 @@ import { getUserProfileContext } from '@/features/settings/profile/query'
 import type { IUserProfileData } from '@/features/settings/profile/types'
 import { getCookie, removeCookie } from './cookies'
 
-// import { User } from 'lucide-react'
-
 type Context = {
   queryClient: QueryClient
 }
@@ -16,6 +14,7 @@ export async function handleAuthProtection(
 ): Promise<IUserProfileData | null> {
   if (type === 'protected') {
     const token = getCookie('token')
+
     const redirectSearch = location.pathname + location.search
 
     const { user } = await getUserProfileContext(context, () => {
@@ -23,13 +22,66 @@ export async function handleAuthProtection(
         removeCookie('token')
       }
 
-      throw redirect({ to: '/sign-in', search: { redirect: redirectSearch } })
+      removeCookie('active_org')
+
+      throw redirect({
+        to: '/sign-in',
+        search: {
+          redirect: redirectSearch,
+        },
+      })
     })
 
-    if (
-      user?.active_organization === null &&
-      !(location.pathname === '/onboarding')
-    ) {
+    /**
+     * No user found
+     */
+    if (!user) {
+      removeCookie('active_org')
+
+      throw redirect({
+        to: '/sign-in',
+        search: {
+          redirect: redirectSearch,
+        },
+      })
+    }
+
+    /**
+     * Check active organization cookie
+     */
+    const activeOrganizationCookie = getCookie('active_org')
+
+    /**
+     * User has no organizations yet
+     */
+    if (!user.organizations?.length && location.pathname !== '/onboarding') {
+      removeCookie('active_org')
+
+      throw redirect({
+        to: '/onboarding',
+      })
+    }
+
+    /**
+     * Missing active organization cookie
+     */
+    if (!activeOrganizationCookie && location.pathname !== '/onboarding') {
+      throw redirect({
+        to: '/onboarding',
+      })
+    }
+
+    /**
+     * Validate cookie organization exists for user
+     */
+    const hasOrganizationAccess = user.organizations?.some(
+      (organization) =>
+        String(organization.id) === String(activeOrganizationCookie)
+    )
+
+    if (!hasOrganizationAccess && location.pathname !== '/onboarding') {
+      removeCookie('active_org')
+
       throw redirect({
         to: '/onboarding',
       })
@@ -41,7 +93,9 @@ export async function handleAuthProtection(
   if (type === 'guest') {
     const token = getCookie('token')
 
-    if (!token) return null
+    if (!token) {
+      return null
+    }
 
     const { user } = await getUserProfileContext(context, () => {
       return

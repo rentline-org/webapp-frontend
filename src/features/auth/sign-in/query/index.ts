@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { handlePost } from '@/api'
+import { setCookie } from '@/lib/cookies'
 import { getDeviceType } from '@/lib/utils'
 import type {
   ISignInRequest,
@@ -22,6 +23,7 @@ async function handleSignIn(
   )
 
   if (response.data.token) {
+    setCookie('token', response.data.token)
     return response.data
   }
 

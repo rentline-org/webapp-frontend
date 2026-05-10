@@ -19,7 +19,6 @@ export interface IResponse<TData> extends ApiErrorResponse {
 
 export const RentlineApi = axios.create({
   baseURL: import.meta.env.VITE_RENTLINE_API_URL,
-  // withCredentials: true,
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
@@ -28,9 +27,14 @@ export const RentlineApi = axios.create({
 
 RentlineApi.interceptors.request.use((config) => {
   const token = getCookie('token')
+  const activeOrgId = getCookie('active_org')
 
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`
+  }
+
+  if (activeOrgId) {
+    config.headers['x-Organization-ID'] = activeOrgId
   }
 
   return config
@@ -94,6 +98,20 @@ export const handlePut = async <TResponse, TRequest = unknown>(
   config?: AxiosRequestConfig<TRequest>
 ): Promise<TResponse> => {
   const res = await RentlineApi.put<
+    TResponse,
+    AxiosResponse<TResponse>,
+    TRequest
+  >(url, data, config)
+
+  return res.data
+}
+
+export const handlePatch = async <TResponse, TRequest = unknown>(
+  url: string,
+  data?: TRequest,
+  config?: AxiosRequestConfig<TRequest>
+): Promise<TResponse> => {
+  const res = await RentlineApi.patch<
     TResponse,
     AxiosResponse<TResponse>,
     TRequest

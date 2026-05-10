@@ -5,7 +5,7 @@ import DeleteActiveOrganization from './components/delete-active-organization'
 import EditOrganizationForm from './edit-organization-form'
 
 const OrganizationDetails = () => {
-  const { data, isLoading, isFetching } = useUserProfileQuery()
+  const { data, isLoading } = useUserProfileQuery()
 
   return (
     <ContentSection
@@ -20,11 +20,7 @@ const OrganizationDetails = () => {
       }
       fullWidth
     >
-      {isLoading || isFetching ? (
-        <Loader2 />
-      ) : (
-        <EditOrganizationForm user={data!} />
-      )}
+      {isLoading ? <Loader2 /> : <EditOrganizationForm user={data!} />}
     </ContentSection>
   )
 }

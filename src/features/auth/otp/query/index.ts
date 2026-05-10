@@ -1,6 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
 import { handlePost } from '@/api'
-import { setCookie } from '@/lib/cookies'
 import { getDeviceType } from '@/lib/utils'
 import type {
   IVerifyOtpRequest,
@@ -9,7 +8,7 @@ import type {
   TOtpFormSchema,
 } from '../types'
 
-const AUTH_OTP_ENDPOINT = 'verify-otp'
+const AUTH_OTP_ENDPOINT = '/verify-otp'
 
 async function handleOTPVerification(
   schema: TOtpFormSchema,
@@ -25,7 +24,7 @@ async function handleOTPVerification(
   )
 
   if (response.data.token) {
-    setCookie('token', response.data.token, 60 * 60 * 24 * 7)
+    // setCookie('token', response.data.token, 60 * 60 * 24 * 7)
     return response.data
   }
 

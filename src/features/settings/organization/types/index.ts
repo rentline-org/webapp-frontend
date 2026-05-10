@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-const avatarSchema = z.instanceof(File).optional().nullable()
-
 export const updateOrganizationSchema = z
   .object({
     title: z.string().min(1, 'Organization name is required'),
@@ -25,8 +23,6 @@ export const updateOrganizationSchema = z
     tax_id_type: z.enum(['cpf', 'cnpj', 'vat']).optional(),
 
     // is_active: z.boolean(),
-
-    avatar: avatarSchema.optional().nullable(),
   })
   .superRefine((data, ctx) => {
     const isBR = data.country === 'BR'

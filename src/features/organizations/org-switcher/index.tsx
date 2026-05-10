@@ -90,11 +90,13 @@ export function OrgSwitcher({ userProfile, isLoading, isFetching }: Props) {
                 </>
               ) : (
                 <>
-                  <div className='flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
-                    {/* <activeTeam.logo className='size-4' />
-                     */}
-                    {userProfile?.active_organization?.avatar ? (
-                      <img src={userProfile!.active_organization.avatar} />
+                  <div className='flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
+                    {userProfile?.active_organization?.logo ? (
+                      <img
+                        src={userProfile.active_organization.logo}
+                        alt={userProfile.active_organization.title}
+                        className='h-full w-full object-cover'
+                      />
                     ) : (
                       <Building2 className='size-4' />
                     )}
@@ -128,9 +130,13 @@ export function OrgSwitcher({ userProfile, isLoading, isFetching }: Props) {
                 onClick={() => handleSelectOrg(org)}
                 className='gap-2 p-2'
               >
-                <div className='flex size-6 items-center justify-center rounded-sm border'>
-                  {org.avatar ? (
-                    <img src={org.avatar} />
+                <div className='flex size-6 items-center justify-center overflow-hidden rounded-sm border bg-background'>
+                  {org.logo ? (
+                    <img
+                      src={org.logo}
+                      alt={org.title}
+                      className='h-full w-full object-cover'
+                    />
                   ) : (
                     <Building2 className='size-4' />
                   )}

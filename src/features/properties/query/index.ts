@@ -8,8 +8,8 @@ import {
 import {
   handleDelete,
   handleGet,
+  handlePatch,
   handlePost,
-  handlePut,
   type IResponse,
 } from '@/api'
 import {
@@ -52,7 +52,7 @@ async function handleUpdateProperty(
   property: IProperty,
   payload: IUpdatePropertyInput
 ): Promise<IProperty> {
-  const result = await handlePut<IResponse<IProperty>, IUpdatePropertyInput>(
+  const result = await handlePatch<IResponse<IProperty>, IUpdatePropertyInput>(
     `${PROPERTIES_ENDPOINT}/${property.id}`,
     payload
   )

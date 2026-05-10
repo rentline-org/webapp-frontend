@@ -2,6 +2,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth-store'
+import { removeCookie } from '@/lib/cookies'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { useHandleLogout } from '@/features/auth/query'
 import { invalidateUserProfile } from '@/features/settings/profile/query'
@@ -23,6 +24,7 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
     mutate(undefined, {
       async onSuccess() {
         auth.reset()
+        removeCookie('active_org')
         await invalidateUserProfile(queryClient)
 
         navigate({

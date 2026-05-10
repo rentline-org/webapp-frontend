@@ -35,7 +35,7 @@ export interface IOrganizationData {
   settings: Record<string, unknown> | null
 
   trial_ends_at: string
-  avatar: string | null
+  logo: string | null
 }
 
 export interface IActiveOrganization extends IOrganizationData {
@@ -138,3 +138,23 @@ export interface IOrganizationMutationRequest {
 }
 
 export type IOrganizationMutationResponse = IResponse<IOrganizationData>
+
+export const organizationLogoUploadSchema = z.object({
+  logo: z
+    .instanceof(File, {
+      message: 'Please select an image.',
+    })
+    .refine(
+      (file) => ['image/jpeg', 'image/png', 'image/webp'].includes(file.type),
+      {
+        message: 'Only JPG, PNG and WebP images are allowed.',
+      }
+    )
+    .refine((file) => file.size <= 2 * 1024 * 1024, {
+      message: 'Image must be less than 2MB.',
+    }),
+})
+
+export type TOrganizationLogoUploadSchema = z.infer<
+  typeof organizationLogoUploadSchema
+>
