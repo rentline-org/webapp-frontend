@@ -1,32 +1,27 @@
 /* eslint-disable no-console */
 import { useMutation } from '@tanstack/react-query'
-import { handlePost } from '@/api'
+import { RentlineAuth } from '@/api'
 import { getDeviceType } from '@/lib/utils'
-import type {
-  ISignUpRequest,
-  ISignUpResponse,
-  ISignUpResponseData,
-  TSignUpFormSchema,
-} from '../types'
+import type { ISignUpResponseData, TSignUpFormSchema } from '../types'
 
 const AUTH_REGISTER_ENDPOINT = '/register'
 
 async function handleSignUp(
   signUpForm: TSignUpFormSchema
-): Promise<ISignUpResponseData | null> {
-  const response = await handlePost<ISignUpResponse, ISignUpRequest>(
-    AUTH_REGISTER_ENDPOINT,
-    {
-      ...signUpForm,
-      device: getDeviceType(),
-    }
-  )
+): Promise<ISignUpResponseData> {
+  await RentlineAuth.get('/sanctum/csrf-cookie')
 
-  if (response.data.user) {
-    return response.data
-  }
+  const response = await RentlineAuth.post(AUTH_REGISTER_ENDPOINT, {
+    ...signUpForm,
+    device: getDeviceType(),
+  })
 
-  return null
+  // console.log(response.data)
+  // if (response.data.user) {
+
+  // }
+
+  return response.data.data
 }
 
 export function useSignUpMutation() {
@@ -35,9 +30,7 @@ export function useSignUpMutation() {
     mutationFn: async (schema) => {
       const result = await handleSignUp(schema)
 
-      if (!result?.user) {
-        throw new Error(result?.message || 'Failed to create account')
-      }
+      console.log(result)
 
       return result
     },

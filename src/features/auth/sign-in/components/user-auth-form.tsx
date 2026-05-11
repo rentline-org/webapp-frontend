@@ -44,24 +44,25 @@ export function UserAuthForm({
 
   function onSubmit(data: TSignInFormSchema) {
     mutate(data, {
-      onSuccess(result) {
-        if (!result?.token) {
-          auth.setUser(result!.user)
+      onSuccess(data) {
+        if (!data?.user) return
+
+        if (!data.verified) {
+          auth.setUser(data.user)
 
           return navigate({
             to: '/otp',
             search: {
-              email: result!.user!.email,
+              email: data.user.email,
             },
           })
         }
 
-        auth.setUser(result!.user)
-        auth.setAccessToken(result!.token)
+        auth.setUser(data!.user)
 
         toast.success('Successfully Signed in!')
 
-        if (result!.user.active_organization === null) {
+        if (data!.user.active_organization === null) {
           navigate({
             to: '/onboarding',
             replace: true,
@@ -71,11 +72,6 @@ export function UserAuthForm({
         const targetPath = redirectTo?.startsWith('/') ? redirectTo : '/'
         navigate({ to: targetPath, replace: true })
       },
-      // onError(err) {
-      //   if (err?.error_code === 'ACCOUNT_UNVERIFIED') {
-      //     setErrMsg(err?.detail)
-      //   }
-      // },
     })
   }
 

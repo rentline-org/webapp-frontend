@@ -1,13 +1,10 @@
-// import { useQueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth-store'
 import { removeCookie } from '@/lib/cookies'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { useHandleLogout } from '@/features/auth/query'
-import { invalidateUserProfile } from '@/features/settings/profile/query'
-
-// import { invalidateUserProfile } from '@/features/settings/profile/query'
+import { USER_PROFILE_ENDPOINT } from '@/features/settings/profile/query'
 
 interface SignOutDialogProps {
   open: boolean
@@ -21,11 +18,18 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
   const { mutate, isPending } = useHandleLogout()
 
   const handleSignOut = () => {
+    onOpenChange(false)
+
     mutate(undefined, {
-      async onSuccess() {
+      onSuccess: async () => {
         auth.reset()
         removeCookie('active_org')
-        await invalidateUserProfile(queryClient)
+
+        await queryClient.cancelQueries({ queryKey: [USER_PROFILE_ENDPOINT] })
+        queryClient.removeQueries({
+          queryKey: [USER_PROFILE_ENDPOINT],
+          exact: true,
+        })
 
         navigate({
           to: '/sign-in',

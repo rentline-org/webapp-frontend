@@ -18,9 +18,13 @@ export interface IVerifyOtpRequest {
   device: DeviceType
 }
 
+export interface IResendOtpRequest {
+  email: string
+  device: DeviceType
+}
+
 export interface IVerifyOtpResponseData {
   user: IUserProfileData
-  token: string
   status: AuthErrorCodes
   message: string
 }

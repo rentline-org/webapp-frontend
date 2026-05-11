@@ -1,12 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
-import { handlePost } from '@/api'
+import { type IResponse, RentlineAuth } from '@/api'
 import { getDeviceType } from '@/lib/utils'
-import type {
-  IVerifyOtpRequest,
-  IVerifyOtpResponse,
-  IVerifyOtpResponseData,
-  TOtpFormSchema,
-} from '../types'
+import type { IVerifyOtpResponseData, TOtpFormSchema } from '../types'
 
 const AUTH_OTP_ENDPOINT = '/verify-otp'
 
@@ -14,21 +9,34 @@ async function handleOTPVerification(
   schema: TOtpFormSchema,
   email: string
 ): Promise<IVerifyOtpResponseData | null> {
-  const response = await handlePost<IVerifyOtpResponse, IVerifyOtpRequest>(
-    AUTH_OTP_ENDPOINT,
-    {
-      email,
-      device: getDeviceType(),
-      otp: schema.otp,
-    }
-  )
+  await RentlineAuth.get('/sanctum/csrf-cookie')
 
-  if (response.data.token) {
-    // setCookie('token', response.data.token, 60 * 60 * 24 * 7)
-    return response.data
+  const response = await RentlineAuth.post(AUTH_OTP_ENDPOINT, {
+    email,
+    device: getDeviceType(),
+    otp: schema.otp,
+  })
+
+  if (response.data) {
+    return response.data.data
   }
 
   return null
+}
+
+async function handleResendOtp(
+  email: string
+): Promise<{ message: string } | null> {
+  await RentlineAuth.get('/sanctum/csrf-cookie')
+  const response = await RentlineAuth.post<IResponse<{ message: string }>>(
+    '/resend-otp',
+    {
+      email,
+      device: getDeviceType(),
+    }
+  )
+
+  return response.data.data
 }
 
 export function useVerifyOtpMutation() {
@@ -41,11 +49,20 @@ export function useVerifyOtpMutation() {
     mutationFn: async ({ email, schema }) => {
       const result = await handleOTPVerification(schema, email)
 
-      if (!result?.token) {
+      if (!result?.user) {
         throw new Error(result?.message || 'Failed to verify OTP')
       }
 
       return result
+    },
+  })
+}
+
+export function useResendOtp() {
+  return useMutation({
+    mutationKey: [AUTH_OTP_ENDPOINT, 'resend'],
+    mutationFn: async (email: string) => {
+      return await handleResendOtp(email)
     },
   })
 }

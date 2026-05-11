@@ -1,6 +1,5 @@
 import z from 'zod'
 import type { IUserProfileData } from '@/features/settings/profile/types'
-import type { AuthErrorCodes } from '../../types'
 
 export const signInFormSchema = z.object({
   email: z.email({
@@ -22,9 +21,8 @@ export interface ISignInRequest {
 
 export interface ISignInResponseData {
   user: IUserProfileData
-  token: string | null
-  status: AuthErrorCodes
   message: string
+  verified: boolean
 }
 
 export interface ISignInResponse {

@@ -1,33 +1,25 @@
 import { useMutation } from '@tanstack/react-query'
-import { handlePost } from '@/api'
-import { setCookie } from '@/lib/cookies'
+import { RentlineAuth } from '@/api'
 import { getDeviceType } from '@/lib/utils'
-import type {
-  ISignInRequest,
-  ISignInResponse,
-  ISignInResponseData,
-  TSignInFormSchema,
-} from '../types'
+import type { ISignInResponseData, TSignInFormSchema } from '../types'
 
 const AUTH_SIGNIN_ENDPOINT = '/login'
 
 async function handleSignIn(
   data: TSignInFormSchema
 ): Promise<ISignInResponseData | null> {
-  const response = await handlePost<ISignInResponse, ISignInRequest>(
-    AUTH_SIGNIN_ENDPOINT,
-    {
-      ...data,
-      device: getDeviceType(),
-    }
-  )
+  await RentlineAuth.get('/sanctum/csrf-cookie')
 
-  if (response.data.token) {
-    setCookie('token', response.data.token)
-    return response.data
+  const response = await RentlineAuth.post(AUTH_SIGNIN_ENDPOINT, {
+    ...data,
+    device: getDeviceType(),
+  })
+
+  if (response.data) {
+    return response.data.data
   }
 
-  throw response.data
+  throw response.data.message
 }
 
 export function useHandleSignIn() {

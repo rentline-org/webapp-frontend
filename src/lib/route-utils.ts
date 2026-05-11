@@ -8,105 +8,84 @@ type Context = {
   queryClient: QueryClient
 }
 
+function getSafeRedirectTarget() {
+  const url = new URL(window.location.href)
+
+  if (url.pathname === '/sign-in') {
+    return '/'
+  }
+
+  url.searchParams.delete('redirect')
+
+  return `${url.pathname}${url.search}${url.hash}`
+}
+
+function redirectToSignIn(): never {
+  removeCookie('active_org')
+
+  throw redirect({
+    to: '/sign-in',
+    search: {
+      redirect: getSafeRedirectTarget(),
+    },
+    replace: true,
+  })
+}
+
+function redirectToOnboarding(): never {
+  throw redirect({
+    to: '/onboarding',
+    replace: true,
+  })
+}
+
 export async function handleAuthProtection(
   type: 'protected' | 'guest',
   context: Context
 ): Promise<IUserProfileData | null> {
-  if (type === 'protected') {
-    const token = getCookie('token')
+  const pathname = window.location.pathname
 
-    const redirectSearch = location.pathname + location.search
+  if (type === 'guest') {
+    const { user } = await getUserProfileContext(context)
 
-    const { user } = await getUserProfileContext(context, () => {
-      if (token) {
-        removeCookie('token')
-      }
-
-      removeCookie('active_org')
-
+    if (user) {
       throw redirect({
-        to: '/sign-in',
-        search: {
-          redirect: redirectSearch,
-        },
-      })
-    })
-
-    /**
-     * No user found
-     */
-    if (!user) {
-      removeCookie('active_org')
-
-      throw redirect({
-        to: '/sign-in',
-        search: {
-          redirect: redirectSearch,
-        },
+        to: '/',
+        replace: true,
       })
     }
 
-    /**
-     * Check active organization cookie
-     */
+    return null
+  }
+
+  const { user } = await getUserProfileContext(context)
+
+  if (!user) {
+    redirectToSignIn()
+  }
+
+  if (pathname !== '/onboarding') {
     const activeOrganizationCookie = getCookie('active_org')
 
-    /**
-     * User has no organizations yet
-     */
-    if (!user.organizations?.length && location.pathname !== '/onboarding') {
+    if (!user.organizations?.length) {
       removeCookie('active_org')
-
-      throw redirect({
-        to: '/onboarding',
-      })
+      redirectToOnboarding()
     }
 
-    /**
-     * Missing active organization cookie
-     */
-    if (!activeOrganizationCookie && location.pathname !== '/onboarding') {
-      throw redirect({
-        to: '/onboarding',
-      })
+    if (!activeOrganizationCookie) {
+      redirectToOnboarding()
     }
 
-    /**
-     * Validate cookie organization exists for user
-     */
     const hasOrganizationAccess = user.organizations?.some(
       (organization) =>
         String(organization.id) === String(activeOrganizationCookie)
     )
 
-    if (!hasOrganizationAccess && location.pathname !== '/onboarding') {
+    if (!hasOrganizationAccess) {
       removeCookie('active_org')
-
-      throw redirect({
-        to: '/onboarding',
-      })
-    }
-
-    return user
-  }
-
-  if (type === 'guest') {
-    const token = getCookie('token')
-
-    if (!token) {
-      return null
-    }
-
-    const { user } = await getUserProfileContext(context, () => {
-      return
-    })
-
-    if (user) {
-      throw redirect({
-        to: '/',
-      })
+      redirectToOnboarding()
     }
   }
 
-  return null
+  return user
 }

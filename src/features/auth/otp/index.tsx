@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { getRouteApi } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
@@ -9,8 +9,13 @@ import {
 } from '@/components/ui/card'
 import { AuthLayout } from '../auth-layout'
 import { OtpForm } from './components/otp-form'
+import ResendOtpCode from './components/resend-otp-code'
+
+const routeApi = getRouteApi('/(auth)/otp')
 
 export function Otp() {
+  const { email } = routeApi.useSearch()
+
   return (
     <AuthLayout showLogo>
       <Card className='max-w-md gap-4 md:min-w-lg'>
@@ -27,16 +32,7 @@ export function Otp() {
           <OtpForm />
         </CardContent>
         <CardFooter>
-          <p className='px-8 text-center text-sm text-muted-foreground'>
-            Haven't received it?{' '}
-            <Link
-              to='/sign-in'
-              className='underline underline-offset-4 hover:text-primary'
-            >
-              Resend a new code.
-            </Link>
-            .
-          </p>
+          <ResendOtpCode email={email} />
         </CardFooter>
       </Card>
     </AuthLayout>

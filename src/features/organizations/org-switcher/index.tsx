@@ -43,7 +43,7 @@ export function OrgSwitcher({ userProfile, isLoading, isFetching }: Props) {
     if (userProfile) {
       const { active_organization, organizations } = userProfile
 
-      return organizations.filter((o) => o.id !== active_organization.id)
+      return organizations.filter((o) => o.id !== active_organization?.id)
     }
 
     return []

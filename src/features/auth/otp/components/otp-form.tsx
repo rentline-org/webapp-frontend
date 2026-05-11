@@ -32,7 +32,7 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
   const { isPending, mutate } = useVerifyOtpMutation()
   const { email } = routeApi.useSearch()
 
-  const { setUser, setAccessToken } = useAuthStore((s) => s.auth)
+  const { setUser } = useAuthStore((s) => s.auth)
 
   const form = useForm<TOtpFormSchema>({
     resolver: zodResolver(otpFormSchema),
@@ -49,7 +49,6 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
         onSuccess: (data) => {
           if (data?.user) {
             setUser(data.user)
-            setAccessToken(data.token)
 
             if (data?.user.active_organization === null) {
               navigate({
@@ -57,7 +56,7 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
                 replace: true,
               })
 
-              toast.success('OTP verified successfully!')
+              toast.success(data?.message ?? 'OTP verified successfully!')
               navigate({ to: '/', replace: true })
             }
           }

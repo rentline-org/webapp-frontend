@@ -76,10 +76,9 @@ export function useUpdateUserProfile() {
   })
 }
 
-export async function getUserProfileContext(
-  context: { queryClient: QueryClient },
-  onError: () => void
-) {
+export async function getUserProfileContext(context: {
+  queryClient: QueryClient
+}) {
   try {
     const user = await context.queryClient.fetchQuery<IUserProfileData | null>({
       queryKey: [USER_PROFILE_ENDPOINT],
@@ -90,7 +89,7 @@ export async function getUserProfileContext(
 
     return { user }
   } catch {
-    throw onError()
+    return { user: null }
   }
 }
 

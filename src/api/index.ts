@@ -13,28 +13,36 @@ export type ApiErrorResponse = {
 
 export interface IResponse<TData> extends ApiErrorResponse {
   data: TData
-  // errors?: Record<string, Array<string>>
-  // message?: string
 }
 
 export const RentlineApi = axios.create({
   baseURL: import.meta.env.VITE_RENTLINE_API_URL,
   headers: {
     Accept: 'application/json',
-    'Content-Type': 'application/json',
   },
+  withCredentials: true,
+  withXSRFToken: true,
+})
+
+export const RentlineAuth = axios.create({
+  baseURL: import.meta.env.VITE_RENTLINE_API_AUTH,
+  headers: {
+    Accept: 'application/json',
+  },
+  withCredentials: true,
+  withXSRFToken: true,
 })
 
 RentlineApi.interceptors.request.use((config) => {
-  const token = getCookie('token')
+  // const token = getCookie('token')
   const activeOrgId = getCookie('active_org')
 
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`
-  }
+  // if (token) {
+  //   config.headers['Authorization'] = `Bearer ${token}`
+  // }
 
   if (activeOrgId) {
-    config.headers['x-Organization-ID'] = activeOrgId
+    config.headers['X-Organization-Id'] = String(activeOrgId)
   }
 
   return config
