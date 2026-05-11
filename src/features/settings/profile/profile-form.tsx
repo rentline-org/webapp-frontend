@@ -151,13 +151,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 <FormControl>
                   <Input {...field} value={field.value ?? ''} />
                 </FormControl>
-                {user.phone && user.phone_verified_at && (
+                {/* {user.phone && user.phone_verified_at && (
                   <FormDescription>
                     <Badge variant='success'>
                       <BadgeCheck /> Phone Verified
                     </Badge>
                   </FormDescription>
-                )}
+                )} */}
                 <FormMessage />
               </FormItem>
             )}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod'
 import type { IProperty } from '@/features/properties/types'
 import { UNIT_TYPES } from './constants'
@@ -7,6 +8,11 @@ export const unitTypeValues = Object.values(UNIT_TYPES) as [
   TUnitType,
   ...TUnitType[],
 ]
+
+export interface IMediaData {
+  id: string
+  url: string
+}
 
 export interface IUnitData {
   id: number
@@ -29,6 +35,9 @@ export interface IUnitData {
   square_feet?: number | null
 
   amenities?: string[] | null
+  thumbnail?: IMediaData | null
+  gallery_urls?: IMediaData[] | null
+  media?: any
 
   available_from?: string | null
   is_pet_friendly: boolean

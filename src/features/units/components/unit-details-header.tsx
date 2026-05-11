@@ -1,11 +1,11 @@
-import { ChevronLeft, ImageIcon } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { cleanSnakecase } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import InlineText from '@/components/inline-text'
 import type { IProperty } from '@/features/properties/types'
 import type { IUnitData, IUpdateUnitInput } from '../types'
+import UnitThumbnail from '../unit-gallery/unit-thumbnail'
 
 type UnitDetailsHeaderProps = {
   property: IProperty
@@ -37,9 +37,14 @@ const UnitDetailsHeader = ({
         </Button>
 
         <div className='flex items-start gap-4'>
-          <div className='relative aspect-4/3 w-28 overflow-hidden rounded-2xl bg-secondary'>
-            <Skeleton className='h-full w-full rounded-none bg-secondary' />
-            <ImageIcon className='absolute inset-1/2 size-6 -translate-x-1/2 -translate-y-1/2 text-muted-foreground' />
+          <div className='relative aspect-5/5 w-28 overflow-hidden rounded-2xl bg-secondary'>
+            <UnitThumbnail
+              thumbnail={unit?.thumbnail ?? null}
+              unitId={unit.id}
+              propertyId={property.id}
+            />
+            {/* <Skeleton className='h-full w-full rounded-none bg-secondary' />
+            <ImageIcon className='absolute inset-1/2 size-6 -translate-x-1/2 -translate-y-1/2 text-muted-foreground' /> */}
           </div>
 
           <div className='max-w-4xl space-y-4'>

@@ -20,7 +20,7 @@ export const makeOptimisticUnit = (
   propertyId: number,
   payload: TCreateUnitSchema,
   tempId: number
-): IUnitData => ({
+): Omit<IUnitData, 'thumbnail' | 'media' | 'gallery_urls'> => ({
   id: tempId,
   property_id: propertyId,
   name: payload.name,
