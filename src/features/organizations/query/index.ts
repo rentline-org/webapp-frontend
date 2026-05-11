@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { handleGet, handlePost, handlePut, type IResponse } from '@/api'
+import { handleGet, handlePost } from '@/api'
 import { saveActiveOrganization } from '../org-switcher/query'
 import type {
   IOrganizationData,
@@ -7,11 +7,10 @@ import type {
   IOrganizationMutationResponse,
   IOrganizationResponse,
   TCreateOrganizationSchema,
-  TOrganizationLogoUploadSchema,
 } from '../types'
 
 const USER_ORGANIZATIONS_LIST_ENDPOINT = '/organizations'
-const CREATE_ORGANIZATION_ENDPOINT = '/organizations'
+export const CREATE_ORGANIZATION_ENDPOINT = '/organizations'
 
 async function handleGetUserOrganizations(): Promise<IOrganizationData[]> {
   const result = await handleGet<IOrganizationResponse>(
@@ -42,21 +41,6 @@ async function handleCreateOrganization(
   return response.data
 }
 
-async function handleUploadLogo(
-  payload: TOrganizationLogoUploadSchema
-): Promise<IOrganizationData> {
-  const formData = new FormData()
-
-  formData.append('logo', payload.logo)
-
-  const response = await handlePut<IResponse<IOrganizationData>, FormData>(
-    CREATE_ORGANIZATION_ENDPOINT.concat('/active/logo'),
-    formData
-  )
-
-  return response.data
-}
-
 export function useGetUserOrganizations() {
   return useQuery<IOrganizationData[]>({
     queryKey: [USER_ORGANIZATIONS_LIST_ENDPOINT],
@@ -68,14 +52,5 @@ export function useHandleCreationOrganization() {
   return useMutation({
     mutationKey: [CREATE_ORGANIZATION_ENDPOINT],
     mutationFn: handleCreateOrganization,
-  })
-}
-
-export function useUploadOrganizationLogo() {
-  return useMutation({
-    mutationKey: [CREATE_ORGANIZATION_ENDPOINT, 'logo'],
-    mutationFn: async (payload: TOrganizationLogoUploadSchema) => {
-      return await handleUploadLogo(payload)
-    },
   })
 }

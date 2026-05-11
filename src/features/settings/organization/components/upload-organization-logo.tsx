@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -16,13 +17,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useUploadOrganizationLogo } from '@/features/organizations/query'
 import {
   type IOrganizationData,
   organizationLogoUploadSchema,
   type TOrganizationLogoUploadSchema,
 } from '@/features/organizations/types'
 import { invalidateUserProfile } from '../../profile/query'
+import { useDeleteOrganizationLogo, useUploadOrganizationLogo } from '../query'
 
 type Props = {
   organization: IOrganizationData
@@ -37,9 +38,19 @@ const UploadOrganizationLogo = ({ organization }: Props) => {
   const [dragActive, setDragActive] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
 
-  const { mutate: uploadLogo, isPending } = useUploadOrganizationLogo()
+  const { mutate: uploadLogo, isPending: isUpdating } =
+    useUploadOrganizationLogo()
+  const { mutate: deleteLogo, isPending: isDeleting } =
+    useDeleteOrganizationLogo()
 
-  const currentPreview = previewUrl ?? organization.logo ?? null
+  const isPending = useMemo(
+    () => isUpdating || isDeleting,
+    [isUpdating, isDeleting]
+  )
+  const currentPreview = useMemo(
+    () => previewUrl ?? organization.logo ?? null,
+    [organization.logo, previewUrl]
+  )
 
   useEffect(() => {
     return () => {
@@ -121,6 +132,21 @@ const UploadOrganizationLogo = ({ organization }: Props) => {
     handleFile(file)
   }
 
+  const handleReset = () => {
+    deleteLogo(undefined, {
+      async onSuccess() {
+        await invalidateUserProfile(queryClient)
+
+        setPreviewUrl(null)
+        setSelectedFileName(null)
+        setLocalError(null)
+        clearInput()
+
+        toast.info('Organization logo removed')
+      },
+    })
+  }
+
   return (
     <div className='rounded-2xl border border-border/50 p-4'>
       <div className='mb-3 flex items-start justify-between gap-3'>
@@ -138,12 +164,7 @@ const UploadOrganizationLogo = ({ organization }: Props) => {
                 type='button'
                 variant='ghost'
                 size='sm'
-                onClick={() => {
-                  setPreviewUrl(null)
-                  setSelectedFileName(null)
-                  setLocalError(null)
-                  clearInput()
-                }}
+                onClick={handleReset}
               >
                 <ResetIcon />
               </Button>
@@ -214,7 +235,10 @@ const UploadOrganizationLogo = ({ organization }: Props) => {
           {isPending ? (
             <div className='flex flex-col items-center gap-2 text-white'>
               <Loader2 className='h-6 w-6 animate-spin' />
-              <span className='text-xs font-medium'>Uploading...</span>
+              <span className='text-xs font-medium'>
+                {isUpdating && 'Uploading...'}
+                {isDeleting && 'Removing...'}
+              </span>
             </div>
           ) : (
             <div className='flex flex-col items-center gap-2 text-white'>

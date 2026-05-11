@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable preserve-caught-error */
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { getCookie } from '@/lib/cookies'
 import { ApiError } from './errors'
