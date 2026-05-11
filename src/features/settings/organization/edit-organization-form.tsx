@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { COUNTRIES } from '@/lib/countries'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -22,8 +25,10 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { CountryCombobox } from '@/components/country-combobox'
+import { invalidateUserProfile } from '../profile/query'
 import type { IUserProfileData } from '../profile/types'
 import UploadOrganizationLogo from './components/upload-organization-logo'
+import { useUpdateOrganization } from './query'
 import {
   type TUpdateOrganizationSchema,
   updateOrganizationSchema,
@@ -36,6 +41,9 @@ type Props = {
 const isBrazil = (country?: string | null) => country?.toUpperCase() === 'BR'
 
 const EditOrganizationForm = ({ user }: Props) => {
+  const queryClient = useQueryClient()
+  const { mutate: updateOrganization, isPending: isUpdating } =
+    useUpdateOrganization()
   const organization = user.active_organization ?? null
 
   const form = useForm<TUpdateOrganizationSchema>({
@@ -59,6 +67,7 @@ const EditOrganizationForm = ({ user }: Props) => {
     },
   })
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const country = form.watch('country')
   const isBR = isBrazil(country)
 
@@ -98,20 +107,37 @@ const EditOrganizationForm = ({ user }: Props) => {
   const onSubmit = (data: TUpdateOrganizationSchema) => {
     if (!organization?.id) return
 
-    const formData = new FormData()
+    const payload = {
+      ...data,
+    } as TUpdateOrganizationSchema
 
-    formData.append('title', data.title)
-    formData.append('description', data.description ?? '')
-    formData.append('email', data.email)
-    formData.append('phone', data.phone ?? '')
-    formData.append('website', data.website ?? '')
-    formData.append('country', data.country)
-    formData.append('state', data.state ?? '')
-    formData.append('city', data.city)
-    formData.append('postal_code', data.postal_code)
-    formData.append('address_line', data.address_line)
-    formData.append('tax_id', data.tax_id ?? '')
-    formData.append('tax_id_type', data.tax_id_type ?? '')
+    updateOrganization(
+      {
+        payload,
+        organizationId: organization.id,
+      },
+      {
+        async onSuccess() {
+          toast.success('Organization updated')
+          await invalidateUserProfile(queryClient)
+        },
+      }
+    )
+
+    // const formData = new FormData()
+
+    // formData.append('title', data.title)
+    // formData.append('description', data.description ?? '')
+    // formData.append('email', data.email)
+    // formData.append('phone', data.phone ?? '')
+    // formData.append('website', data.website ?? '')
+    // formData.append('country', data.country)
+    // formData.append('state', data.state ?? '')
+    // formData.append('city', data.city)
+    // formData.append('postal_code', data.postal_code)
+    // formData.append('address_line', data.address_line)
+    // formData.append('tax_id', data.tax_id ?? '')
+    // formData.append('tax_id_type', data.tax_id_type ?? '')
   }
 
   if (!organization) {
@@ -338,8 +364,15 @@ const EditOrganizationForm = ({ user }: Props) => {
             </div>
 
             <div className='flex justify-start border-t pt-4'>
-              <Button type='submit' disabled={false} className='min-w-36'>
-                Update Organization
+              <Button type='submit' disabled={isUpdating} className='min-w-36'>
+                {isUpdating ? (
+                  <>
+                    <Loader2 className='animate-spin' />
+                    Updating...
+                  </>
+                ) : (
+                  <>Update Organization</>
+                )}
               </Button>
             </div>
           </form>
