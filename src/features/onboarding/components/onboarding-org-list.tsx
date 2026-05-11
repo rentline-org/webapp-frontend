@@ -49,7 +49,7 @@ const OnboardingOrgList = ({ organizations, activeOrganization }: Props) => {
       setSelectedOrgId(id)
 
       if (isActiveOrg(id)) {
-        navigate({
+        return navigate({
           to: '/',
         })
       }

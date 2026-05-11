@@ -249,7 +249,7 @@ const UploadOrganizationLogo = ({ organization }: Props) => {
         </div>
       </button>
 
-      <div className='mt-4 flex flex-wrap items-center gap-3'>
+      {/* <div className='mt-4 flex flex-wrap items-center gap-3'>
         <Button
           type='button'
           variant='outline'
@@ -265,7 +265,7 @@ const UploadOrganizationLogo = ({ organization }: Props) => {
         <p className='text-xs text-muted-foreground'>
           Supported: JPG, PNG, WebP. Max size: 2MB.
         </p>
-      </div>
+      </div> */}
 
       {selectedFileName && (
         <p className='mt-3 text-xs text-muted-foreground'>
