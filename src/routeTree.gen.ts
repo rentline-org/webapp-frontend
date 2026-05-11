@@ -39,6 +39,7 @@ import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenti
 import { Route as AuthenticatedPropertiesNewRouteRouteImport } from './routes/_authenticated/properties/new/route'
 import { Route as AuthenticatedPropertiesPropertySlugRouteRouteImport } from './routes/_authenticated/properties/$propertySlug/route'
 import { Route as AuthenticatedPropertiesPropertySlugIndexRouteImport } from './routes/_authenticated/properties/$propertySlug/index'
+import { Route as authPasswordResetTokenIndexRouteImport } from './routes/(auth)/password-reset/$token/index'
 import { Route as AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteImport } from './routes/_authenticated/properties/$propertySlug/units/$unitSlug/route'
 import { Route as AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRouteImport } from './routes/_authenticated/properties/$propertySlug/units/$unitSlug/index'
 
@@ -204,6 +205,12 @@ const AuthenticatedPropertiesPropertySlugIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedPropertiesPropertySlugRouteRoute,
   } as any)
+const authPasswordResetTokenIndexRoute =
+  authPasswordResetTokenIndexRouteImport.update({
+    id: '/password-reset/$token/',
+    path: '/password-reset/$token/',
+    getParentRoute: () => authRouteRoute,
+  } as any)
 const AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRoute =
   AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteImport.update({
     id: '/units/$unitSlug',
@@ -246,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks/': typeof AuthenticatedTasksIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
+  '/password-reset/$token/': typeof authPasswordResetTokenIndexRoute
   '/properties/$propertySlug/': typeof AuthenticatedPropertiesPropertySlugIndexRoute
   '/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteWithChildren
   '/properties/$propertySlug/units/$unitSlug/': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
@@ -275,6 +283,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/password-reset/$token': typeof authPasswordResetTokenIndexRoute
   '/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugIndexRoute
   '/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
 }
@@ -309,6 +318,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/(auth)/password-reset/$token/': typeof authPasswordResetTokenIndexRoute
   '/_authenticated/properties/$propertySlug/': typeof AuthenticatedPropertiesPropertySlugIndexRoute
   '/_authenticated/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteWithChildren
   '/_authenticated/properties/$propertySlug/units/$unitSlug/': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/tasks/'
     | '/users/'
+    | '/password-reset/$token/'
     | '/properties/$propertySlug/'
     | '/properties/$propertySlug/units/$unitSlug'
     | '/properties/$propertySlug/units/$unitSlug/'
@@ -372,6 +383,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/users'
+    | '/password-reset/$token'
     | '/properties/$propertySlug'
     | '/properties/$propertySlug/units/$unitSlug'
   id:
@@ -405,6 +417,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
+    | '/(auth)/password-reset/$token/'
     | '/_authenticated/properties/$propertySlug/'
     | '/_authenticated/properties/$propertySlug/units/$unitSlug'
     | '/_authenticated/properties/$propertySlug/units/$unitSlug/'
@@ -632,6 +645,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPropertiesPropertySlugIndexRouteImport
       parentRoute: typeof AuthenticatedPropertiesPropertySlugRouteRoute
     }
+    '/(auth)/password-reset/$token/': {
+      id: '/(auth)/password-reset/$token/'
+      path: '/password-reset/$token'
+      fullPath: '/password-reset/$token/'
+      preLoaderRoute: typeof authPasswordResetTokenIndexRouteImport
+      parentRoute: typeof authRouteRoute
+    }
     '/_authenticated/properties/$propertySlug/units/$unitSlug': {
       id: '/_authenticated/properties/$propertySlug/units/$unitSlug'
       path: '/units/$unitSlug'
@@ -655,6 +675,7 @@ interface authRouteRouteChildren {
   authOtpRoute: typeof authOtpRoute
   authSignInRoute: typeof authSignInRoute
   authSignUpRoute: typeof authSignUpRoute
+  authPasswordResetTokenIndexRoute: typeof authPasswordResetTokenIndexRoute
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
@@ -663,6 +684,7 @@ const authRouteRouteChildren: authRouteRouteChildren = {
   authOtpRoute: authOtpRoute,
   authSignInRoute: authSignInRoute,
   authSignUpRoute: authSignUpRoute,
+  authPasswordResetTokenIndexRoute: authPasswordResetTokenIndexRoute,
 }
 
 const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
