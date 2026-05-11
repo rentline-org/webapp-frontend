@@ -170,7 +170,7 @@ export function Properties() {
             </p>
           </div>
 
-          <div className='flex items-center gap-4'>
+          <div className='flex items-center gap-2'>
             <Button
               size='sm'
               onClick={() => navigate({ to: '/properties/new' })}
@@ -223,6 +223,7 @@ export function Properties() {
             <ToggleGroup
               type='single'
               value={viewMode}
+              variant='outline'
               onValueChange={(value) =>
                 setViewMode(value as 'table' | 'large_cards')
               }

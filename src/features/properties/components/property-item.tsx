@@ -37,7 +37,13 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
       <Landmark className='size-3.5' />
     )
 
-  // const typeLa
+  const thumbnail = useMemo(() => {
+    if (property.property_type === 'multi_unit') {
+      return property?.thumbnail ?? null
+    }
+
+    return property?.units?.[0]?.thumbnail?.url ?? null
+  }, [property.property_type, property?.thumbnail, property?.units])
 
   return (
     <Link
@@ -45,19 +51,19 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
       params={{ propertySlug: property.slug }}
       className='block'
     >
-      <Card className='group h-full overflow-hidden bg-card/80 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary hover:shadow-md'>
-        <CardContent className='p-0'>
-          <div className='grid grid-cols-1 md:grid-cols-[180px_1fr]'>
-            <div className='relative h-52 overflow-hidden border-b md:h-full md:border-r md:border-b-0'>
-              {property.thumbnail_url ? (
+      <Card className='group h-full overflow-hidden bg-card/80 py-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary hover:shadow-md'>
+        <CardContent className='p-0 md:h-full'>
+          <div className='grid grid-cols-1 md:h-full md:grid-cols-[180px_1fr]'>
+            <div className='relative h-full overflow-hidden border-b md:h-full md:border-r md:border-b-0'>
+              {thumbnail ? (
                 <img
-                  src={property.thumbnail_url}
+                  src={thumbnail}
                   alt={property.title}
                   className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]'
                 />
               ) : (
                 <div className='flex h-full w-full items-center justify-center bg-transparent text-muted-foreground'>
-                  <div className='flex flex-col items-center gap-2'>
+                  <div className='flex h-full flex-col items-center justify-center gap-2'>
                     <ImageIcon className='size-10' />
                     <span className='text-xs'>No image</span>
                   </div>

@@ -20,7 +20,7 @@ export type TabKey = 'overview' | 'units' | 'leases' | 'contacts' | 'accounting'
 export interface IProperty {
   id: number
   organization_id: number
-  thumbnail_url?: string | null
+  thumbnail?: string | null
 
   slug: string
   title: string

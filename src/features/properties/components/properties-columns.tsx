@@ -56,9 +56,12 @@ export const propertiesColumns: ColumnDef<IProperty>[] = [
       </span>
     ),
     cell: ({ row }) => {
-      const { thumbnail_url, title } = row.original
+      const { thumbnail, title, property_type, units } = row.original
 
-      if (!thumbnail_url) {
+      const imgUrl =
+        property_type === 'multi_unit' ? thumbnail : units?.[0]?.thumbnail?.url
+
+      if (!imgUrl) {
         return (
           <div className='relative aspect-4/3 w-28 overflow-hidden rounded-2xl bg-secondary'>
             <Skeleton className='h-full w-full rounded-none bg-secondary' />
@@ -69,7 +72,7 @@ export const propertiesColumns: ColumnDef<IProperty>[] = [
 
       return (
         <img
-          src={thumbnail_url}
+          src={imgUrl}
           alt={title}
           className='aspect-4/3 w-28 rounded-2xl object-cover ring-1 ring-border'
         />
