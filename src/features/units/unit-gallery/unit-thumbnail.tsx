@@ -6,6 +6,7 @@ import {
   type DragEvent,
 } from 'react'
 import { ResetIcon } from '@radix-ui/react-icons'
+import { useQueryClient } from '@tanstack/react-query'
 import { ImagePlus, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -15,6 +16,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { invalidateUnitById, invalidateUnitList } from '../query'
 import type { IMediaData } from '../types'
 import { useDeleteUnitThumbnail, useUploadUnitThumbnail } from './query'
 import { unitThumbnailSchema } from './types'
@@ -34,6 +36,7 @@ const UnitThumbnail = ({
   className,
   disabled = false,
 }: Props) => {
+  const queryClient = useQueryClient()
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   const uploadMutation = useUploadUnitThumbnail()
@@ -46,10 +49,6 @@ const UnitThumbnail = ({
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
-
-  //   useEffect(() => {
-  //     toast.promise()
-  //   }, [])
 
   const isBusy =
     disabled || uploadMutation.isPending || deleteMutation.isPending
@@ -112,54 +111,79 @@ const UnitThumbnail = ({
     const objectUrl = URL.createObjectURL(file)
     setPreviewUrl(objectUrl)
 
-    try {
-      const response = await uploadMutation.mutateAsync({
+    const response = await uploadMutation.mutateAsync(
+      {
         propertyId,
         unitId,
         thumbnail: file,
-      })
+      },
+      {
+        async onSuccess() {
+          setCurrentThumbnail(response.unit?.thumbnail ?? null)
+          setLocalError(null)
+          setSelectedFileName(null)
+          revokePreview()
+          clearInput()
 
-      setCurrentThumbnail(response.unit?.thumbnail ?? null)
-      setLocalError(null)
-      setSelectedFileName(null)
-      revokePreview()
-      clearInput()
+          await Promise.all([
+            invalidateUnitList(propertyId.toString(), queryClient),
+            invalidateUnitById(
+              propertyId.toString(),
+              unitId.toString(),
+              queryClient
+            ),
+          ])
+        },
+        onError(error) {
+          revokePreview()
+          setSelectedFileName(null)
+          setLocalError('Failed to upload thumbnail.')
+          clearInput()
 
-      toast.success('Thumbnail uploaded successfully.')
-      return response
-    } catch (error) {
-      revokePreview()
-      setSelectedFileName(null)
-      setLocalError('Failed to upload thumbnail.')
-      clearInput()
-
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to upload thumbnail.'
-      )
-    }
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : 'Failed to upload thumbnail.'
+          )
+        },
+      }
+    )
   }
 
   const handleDelete = async () => {
     if (!displayThumbnail) return
 
-    try {
-      await deleteMutation.mutateAsync({
+    await deleteMutation.mutateAsync(
+      {
         propertyId,
         unitId,
-      })
+      },
+      {
+        async onSuccess() {
+          setCurrentThumbnail(null)
+          setSelectedFileName(null)
+          setLocalError(null)
+          revokePreview()
+          clearInput()
 
-      setCurrentThumbnail(null)
-      setSelectedFileName(null)
-      setLocalError(null)
-      revokePreview()
-      clearInput()
-
-      toast.success('Thumbnail removed successfully.')
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to delete thumbnail.'
-      )
-    }
+          await Promise.all([
+            invalidateUnitList(propertyId.toString(), queryClient),
+            invalidateUnitById(
+              propertyId.toString(),
+              unitId.toString(),
+              queryClient
+            ),
+          ])
+        },
+        onError(error) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : 'Failed to delete thumbnail.'
+          )
+        },
+      }
+    )
   }
 
   const handleFile = (file: File | null) => {
@@ -197,7 +221,7 @@ const UnitThumbnail = ({
           <TooltipTrigger asChild>
             <Button
               type='button'
-              variant='ghost'
+              variant='secondary'
               size='icon'
               onClick={() => {
                 toast.promise(handleDelete(), {
@@ -206,12 +230,12 @@ const UnitThumbnail = ({
                 })
               }}
               disabled={isBusy}
-              className='absolute top-1 right-1 z-20 h-7 w-7 rounded-full bg-background/90 shadow-sm hover:bg-background'
+              className='absolute top-1 right-1 z-20 h-7 w-7 rounded-full'
             >
               <ResetIcon />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Remove thumbnail</TooltipContent>
+          <TooltipContent side='left'>Remove thumbnail</TooltipContent>
         </Tooltip>
       )}
 

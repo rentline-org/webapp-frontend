@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   type QueryClient,
   useMutation,
@@ -247,5 +248,15 @@ export async function invalidateUnitList(
 ) {
   await queryClient.invalidateQueries({
     queryKey: [...unitKey(propertyId, 'id')],
+  })
+}
+
+export async function invalidateUnitById(
+  propertyId: string,
+  unitId: string,
+  queryClient: QueryClient
+) {
+  await queryClient.invalidateQueries({
+    queryKey: [UNITS_ENDPOINT, 'detail', propertyId, unitId],
   })
 }

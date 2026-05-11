@@ -120,6 +120,7 @@ export default function UnitsTable({ property }: Props) {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Thumbnail</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Rent</TableHead>

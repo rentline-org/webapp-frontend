@@ -1,5 +1,5 @@
 import { getRouteApi } from '@tanstack/react-router'
-import { Trash2 } from 'lucide-react'
+import { Image, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TableRow, TableCell } from '@/components/ui/table'
 import { currency } from '@/features/properties/utils'
@@ -28,6 +28,24 @@ export default function UnitTableRow({ unit, onDelete }: Props) {
 
   return (
     <TableRow className='group cursor-pointer' onClick={handleViewUnit}>
+      <TableCell className='px-4 py-3'>
+        <div className='relative aspect-4/3 w-20 overflow-hidden rounded-2xl bg-secondary'>
+          {unit?.thumbnail?.url ? (
+            <img
+              src={unit.thumbnail.url}
+              alt='Thumbnail'
+              className='h-full w-full object-cover'
+            />
+          ) : (
+            <>
+              <div className='flex h-full w-full items-center justify-center'>
+                {/* <ImagePlus className='h-5 w-5 text-muted-foreground' /> */}
+                <Image className='h-5 w-5 text-muted-foreground' />
+              </div>
+            </>
+          )}
+        </div>
+      </TableCell>
       <TableCell className='px-4 py-3'>
         <div className='flex items-center gap-2'>
           <div>
