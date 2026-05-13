@@ -186,9 +186,10 @@ export const propertiesColumns: ColumnDef<IProperty>[] = [
       </span>
     ),
     cell: ({ row }) => {
+      const isMultiUnit = row.original.property_type === 'multi_unit'
       const data = row.original.units?.[0]
 
-      if (!data?.rent_price) {
+      if (!data?.rent_price || isMultiUnit) {
         return <span className='text-muted-foreground'>—</span>
       }
 

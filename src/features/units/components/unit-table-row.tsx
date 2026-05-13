@@ -1,8 +1,9 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { Image, Trash2 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
+import { formatMoney } from '@/lib/countries'
 import { Button } from '@/components/ui/button'
 import { TableRow, TableCell } from '@/components/ui/table'
-import { currency } from '@/features/properties/utils'
 import type { IUnitData } from '../types'
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
 const routeApi = getRouteApi('/_authenticated/properties/$propertySlug/')
 
 export default function UnitTableRow({ unit, onDelete }: Props) {
+  const { user } = useAuthStore((s) => s.auth)
   const navigate = routeApi.useNavigate()
   const handleViewUnit = () => {
     navigate({
@@ -58,7 +60,10 @@ export default function UnitTableRow({ unit, onDelete }: Props) {
 
       <TableCell className='px-4 py-3'>
         {unit.rent_price
-          ? currency(Number(unit.rent_price), 'pt-BR', 'BRL')
+          ? formatMoney(
+              unit.rent_price,
+              user?.active_organization.country ?? 'US'
+            )
           : '—'}
       </TableCell>
 

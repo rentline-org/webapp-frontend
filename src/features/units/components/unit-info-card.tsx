@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import {
   Bath,
   BedDouble,
@@ -8,9 +7,8 @@ import {
   Settings2,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth-store'
-import { getMoneyFormatConfig } from '@/lib/countries'
+import { formatMoney } from '@/lib/countries'
 import EditableItem from '@/components/editable-item'
-import { currency } from '@/features/properties/utils'
 import type { IUnitData, IUpdateUnitInput } from '../types'
 
 type EditableValue = string | number | boolean | Date | null
@@ -26,10 +24,6 @@ type UnitInfoCardProps = {
  */
 const UnitInfoCard = ({ unit, onFieldUpdate }: UnitInfoCardProps) => {
   const { user } = useAuthStore((s) => s.auth)
-  const currencyConfig = useMemo(
-    () => getMoneyFormatConfig(user?.active_organization.country ?? 'USD'),
-    [user?.active_organization.country]
-  )
 
   const items = [
     {
@@ -38,10 +32,9 @@ const UnitInfoCard = ({ unit, onFieldUpdate }: UnitInfoCardProps) => {
       icon: <CircleDollarSign />,
       value: unit.rent_price ?? 0,
       defaultContent: unit.rent_price
-        ? currency(
+        ? formatMoney(
             unit.rent_price,
-            currencyConfig.locale,
-            currencyConfig.currency
+            user?.active_organization.country ?? 'US'
           )
         : '-',
       field: 'rent_price' as const,
@@ -53,10 +46,9 @@ const UnitInfoCard = ({ unit, onFieldUpdate }: UnitInfoCardProps) => {
       icon: undefined,
       value: unit.sale_price ?? 0,
       defaultContent: unit.sale_price
-        ? currency(
+        ? formatMoney(
             unit.sale_price,
-            currencyConfig.locale,
-            currencyConfig.currency
+            user?.active_organization.country ?? 'US'
           )
         : '-',
       field: 'sale_price' as const,
