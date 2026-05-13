@@ -15,6 +15,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { Eye } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
 import {
   Table,
@@ -73,10 +74,11 @@ const PropertiesTable = ({ data, onRowClick }: DataTableProps) => {
   })
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState('')
+  const { user } = useAuthStore((s) => s.auth)
 
   const table = useReactTable({
     data,
-    columns,
+    columns: columns(user?.active_organization.country),
     state: {
       rowSelection,
       columnFilters,

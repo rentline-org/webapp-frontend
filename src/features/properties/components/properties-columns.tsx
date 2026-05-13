@@ -8,15 +8,16 @@ import {
   Image as ImageIcon,
   Layers3,
 } from 'lucide-react'
+import { formatMoney } from '@/lib/countries'
 import { cleanSnakecase } from '@/lib/utils'
 import { Badge, type badgeVariants } from '@/components/ui/badge'
-// import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
 import { LongText } from '@/components/long-text'
 import type { IProperty, TPropertyType } from '../types'
-import { currency } from '../utils'
 
-export const propertiesColumns: ColumnDef<IProperty>[] = [
+export const propertiesColumns = (
+  countryCode: string = 'US'
+): ColumnDef<IProperty>[] => [
   //   {
   //     id: 'select',
   //     header: ({ table }) => (
@@ -195,7 +196,7 @@ export const propertiesColumns: ColumnDef<IProperty>[] = [
 
       return (
         <span className='font-medium'>
-          {currency(data!.rent_price, 'pt-BR', 'BRL')}
+          {formatMoney(data!.rent_price, countryCode)}
         </span>
       )
     },

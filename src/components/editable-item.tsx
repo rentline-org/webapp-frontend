@@ -1,5 +1,14 @@
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { PenLine } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
+import { getMoneyFormatConfig } from '@/lib/countries'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -50,13 +59,17 @@ function EditableItem({
   options = [],
   placeholder = 'Not set',
   onSubmit,
-  isCurrency = false,
   defaultContent,
 }: EditableItemProps) {
   const [showEditButton, setShowEditButton] = useState(false)
   const [editState, setEditState] = useState(false)
   const [draft, setDraft] = useState(value)
   const rootRef = useRef<HTMLDivElement>(null)
+  const { user } = useAuthStore((s) => s.auth)
+  const currencyConfig = useMemo(
+    () => getMoneyFormatConfig(user?.active_organization.country ?? 'US'),
+    [user?.active_organization.country]
+  )
 
   const hasCommittedRef = useRef(false)
 
@@ -156,8 +169,8 @@ function EditableItem({
                 autoFormat
                 onChange={(val) => setDraft(val === 0 ? null : Number(val))}
                 onBlur={handleBlurCommit}
-                currency={isCurrency ? 'BRL' : undefined}
-                locale={'pt-BR'}
+                currency={currencyConfig.currency}
+                locale={currencyConfig.locale}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()
