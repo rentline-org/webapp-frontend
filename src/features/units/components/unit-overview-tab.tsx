@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Overview } from '@/features/dashboard/components/overview'
 import ActiveTenantsList from '@/features/properties/components/overview/active-tenants-list'
 import type { IProperty } from '@/features/properties/types'
+import UnitGalleryCard from '../../unit-gallery/components/unit-gallery-card'
 import type { IUnitData, IUpdateUnitInput } from '../types'
-import UnitGalleryCard from '../unit-gallery/components/unit-gallery-card'
 import UnitInfoCard from './unit-info-card'
 
 type UnitOverviewTabProps = {

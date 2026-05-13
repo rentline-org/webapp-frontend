@@ -1,12 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
-import { ChevronLeft, ImageIcon } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { cleanSnakecase } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import InlineText from '@/components/inline-text'
-import UnitThumbnail from '@/features/units/unit-gallery/unit-thumbnail'
+import PropertyThumbnail from '@/features/property-thumbnail'
+import UnitThumbnail from '@/features/unit-gallery/unit-thumbnail'
 import { useSingleUnit } from '../hooks/use-single-unit'
 import { useUpdateProperty } from '../query'
 import type { IProperty } from '../types'
@@ -53,10 +53,10 @@ const DetailsHeader = ({ property }: TDetailsHeaderProps) => {
                 propertyId={property.id}
               />
             ) : (
-              <>
-                <Skeleton className='h-full w-full rounded-none bg-secondary' />
-                <ImageIcon className='absolute inset-1/2 size-6 -translate-x-1/2 -translate-y-1/2 text-muted-foreground' />
-              </>
+              <PropertyThumbnail
+                property={property}
+                thumbnail={property.thumbnail ?? null}
+              />
             )}
           </div>
 

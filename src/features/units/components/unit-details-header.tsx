@@ -4,8 +4,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import InlineText from '@/components/inline-text'
 import type { IProperty } from '@/features/properties/types'
+import UnitThumbnail from '../../unit-gallery/unit-thumbnail'
 import type { IUnitData, IUpdateUnitInput } from '../types'
-import UnitThumbnail from '../unit-gallery/unit-thumbnail'
 
 type UnitDetailsHeaderProps = {
   property: IProperty

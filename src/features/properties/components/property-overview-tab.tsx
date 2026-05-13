@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Overview } from '@/features/dashboard/components/overview'
-import UnitGalleryCard from '@/features/units/unit-gallery/components/unit-gallery-card'
+import UnitGalleryCard from '@/features/unit-gallery/components/unit-gallery-card'
 import { useSingleUnit } from '../hooks/use-single-unit'
 import type { IProperty, TabKey } from '../types'
 import ActiveTenantsList from './overview/active-tenants-list'

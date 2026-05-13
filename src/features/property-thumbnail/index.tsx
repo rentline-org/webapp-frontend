@@ -16,22 +16,24 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { invalidateUnitById, invalidateUnitList } from '../query'
-import type { IMediaData } from '../types'
-import { useDeleteUnitThumbnail, useUploadUnitThumbnail } from './query'
-import { unitThumbnailSchema } from './types'
+import {
+  invalidatePropertiesQuery,
+  invalidatePropertyBySlug,
+} from '../properties/query'
+import { type IProperty } from '../properties/types'
+import type { IMediaData } from '../units/types'
+import { useDeletePropretyThumbnail, useUploadPropertyThumbnail } from './query'
+import { propertyThumbnailSchema } from './types'
 
 type Props = {
-  propertyId: number
-  unitId: number
+  property: IProperty
   thumbnail: IMediaData | null
   className?: string
   disabled?: boolean
 }
 
-const UnitThumbnail = ({
-  propertyId,
-  unitId,
+const PropertyThumbnail = ({
+  property,
   thumbnail,
   className,
   disabled = false,
@@ -39,8 +41,8 @@ const UnitThumbnail = ({
   const queryClient = useQueryClient()
   const inputRef = useRef<HTMLInputElement | null>(null)
 
-  const uploadMutation = useUploadUnitThumbnail()
-  const deleteMutation = useDeleteUnitThumbnail()
+  const uploadMutation = useUploadPropertyThumbnail()
+  const deleteMutation = useDeletePropretyThumbnail()
 
   const [currentThumbnail, setCurrentThumbnail] = useState<IMediaData | null>(
     () => thumbnail
@@ -50,8 +52,7 @@ const UnitThumbnail = ({
   const [dragActive, setDragActive] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
 
-  const isBusy =
-    disabled || uploadMutation.isPending || deleteMutation.isPending
+  const isBusy = disabled
 
   const displayThumbnail = useMemo(() => {
     if (previewUrl) {
@@ -86,7 +87,7 @@ const UnitThumbnail = ({
   }
 
   const validateFile = (file: File) => {
-    const result = unitThumbnailSchema.safeParse({ thumbnail: file })
+    const result = propertyThumbnailSchema.safeParse({ thumbnail: file })
 
     if (!result.success) {
       return result.error.issues[0]?.message ?? 'Invalid file.'
@@ -111,27 +112,22 @@ const UnitThumbnail = ({
     const objectUrl = URL.createObjectURL(file)
     setPreviewUrl(objectUrl)
 
-    const response = await uploadMutation.mutateAsync(
+    return await uploadMutation.mutateAsync(
       {
-        propertyId,
-        unitId,
+        propertyId: property.id,
         thumbnail: file,
       },
       {
-        async onSuccess() {
-          setCurrentThumbnail(response.unit?.thumbnail ?? null)
+        async onSuccess(data) {
+          setCurrentThumbnail(data?.property?.thumbnail ?? null)
           setLocalError(null)
           setSelectedFileName(null)
           revokePreview()
           clearInput()
 
           await Promise.all([
-            invalidateUnitList(propertyId.toString(), queryClient),
-            invalidateUnitById(
-              propertyId.toString(),
-              unitId.toString(),
-              queryClient
-            ),
+            // invalidatePropertiesQuery(queryClient),
+            invalidatePropertyBySlug(queryClient, property.slug),
           ])
         },
         onError(error) {
@@ -155,8 +151,7 @@ const UnitThumbnail = ({
 
     await deleteMutation.mutateAsync(
       {
-        propertyId,
-        unitId,
+        propertyId: property.id,
       },
       {
         async onSuccess() {
@@ -167,12 +162,8 @@ const UnitThumbnail = ({
           clearInput()
 
           await Promise.all([
-            invalidateUnitList(propertyId.toString(), queryClient),
-            invalidateUnitById(
-              propertyId.toString(),
-              unitId.toString(),
-              queryClient
-            ),
+            invalidatePropertiesQuery(queryClient),
+            invalidatePropertyBySlug(queryClient, property.slug),
           ])
         },
         onError(error) {
@@ -282,9 +273,9 @@ const UnitThumbnail = ({
               <p className='text-xs font-medium'>
                 {dragActive ? 'Drop to upload' : 'No thumbnail'}
               </p>
-              <p className='mt-1 text-[11px] text-muted-foreground'>
+              {/* <p className='mt-1 text-[11px] text-muted-foreground'>
                 JPG, PNG, WebP
-              </p>
+              </p> */}
             </div>
           </div>
         )}
@@ -327,4 +318,4 @@ const UnitThumbnail = ({
   )
 }
 
-export default UnitThumbnail
+export default PropertyThumbnail

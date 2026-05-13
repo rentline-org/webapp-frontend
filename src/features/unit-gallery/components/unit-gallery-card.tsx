@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/tooltip'
 import Carousel from '@/components/Carousel'
 import GalleryCard from '@/components/gallery-card'
-import { useGetUnitBySlug } from '../../query'
+import { useGetUnitBySlug } from '../../units/query'
 import useGalleryHandlers from '../hooks/use-gallery-handlers'
 import UnitGalleryUploadForm from './unit-gallery-upload-form'
 

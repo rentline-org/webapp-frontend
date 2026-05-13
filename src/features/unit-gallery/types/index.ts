@@ -1,5 +1,5 @@
 import z from 'zod'
-import type { IUnitData } from '../../types'
+import type { IUnitData } from '../../units/types'
 
 // export const
 export const unitThumbnailSchema = z.object({

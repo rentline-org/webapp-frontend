@@ -6,6 +6,8 @@ import {
   type TUnitType,
   type IUnitData,
   unitTypeValues,
+  type IMediaData,
+  type IGalleryMedia,
 } from '@/features/units/types'
 import { PROPERTY_TYPES } from '../utils/constants'
 
@@ -20,7 +22,8 @@ export type TabKey = 'overview' | 'units' | 'leases' | 'contacts' | 'accounting'
 export interface IProperty {
   id: number
   organization_id: number
-  thumbnail?: string | null
+  thumbnail: IMediaData | null
+  gallery_urls: IGalleryMedia[] | null
 
   slug: string
   title: string

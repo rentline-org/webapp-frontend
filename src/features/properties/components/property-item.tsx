@@ -42,7 +42,7 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
 
   const thumbnail = useMemo(() => {
     if (property.property_type === 'multi_unit') {
-      return property?.thumbnail ?? null
+      return property?.thumbnail?.url ?? null
     }
 
     return property?.units?.[0]?.thumbnail?.url ?? null

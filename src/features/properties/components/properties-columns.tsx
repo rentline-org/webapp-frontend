@@ -60,7 +60,9 @@ export const propertiesColumns = (
       const { thumbnail, title, property_type, units } = row.original
 
       const imgUrl =
-        property_type === 'multi_unit' ? thumbnail : units?.[0]?.thumbnail?.url
+        property_type === 'multi_unit'
+          ? thumbnail?.url
+          : units?.[0]?.thumbnail?.url
 
       if (!imgUrl) {
         return (

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type { IGalleryMedia } from '../../types'
+import type { IGalleryMedia } from '../../units/types'
 import {
   useUploadGallery,
   useDeleteUnitGalleryImage,
