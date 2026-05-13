@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
-import { ResetIcon } from '@radix-ui/react-icons'
-import { Camera, Images, ImageUp, Loader2, Upload } from 'lucide-react'
+import { ResetIcon, StackIcon } from '@radix-ui/react-icons'
+import { Images, ImageUp, Loader2, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -79,6 +79,15 @@ function UnitGalleryCard({ title, propertyId, unitId }: Props) {
     [deletedItemId, editingItemId, isDeleting, isUpdatingImageName]
   )
 
+  const carouselItems = useMemo(() => {
+    if (!unit || !unit?.gallery_urls) return []
+
+    return unit.gallery_urls.map(({ url, ...g }) => ({
+      ...g,
+      image: url,
+    }))
+  }, [unit])
+
   return (
     <ExpandableScreen
       layoutId='unit-gallery'
@@ -89,14 +98,15 @@ function UnitGalleryCard({ title, propertyId, unitId }: Props) {
           <CardTitle>Image Gallery</CardTitle>
         </CardHeader>
         <CardContent className='w-full space-y-4'>
-          <Carousel loop autoplay />
+          <Carousel loop autoplay autoplayDelay={5000} items={carouselItems} />
           <ExpandableScreenTrigger
             fullWidth
             variant='outline'
             className='w-full rounded-md'
           >
-            <Camera />
-            Upload Images
+            {/* <Camera /> */}
+            <StackIcon />
+            View all
           </ExpandableScreenTrigger>
           <ExpandableScreenContent className='h-[90%] w-5/6'>
             <div className='flex h-full w-full flex-col gap-8 p-8'>
@@ -121,7 +131,7 @@ function UnitGalleryCard({ title, propertyId, unitId }: Props) {
                   {isLoadingUnit ? (
                     <Loader2 className='mx-auto size-8 animate-spin' />
                   ) : (
-                    <div className='mt-4 flex w-full flex-col gap-2'>
+                    <div className='mt-4 flex w-full flex-col gap-4'>
                       <div className='flex w-full flex-col items-center justify-between md:flex-row'>
                         <Input
                           placeholder='Search...'

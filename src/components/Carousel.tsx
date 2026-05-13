@@ -11,9 +11,9 @@ import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 
 export interface CarouselItem {
-  title: string
+  name: string
   image: string
-  id: number
+  id: string
 }
 
 export interface CarouselProps {
@@ -25,39 +25,6 @@ export interface CarouselProps {
   loop?: boolean
   round?: boolean
 }
-
-const DEFAULT_ITEMS: CarouselItem[] = [
-  {
-    title: 'Unit gallery',
-    image:
-      'https:\/\/pub-e4672db008e24dd5b0161728339b3dd6.r2.dev\/43\/pexels-john-cheathem-413494-30652918.jpg',
-    id: 1,
-  },
-  {
-    title: 'Living room',
-    image:
-      'https:\/\/pub-e4672db008e24dd5b0161728339b3dd6.r2.dev\/43\/pexels-john-cheathem-413494-30652918.jpg',
-    id: 2,
-  },
-  {
-    title: 'Kitchen',
-    image:
-      'https:\/\/pub-e4672db008e24dd5b0161728339b3dd6.r2.dev\/43\/pexels-john-cheathem-413494-30652918.jpg',
-    id: 3,
-  },
-  {
-    title: 'Bedroom',
-    image:
-      'https:\/\/pub-e4672db008e24dd5b0161728339b3dd6.r2.dev\/43\/pexels-john-cheathem-413494-30652918.jpg',
-    id: 4,
-  },
-  {
-    title: 'Bathroom',
-    image:
-      'https:\/\/pub-e4672db008e24dd5b0161728339b3dd6.r2.dev\/43\/pexels-john-cheathem-413494-30652918.jpg',
-    id: 5,
-  },
-]
 
 const DRAG_BUFFER = 0
 const VELOCITY_THRESHOLD = 500
@@ -72,6 +39,7 @@ interface CarouselItemProps {
   trackItemOffset: number
   x: ReturnType<typeof useMotionValue<number>>
   transition: any
+  itemHeight: number
 }
 
 function CarouselItem({
@@ -82,6 +50,7 @@ function CarouselItem({
   trackItemOffset,
   x,
   transition,
+  itemHeight,
 }: CarouselItemProps) {
   const range = [
     -(index + 1) * trackItemOffset,
@@ -102,7 +71,7 @@ function CarouselItem({
       )}
       style={{
         width: itemWidth,
-        height: round ? itemWidth : '100%',
+        height: itemHeight,
         rotateY,
         ...(round && { borderRadius: '50%' }),
       }}
@@ -111,8 +80,11 @@ function CarouselItem({
       <div className='relative h-full w-full'>
         <img
           src={item.image}
-          alt={item.title}
-          className={cn('h-full w-full object-cover', round && 'rounded-full')}
+          alt={item.name}
+          className={cn(
+            'absolute inset-0 h-full w-full object-cover',
+            round && 'rounded-full'
+          )}
           draggable={false}
         />
 
@@ -130,7 +102,7 @@ function CarouselItem({
           )}
         >
           <div className='inline-flex max-w-full rounded-md bg-background/80 px-3 py-1.5 text-sm font-semibold text-foreground shadow-sm backdrop-blur-sm'>
-            <span className='truncate'>{item.title}</span>
+            <span className='truncate'>{item.name}</span>
           </div>
         </div>
       </div>
@@ -139,7 +111,7 @@ function CarouselItem({
 }
 
 export default function Carousel({
-  items = DEFAULT_ITEMS,
+  items = [],
   baseWidth = 300,
   autoplay = false,
   autoplayDelay = 3000,
@@ -150,6 +122,7 @@ export default function Carousel({
   const containerPadding = 16
   const itemWidth = baseWidth - containerPadding * 2
   const trackItemOffset = itemWidth + GAP
+  const itemHeight = round ? baseWidth : Math.round(baseWidth * 1.05)
 
   const itemsForRender = useMemo(() => {
     if (!loop) return items
@@ -293,15 +266,16 @@ export default function Carousel({
       )}
       style={{
         width: `${baseWidth}px`,
-        ...(round && { height: `${baseWidth}px` }),
+        height: `${itemHeight + 48}px`,
       }}
     >
       <motion.div
-        className='flex'
+        className='flex h-full'
         drag={isAnimating ? false : 'x'}
         {...dragProps}
         style={{
           width: itemWidth,
+          height: '100%',
           gap: `${GAP}px`,
           perspective: 1000,
           perspectiveOrigin: `${position * trackItemOffset + itemWidth / 2}px 50%`,
@@ -323,6 +297,7 @@ export default function Carousel({
             trackItemOffset={trackItemOffset}
             x={x}
             transition={effectiveTransition}
+            itemHeight={itemHeight - 32}
           />
         ))}
       </motion.div>

@@ -45,13 +45,12 @@ const UnitOverviewTab = ({
       </div>
 
       <div className='space-y-6'>
-        <ActiveTenantsList />
-
         <UnitGalleryCard
           title={`Image gallery for ${unit.name}`}
           propertyId={property.id}
           unitId={unit.id}
         />
+        <ActiveTenantsList />
 
         <Card>
           <CardContent className='space-y-4'>

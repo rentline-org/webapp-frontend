@@ -58,6 +58,7 @@ export default function UnitEditRow({ onSave, onCancel, isSaving }: Props) {
 
   return (
     <TableRow>
+      <TableCell>-</TableCell>
       <TableCell>
         <Input
           value={name}
