@@ -11,7 +11,7 @@ export const SignUpFormSchema = z
       error: (iss) =>
         iss.input === '' ? 'Please enter your email.' : undefined,
     }),
-    role: z.enum(['landlord', 'tenant']),
+    // role: z.enum(['landlord', 'tenant']),
     password: z
       .string()
       .min(1, 'Please enter your password.')

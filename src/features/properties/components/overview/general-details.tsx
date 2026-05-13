@@ -47,6 +47,10 @@ const GeneralDetails = ({ property }: Props) => {
           )}
         </div>
 
+        {isSingleUnit && unit && (
+          <SingleUnitDetails property={property} unit={unit} />
+        )}
+
         <Separator />
 
         <div className='grid gap-3 sm:grid-cols-2'>
@@ -86,12 +90,6 @@ const GeneralDetails = ({ property }: Props) => {
             }
           />
         </div>
-
-        <Separator />
-
-        {isSingleUnit && unit && (
-          <SingleUnitDetails property={property} unit={unit} />
-        )}
       </CardContent>
     </Card>
   )

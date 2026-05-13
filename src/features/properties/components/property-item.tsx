@@ -7,17 +7,20 @@ import {
   House,
   Layers3,
 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
+import { formatMoney } from '@/lib/countries'
 import { cleanSnakecase } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import type { IProperty } from '../types'
-import { currency } from '../utils'
 
 type PropertyCardProps = {
   property: IProperty
 }
 
 const PropertyItem = ({ property }: PropertyCardProps) => {
+  const { user } = useAuthStore((s) => s.auth)
+
   const isApartment = property.property_type === 'multi_unit'
 
   const unitData = useMemo(() => {
@@ -53,7 +56,7 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
     >
       <Card className='group h-full overflow-hidden bg-card/80 py-0 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary hover:shadow-md'>
         <CardContent className='p-0 md:h-full'>
-          <div className='grid grid-cols-1 md:h-full md:grid-cols-[180px_1fr]'>
+          <div className='grid grid-cols-1 md:h-full md:grid-cols-[160px_1fr]'>
             <div className='relative h-full overflow-hidden border-b md:h-full md:border-r md:border-b-0'>
               {thumbnail ? (
                 <img
@@ -62,7 +65,7 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
                   className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]'
                 />
               ) : (
-                <div className='flex h-full w-full items-center justify-center bg-transparent text-muted-foreground'>
+                <div className='flex h-full w-full items-center justify-center bg-transparent py-8 text-muted-foreground'>
                   <div className='flex h-full flex-col items-center justify-center gap-2'>
                     <ImageIcon className='size-10' />
                     <span className='text-xs'>No image</span>
@@ -98,27 +101,45 @@ const PropertyItem = ({ property }: PropertyCardProps) => {
                 </div>
               </div>
 
-              {unitData && (
-                <div className='grid gap-3 sm:grid-cols-2'>
+              {unitData ? (
+                <div className='grid gap-3 md:gap-2 xl:grid-cols-2'>
                   <div className='p-3'>
                     <p className='text-xs text-muted-foreground'>
                       Monthly rent
                     </p>
                     <p className='mt-1 text-base font-semibold'>
                       {unitData.rent_price
-                        ? `${currency(unitData.rent_price, 'pt-BR', 'BRL')}`
+                        ? `${formatMoney(
+                            unitData.rent_price,
+                            user!.active_organization.country
+                          )}`
                         : '—'}
                     </p>
                   </div>
 
-                  {/* <div className='p-3'>
+                  <div className='p-3'>
                     <p className='text-xs text-muted-foreground'>Sale price</p>
                     <p className='mt-1 text-base font-semibold'>
                       {unitData.sale_price
-                        ? currency(unitData.sale_price, 'pt-BR', 'BRL')
+                        ? formatMoney(
+                            unitData.sale_price,
+                            user!.active_organization.country
+                          )
                         : '—'}
                     </p>
-                  </div> */}
+                  </div>
+                </div>
+              ) : (
+                <div className='p-3'>
+                  <p className='text-xs text-muted-foreground'>Sale price</p>
+                  <p className='mt-1 text-base font-semibold'>
+                    {property.sale_price
+                      ? formatMoney(
+                          property.sale_price,
+                          user!.active_organization.country
+                        )
+                      : '—'}
+                  </p>
                 </div>
               )}
             </div>

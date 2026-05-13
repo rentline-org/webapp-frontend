@@ -23,7 +23,7 @@ const PropertyOverviewTab = ({ property }: Props) => {
       <div className='space-y-6'>
         <GeneralDetails property={property} />
 
-        <Card>
+        <Card className='hidden md:flex'>
           <CardHeader>
             <CardTitle>Revenue</CardTitle>
           </CardHeader>
@@ -35,10 +35,10 @@ const PropertyOverviewTab = ({ property }: Props) => {
 
       {/* RIGHT */}
       <div className='space-y-6'>
-        {isSingleUnit && unit ? (
+        {isSingleUnit ? (
           <UnitGalleryCard
             propertyId={property.id}
-            unitId={unit.id}
+            unitId={unit!.id}
             title='Gallery'
           />
         ) : (

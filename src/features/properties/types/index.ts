@@ -31,6 +31,7 @@ export interface IProperty {
   state: string
   postal_code: string
   country?: string | null
+  sale_price: number | null
 
   property_type: TPropertyType
 

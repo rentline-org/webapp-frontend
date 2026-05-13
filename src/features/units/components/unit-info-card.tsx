@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   Bath,
   BedDouble,
@@ -6,6 +7,8 @@ import {
   Ruler,
   Settings2,
 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
+import { getMoneyFormatConfig } from '@/lib/countries'
 import EditableItem from '@/components/editable-item'
 import { currency } from '@/features/properties/utils'
 import type { IUnitData, IUpdateUnitInput } from '../types'
@@ -14,10 +17,7 @@ type EditableValue = string | number | boolean | Date | null
 
 type UnitInfoCardProps = {
   unit: IUnitData
-  onFieldUpdate: (
-    field: keyof IUpdateUnitInput,
-    value: EditableValue
-  ) => void
+  onFieldUpdate: (field: keyof IUpdateUnitInput, value: EditableValue) => void
 }
 
 /**
@@ -25,6 +25,12 @@ type UnitInfoCardProps = {
  * and the individual unit details page.
  */
 const UnitInfoCard = ({ unit, onFieldUpdate }: UnitInfoCardProps) => {
+  const { user } = useAuthStore((s) => s.auth)
+  const currencyConfig = useMemo(
+    () => getMoneyFormatConfig(user?.active_organization.country ?? 'USD'),
+    [user?.active_organization.country]
+  )
+
   const items = [
     {
       label: 'Rent Value',
@@ -32,7 +38,11 @@ const UnitInfoCard = ({ unit, onFieldUpdate }: UnitInfoCardProps) => {
       icon: <CircleDollarSign />,
       value: unit.rent_price ?? 0,
       defaultContent: unit.rent_price
-        ? currency(unit.rent_price, 'pt-BR', 'BRL')
+        ? currency(
+            unit.rent_price,
+            currencyConfig.locale,
+            currencyConfig.currency
+          )
         : '-',
       field: 'rent_price' as const,
       isCurrency: true,
@@ -43,7 +53,11 @@ const UnitInfoCard = ({ unit, onFieldUpdate }: UnitInfoCardProps) => {
       icon: undefined,
       value: unit.sale_price ?? 0,
       defaultContent: unit.sale_price
-        ? currency(unit.sale_price, 'pt-BR', 'BRL')
+        ? currency(
+            unit.sale_price,
+            currencyConfig.locale,
+            currencyConfig.currency
+          )
         : '-',
       field: 'sale_price' as const,
       isCurrency: true,

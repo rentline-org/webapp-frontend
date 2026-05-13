@@ -8,7 +8,7 @@ import {
   Image as ImageIcon,
   Layers3,
 } from 'lucide-react'
-import { cleanSnakecase, cn } from '@/lib/utils'
+import { cleanSnakecase } from '@/lib/utils'
 import { Badge, type badgeVariants } from '@/components/ui/badge'
 // import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -103,13 +103,7 @@ export const propertiesColumns: ColumnDef<IProperty>[] = [
         </span>
       </div>
     ),
-    meta: {
-      className: cn(
-        'min-w-0',
-        'max-md:sticky max-md:inset-s-14 max-md:z-10 max-md:bg-background'
-      ),
-      thClassName: 'min-w-0',
-    },
+
     enableHiding: false,
   },
   {

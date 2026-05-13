@@ -66,7 +66,13 @@ export function Properties() {
   } = route.useSearch()
 
   const [viewMode, setViewMode] = useState<'table' | 'large_cards'>(() => {
-    return localStorage.getItem('properties_view_mode') === 'large_cards'
+    const saved = localStorage.getItem('properties_view_mode')
+
+    if (saved === 'table' || saved === 'large_cards') {
+      return saved
+    }
+
+    return window.matchMedia('(max-width: 640px)').matches
       ? 'large_cards'
       : 'table'
   })
@@ -157,9 +163,8 @@ export function Properties() {
   }, [viewMode])
 
   return (
-    <Main>
+    <Main className='px-4 py-4 sm:px-6 sm:py-6 lg:px-8'>
       <div className='flex flex-col gap-6'>
-        {/* HEADER */}
         <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
           <div className='space-y-1'>
             <h1 className='text-2xl font-semibold tracking-tight sm:text-3xl'>
@@ -170,10 +175,11 @@ export function Properties() {
             </p>
           </div>
 
-          <div className='flex items-center gap-2'>
+          <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2'>
             <Button
               size='sm'
               onClick={() => navigate({ to: '/properties/new' })}
+              className='w-full sm:w-auto'
             >
               <Plus className='size-4' />
               Add Property
@@ -181,12 +187,16 @@ export function Properties() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant='secondary' size='sm'>
+                <Button
+                  variant='secondary'
+                  size='sm'
+                  className='w-full sm:w-auto'
+                >
                   <DotsVerticalIcon />
                 </Button>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent align='end'>
+              <DropdownMenuContent align='end' className='w-56'>
                 <DropdownMenuItem>
                   <Import />
                   Import properties
@@ -218,7 +228,7 @@ export function Properties() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Separator orientation='vertical' className='h-6' />
+            <Separator orientation='vertical' className='hidden h-6 sm:block' />
 
             <ToggleGroup
               type='single'
@@ -227,13 +237,14 @@ export function Properties() {
               onValueChange={(value) =>
                 setViewMode(value as 'table' | 'large_cards')
               }
+              className='grid w-full grid-cols-2 sm:flex sm:w-auto'
             >
-              <ToggleGroupItem value='table'>
+              <ToggleGroupItem value='table' className='w-full sm:w-auto'>
                 <Table2 className='size-4' />
                 Table
               </ToggleGroupItem>
 
-              <ToggleGroupItem value='large_cards'>
+              <ToggleGroupItem value='large_cards' className='w-full sm:w-auto'>
                 <LayoutGrid className='size-4' />
                 List
               </ToggleGroupItem>
@@ -241,7 +252,6 @@ export function Properties() {
           </div>
         </div>
 
-        {/* FILTERS (cards only) */}
         {viewMode === 'large_cards' && (
           <div className='flex flex-col gap-4'>
             <Tabs
@@ -249,10 +259,15 @@ export function Properties() {
               onValueChange={(value) =>
                 handleTypeChange(value as TPropertyTypeFilter)
               }
+              className='w-full md:w-max'
             >
-              <TabsList className='flex flex-wrap gap-2'>
+              <TabsList className='flex w-full flex-nowrap gap-4 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible md:w-auto'>
                 {propertyTypes.map((item) => (
-                  <TabsTrigger key={item.value} value={item.value}>
+                  <TabsTrigger
+                    key={item.value}
+                    value={item.value}
+                    className='shrink-0'
+                  >
                     <item.icon />
                     {item.label}
                   </TabsTrigger>
@@ -261,7 +276,7 @@ export function Properties() {
             </Tabs>
 
             <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
-              <div className='relative w-full md:w-70'>
+              <div className='relative w-full lg:max-w-xs'>
                 <Search className='absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
                   className='pl-9'
@@ -275,7 +290,7 @@ export function Properties() {
                 value={sort}
                 onValueChange={(v) => handleSortChange(v as PropertySort)}
               >
-                <SelectTrigger className='w-55'>
+                <SelectTrigger className='w-full sm:w-55'>
                   <SlidersHorizontal className='mr-2 size-4' />
                   <SelectValue />
                 </SelectTrigger>
@@ -290,22 +305,24 @@ export function Properties() {
           </div>
         )}
 
-        {/* CLEAR FILTERS */}
         {isCardsFiltered && (
-          <Button variant='ghost' onClick={resetFilters}>
+          <Button
+            variant='ghost'
+            onClick={resetFilters}
+            className='w-full justify-center sm:w-auto sm:justify-start'
+          >
             Clear filters
             <Cross2Icon className='ml-2' />
           </Button>
         )}
 
-        {/* CONTENT */}
         {isLoading ? (
           <div className='flex justify-center py-16'>
             <Loader2 className='animate-spin' />
           </div>
         ) : viewMode === 'large_cards' ? (
           cardFilteredProperties.length ? (
-            <div className='grid gap-4 xl:grid-cols-3'>
+            <div className='grid gap-4 sm:grid-cols-2 2xl:grid-cols-3'>
               {cardFilteredProperties.map((property) => (
                 <PropertyItem key={property.id} property={property} />
               ))}
@@ -318,7 +335,12 @@ export function Properties() {
             </Card>
           )
         ) : (
-          <PropertiesTable data={properties ?? []} onRowClick={openProperty} />
+          <div className='overflow-x-auto'>
+            <PropertiesTable
+              data={properties ?? []}
+              onRowClick={openProperty}
+            />
+          </div>
         )}
       </div>
     </Main>

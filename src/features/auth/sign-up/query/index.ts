@@ -13,13 +13,9 @@ async function handleSignUp(
 
   const response = await RentlineAuth.post(AUTH_REGISTER_ENDPOINT, {
     ...signUpForm,
+    role: 'landlord',
     device: getDeviceType(),
   })
-
-  // console.log(response.data)
-  // if (response.data.user) {
-
-  // }
 
   return response.data.data
 }

@@ -8,13 +8,6 @@ import IconGoogle from '@/assets/brand-icons/icon-google'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldLabel,
-  FieldTitle,
-} from '@/components/ui/field'
-import {
   Form,
   FormControl,
   FormField,
@@ -23,7 +16,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { PasswordInput } from '@/components/password-input'
 import { useSignUpMutation } from '../query'
 import { SignUpFormSchema, type TSignUpFormSchema } from '../types'
@@ -44,7 +36,6 @@ export function SignUpForm({
       email: '',
       password: '',
       confirmPassword: '',
-      role: 'landlord',
     },
   })
 
@@ -113,7 +104,7 @@ export function SignUpForm({
             </FormItem>
           )}
         />
-        <FormField
+        {/* <FormField
           control={form.control}
           name='role'
           defaultValue='landlord'
@@ -151,7 +142,7 @@ export function SignUpForm({
               </FormControl>
             </FormItem>
           )}
-        />
+        /> */}
 
         <FormField
           control={form.control}

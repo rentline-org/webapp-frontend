@@ -31,13 +31,13 @@ type Props = {
 
 function UnitGalleryCard({ title, propertyId, unitId }: Props) {
   const [search, setSearch] = useState('')
-  const [expandableOpen, setExpandableOpen] = useState(false)
+  // const [expandableOpen, setExpandableOpen] = useState(false)
 
   const {
     data: unit,
     isLoading: isLoadingUnit,
     refetch,
-  } = useGetUnitBySlug(propertyId, unitId, expandableOpen)
+  } = useGetUnitBySlug(propertyId, unitId)
 
   const {
     handleUpload,
@@ -91,7 +91,7 @@ function UnitGalleryCard({ title, propertyId, unitId }: Props) {
   return (
     <ExpandableScreen
       layoutId='unit-gallery'
-      onExpandChange={(expanded) => setExpandableOpen(expanded)}
+      // onExpandChange={(expanded) => setExpandableOpen(expanded)}
     >
       <Card>
         <CardHeader>
@@ -108,7 +108,7 @@ function UnitGalleryCard({ title, propertyId, unitId }: Props) {
             <StackIcon />
             View all
           </ExpandableScreenTrigger>
-          <ExpandableScreenContent className='h-[90%] w-5/6'>
+          <ExpandableScreenContent className='h-full w-full md:h-[90%] md:w-5/6'>
             <div className='flex h-full w-full flex-col gap-8 p-8'>
               <div className='space-y-2'>
                 <h1 className='text-xl tracking-wide'>{title}</h1>
@@ -132,10 +132,10 @@ function UnitGalleryCard({ title, propertyId, unitId }: Props) {
                     <Loader2 className='mx-auto size-8 animate-spin' />
                   ) : (
                     <div className='mt-4 flex w-full flex-col gap-4'>
-                      <div className='flex w-full flex-col items-center justify-between md:flex-row'>
+                      <div className='flex w-full items-center justify-between'>
                         <Input
                           placeholder='Search...'
-                          className='w-full max-w-80'
+                          className='w-full max-w-60 md:max-w-80'
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
                         />

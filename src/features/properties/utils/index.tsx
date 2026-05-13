@@ -1,5 +1,11 @@
 import { Building2, CircleSlash2, Home } from 'lucide-react'
-import type { IProperty, TPropertyType } from '../types'
+import type {
+  IProperty,
+  TCreatePropertySchema,
+  TCreatePropertyUnitSchema,
+  TPropertyType,
+} from '../types'
+import { defaultUnitTypeByProperty } from './constants'
 
 export function currency(
   value: number,
@@ -51,4 +57,19 @@ export function statusBadgeVariant(isAvailable: boolean) {
 
 export function checkPropertyIsHouse({ property_type }: IProperty) {
   return property_type === 'single_unit'
+}
+
+export function createEmptyUnit(
+  propertyType: TCreatePropertySchema['property_type'],
+  name: string = ''
+): TCreatePropertyUnitSchema {
+  return {
+    name,
+    unit_type: defaultUnitTypeByProperty[propertyType],
+    rent_price: null,
+    sale_price: null,
+    bedrooms: null,
+    bathrooms: null,
+    square_feet: null,
+  }
 }

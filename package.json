@@ -48,6 +48,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.1.1",
+    "country-locale-map": "^1.9.12",
+    "country-to-currency": "^2.0.3",
     "date-fns": "^4.1.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^1.8.0",

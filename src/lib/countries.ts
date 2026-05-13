@@ -1,53 +1,95 @@
 // constants/countries.ts
-import countries, { type Country } from 'world-countries'
-
-// import type { CountryOption } from '@/components/country-combobox'
+import * as countryLocaleMap from 'country-locale-map'
+import countryToCurrency from 'country-to-currency'
+import countries from 'world-countries'
 
 export type CountryOption = {
-  value: string // ISO code like "BR", "DE"
-  label: string // Human name like "Brazil"
-  flag?: string // optional flag URL
+  value: string
+  label: string
+  flag?: string
+  currency: string
+  locale: string
 }
 
-const EU_COUNTRIES = new Set([
-  'AT', // Austria
-  'BE', // Belgium
-  'BG', // Bulgaria
-  'HR', // Croatia
-  'CY', // Cyprus
-  'CZ', // Czech Republic
-  'DK', // Denmark
-  'EE', // Estonia
-  'FI', // Finland
-  'FR', // France
-  'DE', // Germany
-  'GR', // Greece
-  'HU', // Hungary
-  'IE', // Ireland
-  'IT', // Italy
-  'LV', // Latvia
-  'LT', // Lithuania
-  'LU', // Luxembourg
-  'MT', // Malta
-  'NL', // Netherlands
-  'PL', // Poland
-  'PT', // Portugal
-  'RO', // Romania
-  'SK', // Slovakia
-  'SI', // Slovenia
-  'ES', // Spain
-  'SE', // Sweden
-])
+export type MoneyFormatConfig = {
+  currency: string
+  locale: string
+}
 
-const isBrazil = (c: Country) => c.cca2 === 'BR'
+const FALLBACK_CURRENCY = 'USD'
+const FALLBACK_LOCALE = 'en-US'
 
-const isEU = (c: Country) => EU_COUNTRIES.has(c.cca2)
+const countryCurrencyMap = countryToCurrency as Record<string, string>
+
+const normalizeLocale = (locale?: string | null) => {
+  if (!locale) return FALLBACK_LOCALE
+  return locale.replace('_', '-')
+}
+
+const getCurrencyByCountryCode = (countryCode: string) => {
+  const code = countryCode.toUpperCase()
+
+  return (
+    countryCurrencyMap[code] ??
+    countryLocaleMap.getCurrencyByAlpha2?.(code) ??
+    FALLBACK_CURRENCY
+  )
+}
+
+const getLocaleByCountryCode = (countryCode: string) => {
+  const code = countryCode.toUpperCase()
+
+  return normalizeLocale(
+    countryLocaleMap.getLocaleByAlpha2(code) ??
+      countryLocaleMap.getCountryByAlpha2?.(code)?.default_locale ??
+      FALLBACK_LOCALE
+  )
+}
 
 export const COUNTRIES: CountryOption[] = countries
-  .filter((c) => isBrazil(c) || isEU(c))
-  .map((c) => ({
-    value: c.cca2,
-    label: c.name.common,
-    flag: `https://flagcdn.com/w40/${c.cca2.toLowerCase()}.png`,
-  }))
+  .map((country) => {
+    const code = country.cca2.toUpperCase()
+
+    return {
+      value: code,
+      label: country.name.common,
+      flag: `https://flagcdn.com/w40/${code.toLowerCase()}.png`,
+      currency: getCurrencyByCountryCode(code),
+      locale: getLocaleByCountryCode(code),
+    }
+  })
   .sort((a, b) => a.label.localeCompare(b.label))
+
+export function getMoneyFormatConfig(countryCode: string): MoneyFormatConfig {
+  const code = countryCode.toUpperCase()
+  const country = COUNTRIES.find((item) => item.value === code)
+
+  const value = {
+    currency: country?.currency ?? getCurrencyByCountryCode(code),
+    locale: country?.locale ?? getLocaleByCountryCode(code),
+  }
+
+  return value
+}
+
+export function formatMoney(
+  value: number,
+  countryCode: string,
+  options?: Omit<Intl.NumberFormatOptions, 'style' | 'currency'>
+) {
+  const code = countryCode.toUpperCase()
+
+  const { currency, locale } = getMoneyFormatConfig(code)
+
+  const formatted = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    ...options,
+  }).format(value)
+
+  if (code === 'MZ') {
+    return formatted.replace('MTn', 'MT')
+  }
+
+  return formatted
+}

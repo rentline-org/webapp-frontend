@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Building2, Home, Layers3, List, type LucideIcon } from 'lucide-react'
 import { cleanSnakecase } from '@/lib/utils'
-import type {
-  // PropertyOccupancy,
-  // PropertyStatus,
-  TPropertyTypeFilter,
-} from '../types'
+import type { TUnitType } from '@/features/units/types'
+import type { TPropertyType, TPropertyTypeFilter } from '../types'
 
 export const propertyTypes: {
   value: TPropertyTypeFilter
@@ -91,3 +88,26 @@ export const SALE_TYPE_OPTIONS = [
   { label: 'Rent', value: 'rent' },
   { label: 'Sale', value: 'sale' },
 ] as const
+
+export const defaultUnitTypeByProperty: Record<TPropertyType, TUnitType> = {
+  single_unit: 'house',
+  multi_unit: 'apartment',
+  land: 'other',
+} as const
+
+export const allowedUnitTypesByProperty = {
+  single_unit: [
+    { value: 'house', label: 'House' },
+    { value: 'studio', label: 'Studio' },
+    { value: 'office', label: 'Office' },
+  ],
+  multi_unit: [
+    { value: 'apartment', label: 'Apartment' },
+    { value: 'studio', label: 'Studio' },
+    { value: 'room', label: 'Room' },
+    { value: 'office', label: 'Office' },
+    { value: 'retail', label: 'Retail' },
+    { value: 'warehouse', label: 'Warehouse' },
+  ],
+  land: [{ value: 'land', label: 'Land' }],
+} as const

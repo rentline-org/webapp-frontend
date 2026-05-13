@@ -23,7 +23,7 @@ export function AppBreadcrumbs() {
     }))
 
   return (
-    <Breadcrumb>
+    <Breadcrumb className='hidden md:flex'>
       <BreadcrumbList>
         {crumbs.map((crumb, i) => {
           const isLast = i === crumbs.length - 1

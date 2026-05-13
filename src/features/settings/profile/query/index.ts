@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { type QueryClient, useMutation, useQuery } from '@tanstack/react-query'
 import { handleGet, handlePost, type IResponse } from '@/api'
+import { useAuthStore } from '@/stores/auth-store'
 import type {
   IUpdateProfileRequest,
   IUserProfileData,
@@ -51,11 +53,19 @@ async function handleUpdateUserProfile(
 }
 
 export function useUserProfileQuery() {
-  return useQuery<IUserProfileData | null>({
+  const { setUser } = useAuthStore((s) => s.auth)
+
+  const query = useQuery<IUserProfileData | null>({
     queryKey: [USER_PROFILE_ENDPOINT],
     queryFn: handleGetUserProfile,
     staleTime: 1000 * 60 * 10,
   })
+
+  useEffect(() => {
+    setUser(query.data ?? null)
+  }, [query.data, setUser])
+
+  return query
 }
 
 export function useUpdateProfileAvatar() {
