@@ -49,11 +49,15 @@ export function useGetUnits(propertyId: number) {
   })
 }
 
-export function useGetUnitBySlug(propertyId: number, unitId: number) {
+export function useGetUnitBySlug(
+  propertyId: number,
+  unitId: number,
+  enabled: boolean = true
+) {
   return useQuery({
     queryKey: [UNITS_ENDPOINT, 'detail', propertyId, unitId],
     queryFn: async () => await handleGetUnitBySlug(propertyId, unitId),
-    enabled: !!propertyId && !!unitId,
+    enabled: !!propertyId && !!unitId && !!enabled,
   })
 }
 

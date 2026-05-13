@@ -14,6 +14,10 @@ export interface IMediaData {
   url: string
 }
 
+export interface IGalleryMedia extends IMediaData {
+  name: string
+}
+
 export interface IUnitData {
   id: number
   property_id: number
@@ -36,7 +40,7 @@ export interface IUnitData {
 
   amenities?: string[] | null
   thumbnail?: IMediaData | null
-  gallery_urls?: IMediaData[] | null
+  gallery_urls?: IGalleryMedia[] | null
   media?: any
 
   available_from?: string | null

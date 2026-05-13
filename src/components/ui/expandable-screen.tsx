@@ -3,69 +3,81 @@ import {
   useContext,
   useEffect,
   useState,
+  type KeyboardEvent,
   type ReactNode,
 } from 'react'
+import { type VariantProps } from 'class-variance-authority'
 import { X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { cn } from '@/lib/utils'
+import { buttonVariants } from '@/components/ui/button'
 
-type ExpandableScreenContextValue<T> = {
+interface ExpandableScreenContextValue {
   isExpanded: boolean
-  selectedItem: T | null
-  open: (item: T) => void
-  close: () => void
+  expand: () => void
+  collapse: () => void
   layoutId: string
+  triggerRadius: string
+  contentRadius: string
   animationDuration: number
 }
 
 const ExpandableScreenContext =
-  createContext<ExpandableScreenContextValue<any> | null>(null)
+  createContext<ExpandableScreenContextValue | null>(null)
 
-export function useExpandableScreen<T>() {
+function useExpandableScreen() {
   const context = useContext(ExpandableScreenContext)
-  if (!context)
-    throw new Error('useExpandableScreen must be used within ExpandableScreen')
-  return context as ExpandableScreenContextValue<T>
+  if (!context) {
+    throw new Error(
+      'useExpandableScreen must be used within an ExpandableScreen'
+    )
+  }
+  return context
 }
 
-type ExpandableScreenProps<T> = {
+interface ExpandableScreenProps {
   children: ReactNode
+  defaultExpanded?: boolean
+  onExpandChange?: (expanded: boolean) => void
   layoutId?: string
+  triggerRadius?: string
+  contentRadius?: string
   animationDuration?: number
   lockScroll?: boolean
-  defaultExpanded?: boolean
-  defaultItem?: T | null
-  onOpenChange?: (open: boolean, item: T | null) => void
 }
 
-export function ExpandableScreen<T>({
+export function ExpandableScreen({
   children,
-  layoutId = 'expandable-card',
-  animationDuration = 0.35,
-  lockScroll = true,
   defaultExpanded = false,
-  defaultItem = null,
-  onOpenChange,
-}: ExpandableScreenProps<T>) {
+  onExpandChange,
+  layoutId = 'expandable-card',
+  triggerRadius = 'var(--radius-xl)',
+  contentRadius = 'var(--radius-xl)',
+  animationDuration = 0.3,
+  lockScroll = true,
+}: ExpandableScreenProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
-  const [selectedItem, setSelectedItem] = useState<T | null>(defaultItem)
 
-  const open = (item: T) => {
-    setSelectedItem(item)
+  const expand = () => {
     setIsExpanded(true)
-    onOpenChange?.(true, item)
+    onExpandChange?.(true)
   }
 
-  const close = () => {
+  const collapse = () => {
     setIsExpanded(false)
-    onOpenChange?.(false, selectedItem)
+    onExpandChange?.(false)
   }
 
   useEffect(() => {
     if (!lockScroll) return
-    document.body.style.overflow = isExpanded ? 'hidden' : 'unset'
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = isExpanded
+      ? 'hidden'
+      : previousOverflow || ''
+
     return () => {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = previousOverflow
     }
   }, [isExpanded, lockScroll])
 
@@ -73,10 +85,11 @@ export function ExpandableScreen<T>({
     <ExpandableScreenContext.Provider
       value={{
         isExpanded,
-        selectedItem,
-        open,
-        close,
+        expand,
+        collapse,
         layoutId,
+        triggerRadius,
+        contentRadius,
         animationDuration,
       }}
     >
@@ -85,11 +98,80 @@ export function ExpandableScreen<T>({
   )
 }
 
-type ExpandableScreenContentProps = {
+type ButtonVariant = VariantProps<typeof buttonVariants>['variant']
+type ButtonSize = VariantProps<typeof buttonVariants>['size']
+
+interface ExpandableScreenTriggerProps {
+  children: ReactNode
+  className?: string
+  variant?: ButtonVariant
+  size?: ButtonSize
+  fullWidth?: boolean
+}
+
+export function ExpandableScreenTrigger({
+  children,
+  className = '',
+  variant = 'ghost',
+  size = 'default',
+  fullWidth = false,
+}: ExpandableScreenTriggerProps) {
+  const { isExpanded, expand, layoutId, triggerRadius } = useExpandableScreen()
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      expand()
+    }
+  }
+
+  return (
+    <AnimatePresence initial={false}>
+      {!isExpanded && (
+        <motion.div
+          className={cn(
+            'relative inline-block rounded-md',
+            fullWidth && 'w-full'
+          )}
+        >
+          <motion.div
+            style={{ borderRadius: triggerRadius }}
+            layout
+            layoutId={layoutId}
+            className='absolute inset-0 transform-gpu bg-card shadow-sm ring-1 ring-border will-change-transform'
+          />
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            layout={false}
+            role='button'
+            tabIndex={0}
+            onClick={expand}
+            onKeyDown={handleKeyDown}
+            className={cn(
+              buttonVariants({ variant, size }),
+              'relative cursor-pointer rounded-md!',
+              className
+            )}
+          >
+            {children}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+interface ExpandableScreenContentProps {
   children: ReactNode
   className?: string
   showCloseButton?: boolean
   closeButtonClassName?: string
+  closeButtonVariant?: ButtonVariant
+  closeButtonSize?: ButtonSize
 }
 
 export function ExpandableScreenContent({
@@ -97,55 +179,84 @@ export function ExpandableScreenContent({
   className = '',
   showCloseButton = true,
   closeButtonClassName = '',
+  closeButtonVariant = 'ghost',
+  closeButtonSize = 'icon',
 }: ExpandableScreenContentProps) {
-  const { isExpanded, close, layoutId, animationDuration } =
-    useExpandableScreen<any>()
+  const { isExpanded, collapse, layoutId, contentRadius, animationDuration } =
+    useExpandableScreen()
 
   return (
     <AnimatePresence initial={false}>
       {isExpanded && (
-        <motion.div
-          className='fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-2'
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-background/50 p-3 backdrop-blur-sm sm:p-6'>
           <motion.div
             layoutId={layoutId}
             transition={{
               duration: animationDuration,
-              type: 'spring',
-              bounce: 0.2,
+              ease: [0.22, 1, 0.36, 1],
             }}
+            style={{ borderRadius: contentRadius }}
+            layout
             className={cn(
-              'relative flex h-full w-full transform-gpu overflow-hidden rounded-3xl bg-background shadow-2xl will-change-transform',
+              'relative flex h-[min(92vh,900px)] w-full transform-gpu overflow-hidden border border-border bg-background text-card-foreground shadow-2xl ring-1 ring-border/60 will-change-transform',
               className
             )}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.12, duration: 0.2 }}
-              className='relative z-20 w-full'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.25 }}
+              className='relative z-20 w-full overflow-y-auto'
             >
               {children}
             </motion.div>
 
             {showCloseButton && (
               <motion.button
-                onClick={close}
-                className={`absolute top-4 right-4 z-30 flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
-                  closeButtonClassName ||
-                  'bg-black/30 text-white hover:bg-black/45'
-                }`}
+                type='button'
+                onClick={collapse}
+                className={cn(
+                  buttonVariants({
+                    variant: closeButtonVariant,
+                    size: closeButtonSize,
+                  }),
+                  'absolute top-4 right-4 z-30',
+                  closeButtonClassName
+                )}
                 aria-label='Close'
               >
                 <X className='h-5 w-5' />
               </motion.button>
             )}
           </motion.div>
-        </motion.div>
+        </div>
       )}
     </AnimatePresence>
   )
 }
+
+interface ExpandableScreenBackgroundProps {
+  trigger?: ReactNode
+  content?: ReactNode
+  className?: string
+}
+
+export function ExpandableScreenBackground({
+  trigger,
+  content,
+  className = '',
+}: ExpandableScreenBackgroundProps) {
+  const { isExpanded } = useExpandableScreen()
+
+  if (isExpanded && content) {
+    return <div className={className}>{content}</div>
+  }
+
+  if (!isExpanded && trigger) {
+    return <div className={className}>{trigger}</div>
+  }
+
+  return null
+}
+
+export { useExpandableScreen }

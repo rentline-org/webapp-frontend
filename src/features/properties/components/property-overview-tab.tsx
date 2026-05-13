@@ -1,12 +1,11 @@
-import { Camera, ImageIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Overview } from '@/features/dashboard/components/overview'
 import { useSingleUnit } from '../hooks/use-single-unit'
 import type { IProperty, TabKey } from '../types'
 import ActiveTenantsList from './overview/active-tenants-list'
+import GalleryCard from './overview/gallery-card'
+// import GalleryCard from './overview/gallery-card'
 import GeneralDetails from './overview/general-details'
 
 type Props = {
@@ -15,7 +14,7 @@ type Props = {
   setUploadOpen: (open: boolean) => void
 }
 
-const PropertyOverviewTab = ({ property, setUploadOpen }: Props) => {
+const PropertyOverviewTab = ({ property }: Props) => {
   const { isSingleUnit, unit } = useSingleUnit(property)
 
   return (
@@ -38,7 +37,7 @@ const PropertyOverviewTab = ({ property, setUploadOpen }: Props) => {
         {/* Tenants ONLY for single unit */}
         {isSingleUnit && <ActiveTenantsList />}
 
-        <OverviewGalleryCard onUploadImages={() => setUploadOpen(true)} />
+        <GalleryCard title='Property Gallery' />
 
         <Card>
           <CardContent className='space-y-4'>
@@ -70,58 +69,6 @@ const PropertyOverviewTab = ({ property, setUploadOpen }: Props) => {
         </Card>
       </div>
     </div>
-  )
-}
-
-/**
- * GALLERY (unchanged except minor cleanup)
- */
-function OverviewGalleryCard({
-  onUploadImages,
-}: {
-  onUploadImages: () => void
-}) {
-  return (
-    <Card className='h-95'>
-      <CardContent className='space-y-4'>
-        <div className='space-y-1'>
-          <h2 className='text-lg font-semibold'>Images</h2>
-        </div>
-
-        <div className='space-y-3'>
-          <div className='relative overflow-hidden rounded-2xl border bg-muted/20'>
-            <div className='aspect-video'>
-              <Skeleton className='h-full w-full rounded-none' />
-            </div>
-            <ImageIcon className='pointer-events-none absolute inset-1/2 size-9 -translate-x-1/2 -translate-y-1/2 text-muted-foreground' />
-          </div>
-
-          <div className='grid grid-cols-3 gap-3'>
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className='relative overflow-hidden rounded-2xl border bg-muted/20'
-              >
-                <div className='aspect-4/3'>
-                  <Skeleton className='h-full w-full rounded-none' />
-                </div>
-                <ImageIcon className='pointer-events-none absolute inset-1/2 size-5 -translate-x-1/2 -translate-y-1/2 text-muted-foreground' />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <Button
-          variant='outline'
-          size='sm'
-          className='w-full'
-          onClick={onUploadImages}
-        >
-          <Camera />
-          Upload image
-        </Button>
-      </CardContent>
-    </Card>
   )
 }
 
