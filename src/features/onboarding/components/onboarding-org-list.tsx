@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { House, Loader2, Users2 } from 'lucide-react'
+import { getCookie } from '@/lib/cookies'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,7 +41,7 @@ const OnboardingOrgList = ({ organizations, activeOrganization }: Props) => {
   const { mutate, isPending } = useHandleSelectOrganization()
 
   const isActiveOrg = useCallback(
-    (id: number) => activeOrganization?.id === id,
+    (id: number) => activeOrganization?.id === id && !!getCookie('active_org'),
     [activeOrganization]
   )
 
