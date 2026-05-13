@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Overview } from '@/features/dashboard/components/overview'
+import UnitGalleryCard from '@/features/units/unit-gallery/components/unit-gallery-card'
 import { useSingleUnit } from '../hooks/use-single-unit'
 import type { IProperty, TabKey } from '../types'
 import ActiveTenantsList from './overview/active-tenants-list'
@@ -34,10 +35,16 @@ const PropertyOverviewTab = ({ property }: Props) => {
 
       {/* RIGHT */}
       <div className='space-y-6'>
-        {/* Tenants ONLY for single unit */}
+        {isSingleUnit && unit ? (
+          <UnitGalleryCard
+            propertyId={property.id}
+            unitId={unit.id}
+            title='Gallery'
+          />
+        ) : (
+          <GalleryCard title='Property Gallery' />
+        )}
         {isSingleUnit && <ActiveTenantsList />}
-
-        <GalleryCard title='Property Gallery' />
 
         <Card>
           <CardContent className='space-y-4'>
