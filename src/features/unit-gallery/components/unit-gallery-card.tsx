@@ -31,7 +31,6 @@ type Props = {
 
 function UnitGalleryCard({ title, propertyId, unitId }: Props) {
   const [search, setSearch] = useState('')
-  // const [expandableOpen, setExpandableOpen] = useState(false)
 
   const {
     data: unit,
@@ -89,10 +88,7 @@ function UnitGalleryCard({ title, propertyId, unitId }: Props) {
   }, [unit])
 
   return (
-    <ExpandableScreen
-      layoutId='unit-gallery'
-      // onExpandChange={(expanded) => setExpandableOpen(expanded)}
-    >
+    <ExpandableScreen layoutId='unit-gallery'>
       <Card>
         <CardHeader>
           <CardTitle>Image Gallery</CardTitle>

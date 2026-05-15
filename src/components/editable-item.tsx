@@ -60,6 +60,7 @@ function EditableItem({
   placeholder = 'Not set',
   onSubmit,
   defaultContent,
+  isCurrency = false,
 }: EditableItemProps) {
   const [showEditButton, setShowEditButton] = useState(false)
   const [editState, setEditState] = useState(false)
@@ -169,8 +170,8 @@ function EditableItem({
                 autoFormat
                 onChange={(val) => setDraft(val === 0 ? null : Number(val))}
                 onBlur={handleBlurCommit}
-                currency={currencyConfig.currency}
-                locale={currencyConfig.locale}
+                currency={isCurrency ? currencyConfig.currency : undefined}
+                locale={isCurrency ? currencyConfig.locale : undefined}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()
