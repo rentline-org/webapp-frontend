@@ -5,9 +5,8 @@ import UnitGalleryCard from '@/features/unit-gallery/components/unit-gallery-car
 import { useSingleUnit } from '../hooks/use-single-unit'
 import type { IProperty, TabKey } from '../types'
 import ActiveTenantsList from './overview/active-tenants-list'
-import GalleryCard from './overview/gallery-card'
-// import GalleryCard from './overview/gallery-card'
 import GeneralDetails from './overview/general-details'
+import PropertyGallery from '@/features/property-gallery'
 
 type Props = {
   property: IProperty
@@ -42,7 +41,7 @@ const PropertyOverviewTab = ({ property }: Props) => {
             title='Gallery'
           />
         ) : (
-          <GalleryCard title='Property Gallery' />
+          <PropertyGallery property={property} title={"Apartment Complex gallery"} />
         )}
         {isSingleUnit && <ActiveTenantsList />}
 

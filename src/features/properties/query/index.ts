@@ -70,10 +70,11 @@ export function useGetProperties() {
   })
 }
 
-export function useGetPropertyBySlug(slug: string) {
+export function useGetPropertyBySlug(slug: string, enabled: boolean = true) {
   return useQuery<IProperty>({
     queryKey: propertyKey(slug, 'slug'),
     queryFn: () => handleGetPropertyBySlug(slug),
+    enabled: !!enabled
   })
 }
 

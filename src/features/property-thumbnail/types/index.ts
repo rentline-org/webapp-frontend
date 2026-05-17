@@ -22,9 +22,9 @@ export interface IPropertyThumbnailEndpointParams {
   propertyId: number
 }
 
-// export interface IPropertyGalleryEndpointParams extends IPropertyThumbnailEndpointParams {
-//   mediaId: string
-// }
+export interface IPropertyGalleryEndpointParams extends IPropertyThumbnailEndpointParams {
+  mediaId: string
+}
 
 export type TPropertyThumbnailRequest = TPropertyThumbnailSchema &
   IPropertyThumbnailEndpointParams

@@ -34,7 +34,7 @@ type Props = {
   onSave?: (payload: FormData) => void
 }
 
-const UnitGalleryUploadForm = ({
+const PropertyGalleryUploadForm = ({
   title,
   className,
   onSave,
@@ -231,4 +231,4 @@ const UnitGalleryUploadForm = ({
   )
 }
 
-export default UnitGalleryUploadForm
+export default PropertyGalleryUploadForm
