@@ -1,16 +1,76 @@
-import { useEffect, useState } from 'react'
-import { getRouteApi } from '@tanstack/react-router'
-import { Loader2 } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Main } from '@/components/layout/main'
-import ModulePlaceholder from '@/features/properties/components/module-placeholder'
-import { useGetPropertyBySlug } from '@/features/properties/query'
-import type { IProperty } from '@/features/properties/types'
-import UnitDetailsHeader from './components/unit-details-header'
-import UnitOverviewTab from './components/unit-overview-tab'
-import { useUnitFieldUpdate } from './hooks/use-unit-field-update'
-import { useGetUnitBySlug } from './query'
-import type { IUnitData, UnitTabKey } from './types'
+import { useEffect, useState } from 'react';
+import { getRouteApi } from '@tanstack/react-router';
+import { Loader2, LucideBadgeDollarSign, LucideChartColumn, LucideFilePen, LucideUsers } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Main } from '@/components/layout/main';
+import ModulePlaceholder from '@/features/properties/components/module-placeholder';
+import { useGetPropertyBySlug } from '@/features/properties/query';
+import type { IProperty } from '@/features/properties/types';
+import UnitDetailsHeader from './components/unit-details-header';
+import UnitOverviewTab from './components/unit-overview-tab';
+import { useUnitFieldUpdate } from './hooks/use-unit-field-update';
+import { useGetUnitBySlug } from './query';
+import type { IUnitData, UnitTabKey } from './types';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const routeApi = getRouteApi(
   '/_authenticated/properties/$propertySlug/units/$unitSlug'
@@ -99,10 +159,22 @@ function UnitDetailsContent({
           onValueChange={(value) => setActiveTab(value as UnitTabKey)}
         >
           <TabsList className='inline-flex h-auto gap-2 overflow-x-auto p-1'>
-            <TabsTrigger value='overview'>Overview</TabsTrigger>
-            <TabsTrigger value='leases'>Leases</TabsTrigger>
-            <TabsTrigger value='contacts'>Contacts</TabsTrigger>
-            <TabsTrigger value='accounting'>Accounting</TabsTrigger>
+            <TabsTrigger value='overview'>
+              <LucideChartColumn />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value='leases'>
+              <LucideFilePen />
+              Leases
+            </TabsTrigger>
+            <TabsTrigger value='contacts'>
+              <LucideUsers />
+              Contacts
+            </TabsTrigger>
+            <TabsTrigger value='accounting'>
+              <LucideBadgeDollarSign />
+              Accounting
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent
