@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
-import { Loader2 } from 'lucide-react'
+import {
+  Loader2,
+  LucideBadgeDollarSign,
+  LucideChartColumn,
+  LucideFilePen,
+  LucideSquaresUnite,
+  LucideUsers,
+} from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Main } from '@/components/layout/main'
 import DetailsHeader from './components/details-header'
@@ -64,13 +71,28 @@ const PropertyDetails = () => {
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className=''>
           <TabsList className='inline-flex h-auto gap-2 overflow-x-auto p-1'>
-            <TabsTrigger value='overview'>Overview</TabsTrigger>
+            <TabsTrigger value='overview'>
+              <LucideChartColumn />
+              Overview
+            </TabsTrigger>
             {property.property_type === 'multi_unit' && (
-              <TabsTrigger value='units'>Units</TabsTrigger>
+              <TabsTrigger value='units'>
+                <LucideSquaresUnite />
+                Units
+              </TabsTrigger>
             )}
-            <TabsTrigger value='leases'>Leases</TabsTrigger>
-            <TabsTrigger value='contacts'>Contacts</TabsTrigger>
-            <TabsTrigger value='accounting'>Accounting</TabsTrigger>
+            <TabsTrigger value='leases'>
+              <LucideFilePen />
+              Leases
+            </TabsTrigger>
+            <TabsTrigger value='contacts'>
+              <LucideUsers />
+              Contacts
+            </TabsTrigger>
+            <TabsTrigger value='accounting'>
+              <LucideBadgeDollarSign />
+              Accounting
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent
