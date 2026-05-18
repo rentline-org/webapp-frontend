@@ -31,7 +31,7 @@ export const propertyTypes: {
   {
     value: 'land',
     label: 'Land',
-    description: 'Sale-oriented listing with no rooms or rent pricing.',
+    description: 'Sale-oriented listings with no rooms or rent pricing.',
     icon: Layers3,
   },
 ]

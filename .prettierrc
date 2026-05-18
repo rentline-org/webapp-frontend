@@ -9,7 +9,6 @@
   "bracketSpacing": true,
   "endOfLine": "lf",
   "plugins": [
-    "@trivago/prettier-plugin-sort-imports",
     "prettier-plugin-tailwindcss"
   ],
   "tailwindFunctions": ["cn", "clsx"],

@@ -24,10 +24,12 @@ import { Route as authOnboardingRouteImport } from './routes/(auth)/onboarding'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedPropertiesRouteRouteImport } from './routes/_authenticated/properties/route'
+import { Route as AuthenticatedListingsRouteRouteImport } from './routes/_authenticated/listings/route'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedPropertiesIndexRouteImport } from './routes/_authenticated/properties/index'
+import { Route as AuthenticatedListingsIndexRouteImport } from './routes/_authenticated/listings/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings/organization'
@@ -118,6 +120,12 @@ const AuthenticatedPropertiesRouteRoute =
     path: '/properties',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedListingsRouteRoute =
+  AuthenticatedListingsRouteRouteImport.update({
+    id: '/listings',
+    path: '/listings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -139,6 +147,12 @@ const AuthenticatedPropertiesIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedPropertiesRouteRoute,
+  } as any)
+const AuthenticatedListingsIndexRoute =
+  AuthenticatedListingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedListingsRouteRoute,
   } as any)
 const AuthenticatedHelpCenterIndexRoute =
   AuthenticatedHelpCenterIndexRouteImport.update({
@@ -227,6 +241,7 @@ const AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/listings': typeof AuthenticatedListingsRouteRouteWithChildren
   '/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
@@ -249,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/listings/': typeof AuthenticatedListingsIndexRoute
   '/properties/': typeof AuthenticatedPropertiesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks/': typeof AuthenticatedTasksIndexRoute
@@ -279,6 +295,7 @@ export interface FileRoutesByTo {
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/listings': typeof AuthenticatedListingsIndexRoute
   '/properties': typeof AuthenticatedPropertiesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
@@ -291,6 +308,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(auth)': typeof authRouteRouteWithChildren
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/listings': typeof AuthenticatedListingsRouteRouteWithChildren
   '/_authenticated/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
@@ -314,6 +332,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/_authenticated/listings/': typeof AuthenticatedListingsIndexRoute
   '/_authenticated/properties/': typeof AuthenticatedPropertiesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
@@ -327,6 +346,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/listings'
     | '/properties'
     | '/settings'
     | '/forgot-password'
@@ -349,6 +369,7 @@ export interface FileRouteTypes {
     | '/settings/organization'
     | '/chats/'
     | '/help-center/'
+    | '/listings/'
     | '/properties/'
     | '/settings/'
     | '/tasks/'
@@ -379,6 +400,7 @@ export interface FileRouteTypes {
     | '/settings/organization'
     | '/chats'
     | '/help-center'
+    | '/listings'
     | '/properties'
     | '/settings'
     | '/tasks'
@@ -390,6 +412,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/(auth)'
     | '/_authenticated'
+    | '/_authenticated/listings'
     | '/_authenticated/properties'
     | '/_authenticated/settings'
     | '/(auth)/forgot-password'
@@ -413,6 +436,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/organization'
     | '/_authenticated/chats/'
     | '/_authenticated/help-center/'
+    | '/_authenticated/listings/'
     | '/_authenticated/properties/'
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
@@ -540,6 +564,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPropertiesRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/listings': {
+      id: '/_authenticated/listings'
+      path: '/listings'
+      fullPath: '/listings'
+      preLoaderRoute: typeof AuthenticatedListingsRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/users/': {
       id: '/_authenticated/users/'
       path: '/users'
@@ -567,6 +598,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/properties/'
       preLoaderRoute: typeof AuthenticatedPropertiesIndexRouteImport
       parentRoute: typeof AuthenticatedPropertiesRouteRoute
+    }
+    '/_authenticated/listings/': {
+      id: '/_authenticated/listings/'
+      path: '/'
+      fullPath: '/listings/'
+      preLoaderRoute: typeof AuthenticatedListingsIndexRouteImport
+      parentRoute: typeof AuthenticatedListingsRouteRoute
     }
     '/_authenticated/help-center/': {
       id: '/_authenticated/help-center/'
@@ -691,6 +729,20 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
+interface AuthenticatedListingsRouteRouteChildren {
+  AuthenticatedListingsIndexRoute: typeof AuthenticatedListingsIndexRoute
+}
+
+const AuthenticatedListingsRouteRouteChildren: AuthenticatedListingsRouteRouteChildren =
+  {
+    AuthenticatedListingsIndexRoute: AuthenticatedListingsIndexRoute,
+  }
+
+const AuthenticatedListingsRouteRouteWithChildren =
+  AuthenticatedListingsRouteRoute._addFileChildren(
+    AuthenticatedListingsRouteRouteChildren,
+  )
+
 interface AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteChildren {
   AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute: typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
 }
@@ -770,6 +822,7 @@ const AuthenticatedSettingsRouteRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedListingsRouteRoute: typeof AuthenticatedListingsRouteRouteWithChildren
   AuthenticatedPropertiesRouteRoute: typeof AuthenticatedPropertiesRouteRouteWithChildren
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -781,6 +834,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedListingsRouteRoute: AuthenticatedListingsRouteRouteWithChildren,
   AuthenticatedPropertiesRouteRoute:
     AuthenticatedPropertiesRouteRouteWithChildren,
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,

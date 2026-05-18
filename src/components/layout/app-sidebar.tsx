@@ -9,7 +9,6 @@ import {
 import { OrgSwitcher } from '@/features/organizations/org-switcher'
 import { useUserProfileQuery } from '@/features/settings/profile/query'
 import { AppTitle } from './app-title'
-// import { AppTitle } from './app-title'
 import { sidebarData } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
