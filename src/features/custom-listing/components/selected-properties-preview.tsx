@@ -3,7 +3,7 @@ import { Building2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 type SelectedPropertiesPreviewProps = {
-  propertyIds: string[]
+  propertyIds: number[]
 }
 
 function SelectedPropertiesPreview({

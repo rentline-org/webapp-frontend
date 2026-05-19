@@ -1,4 +1,4 @@
-import {  useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'motion/react'
 import { ArrowLeft, Building2, CheckCircle2 } from 'lucide-react'
 
@@ -7,33 +7,24 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import type { PropertyOption } from '@/features/custom-listing/types'
 import { useGetProperties } from '@/features/properties/query'
+import type { IProperty } from '@/features/properties/types'
+import { useSingleUnit } from '@/features/properties/hooks/use-single-unit'
 
 function PropertySelectionForm({
   selectedIds,
   onSelect,
   onBack,
 }: {
-  selectedIds: string[]
-  onSelect: (propertyIds: string[]) => void
+  selectedIds: number[]
+  onSelect: (propertyIds: number[]) => void
   onBack: () => void
 }) {
-  // Swap this with your own query hook.
-  // const { data, isLoading, isError, error, refetch } = useGetProperties()
   const { data: properties, isLoading, isError, error } = useGetProperties()
-  // const data: unknown = null
-  // const isLoading = false
-  // const isError = false
-  // const error: unknown = null
-  //
-  // const properties = useMemo(() => normalizePropertiesResponse(data), [data])
 
-  const [value, setValue] = useState<string[]>(selectedIds)
+  const [value, setValue] = useState<number[]>(selectedIds)
 
-
-
-  const toggleProperty = (propertyId: string) => {
+  const toggleProperty = (propertyId: number) => {
     setValue((current) =>
       current.includes(propertyId)
         ? current.filter((id) => id !== propertyId)
@@ -51,7 +42,7 @@ function PropertySelectionForm({
       transition={{ duration: 0.22, ease: 'easeOut' }}
     >
       <div className='border-b px-6 py-5'>
-        <div className='flex flex-col items-start  gap-4'>
+        <div className='flex flex-col items-start gap-4'>
           <Button
             variant='outline'
             size='sm'
@@ -66,15 +57,10 @@ function PropertySelectionForm({
               <Building2 className='h-4 w-4' />
               Properties
             </div>
-            {/*<h3 className='text-lg font-semibold text-foreground'>*/}
-            {/*  Choose properties*/}
-            {/*</h3>*/}
             <p className='mt-1 text-sm text-muted-foreground'>
               Select one or more properties to be visible on your website
             </p>
           </div>
-
-
         </div>
       </div>
 
@@ -111,15 +97,15 @@ function PropertySelectionForm({
         ) : (
           <div className='space-y-3'>
             {properties?.map((property) => {
-              const selected = value.includes(String(property.id))
+              const selected = value.includes(property.id)
 
               return (
                 <button
                   key={property.id}
                   type='button'
-                  onClick={() => toggleProperty(String(property.id))}
+                  onClick={() => toggleProperty(property.id)}
                   className={cn(
-                    'flex w-full items-center gap-3 rounded-xl border p-3 text-left ',
+                    'flex w-full items-center gap-3 rounded-xl border p-3 text-left',
                     selected
                       ? 'border-primary bg-primary/5'
                       : 'hover:bg-muted/50'
@@ -138,7 +124,7 @@ function PropertySelectionForm({
 
                   <Checkbox
                     checked={selected}
-                    onCheckedChange={() => toggleProperty(String(property.id))}
+                    onCheckedChange={() => toggleProperty(property.id)}
                   />
                 </button>
               )
@@ -148,27 +134,14 @@ function PropertySelectionForm({
       </div>
 
       <div className='border-t px-6 py-4'>
-        <div className='flex items-center justify-between gap-3'>
-          <div className='text-sm text-muted-foreground'>
-            {value.length
-              ? `${value.length} property${value.length === 1 ? '' : 'ies'} selected.`
-              : 'Pick one or more properties to continue.'}
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <Button variant='outline' onClick={onBack}>
-              Cancel
-            </Button>
-            <Button
-              className='gap-2'
-              // disabled={!value.length}
-              onClick={() => onSelect(value)}
-            >
-              <CheckCircle2 className='h-4 w-4' />
-              Use properties
-            </Button>
-          </div>
-        </div>
+        <Button
+          className='gap-2'
+          disabled={!value.length}
+          onClick={() => onSelect(value)}
+        >
+          <CheckCircle2 className='h-4 w-4' />
+          Use properties
+        </Button>
       </div>
     </motion.div>
   )
@@ -194,17 +167,17 @@ function PropertyPickerSkeleton() {
   )
 }
 
-
-
 function formatPropertyUnits(count?: number | null) {
   if (typeof count !== 'number') return '—'
   return `${count} ${count === 1 ? 'unit' : 'units'}`
 }
 
+function PropertyThumbnail({ property }: { property: IProperty }) {
+  const { isSingleUnit, unit } = useSingleUnit(property)
 
-
-function PropertyThumbnail({ property }: { property: PropertyOption }) {
-  const thumbnailUrl = property.thumbnail?.url
+  const thumbnailUrl = isSingleUnit
+    ? unit?.thumbnail?.url
+    : property?.thumbnail?.url
 
   if (!thumbnailUrl) {
     return <Skeleton className='h-14 w-14 rounded-xl' />

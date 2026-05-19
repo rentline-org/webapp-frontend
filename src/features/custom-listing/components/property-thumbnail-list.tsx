@@ -8,21 +8,20 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.tsx'
 import { getInitials } from '@/features/custom-listing/utils'
 import type { IProperty } from '@/features/properties/types'
-import { useMemo } from 'react'
+import { useSingleUnit } from '@/features/properties/hooks/use-single-unit'
 
+function PropertyThumbnail({ property }: { property: IProperty }) {
+  const { isSingleUnit, unit } = useSingleUnit(property)
 
-type PropertyPreview = {
-  id?: string;
-  url?: string;
-  name: string;
-}
+  const thumbnailUrl = isSingleUnit
+    ? unit?.thumbnail?.url
+    : property?.thumbnail?.url
 
-function PropertyThumbnail({ property }: { property: PropertyPreview }) {
-  if (property.url) {
+  if (thumbnailUrl) {
     return (
       <Avatar className='h-10 w-10 border-2 border-white shadow-sm dark:border-gray-800'>
-        <AvatarImage src={property.url} alt={property.name} />
-        <AvatarFallback>{getInitials(property.name)}</AvatarFallback>
+        <AvatarImage src={thumbnailUrl} alt={property.title} />
+        <AvatarFallback>{getInitials(property.title)}</AvatarFallback>
       </Avatar>
     )
   }
@@ -37,25 +36,7 @@ function PropertyThumbnailList({
 }: {
   properties?: IProperty[] | null
 }) {
-  const propertyMedia = useMemo((): PropertyPreview[] => {
-    if (!properties?.length) return []
-
-    return [...properties]
-      .sort((a, b) => {
-        const aHasThumbnail = a.thumbnail !== null
-        const bHasThumbnail = b.thumbnail !== null
-
-        if (aHasThumbnail === bHasThumbnail) return 0
-        return aHasThumbnail ? -1 : 1
-      })
-      .slice(0, 5)
-      .map((p): PropertyPreview => ({
-        ...p.thumbnail,
-        name: p.title,
-      }))
-  }, [properties])
-
-  if (!propertyMedia.length) {
+  if (!properties?.length) {
     return (
       <div className='flex -space-x-2 overflow-hidden'>
         {Array.from({ length: 4 }).map((_, index) => (
@@ -70,7 +51,7 @@ function PropertyThumbnailList({
 
   return (
     <div className='flex -space-x-2 overflow-hidden'>
-      {propertyMedia.map((property) => (
+      {properties.map((property) => (
         <TooltipProvider key={property.id}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -79,7 +60,7 @@ function PropertyThumbnailList({
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{property.name}</p>
+              <p>{property.title}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -88,4 +69,4 @@ function PropertyThumbnailList({
   )
 }
 
-export default PropertyThumbnailList;
+export default PropertyThumbnailList

@@ -35,9 +35,11 @@ export function typeIcon(type: TPropertyType) {
 export function formatDate(value?: string | null) {
   if (!value) return '—'
   const date = new Date(value)
+
   if (Number.isNaN(date.getTime())) return '—'
-  return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'medium',
+
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'short',
   }).format(date)
 }
 

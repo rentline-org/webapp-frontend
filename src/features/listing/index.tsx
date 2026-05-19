@@ -1,25 +1,25 @@
-import { Loader2, PlusIcon } from 'lucide-react';
+import { Loader2, PlusIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button.tsx'
-import { Main } from '@/components/layout/main.tsx';
-import { useCreateListing, useGetListing } from '@/features/listing/query';
+import { Main } from '@/components/layout/main.tsx'
+import { useCreateListing, useGetListing } from '@/features/listing/query'
 import WebsiteIntegrationCard from '@/features/custom-listing/components/website-integration-card.tsx'
 
 function ListingPage() {
-  const { data, isLoading, refetch, isFetching } = useGetListing();
-  const { mutate, isPending } = useCreateListing();
+  const { data, isLoading, refetch, isFetching } = useGetListing()
+  const { mutate, isPending } = useCreateListing()
 
   const handleInitListing = () => {
     mutate(undefined, {
       onSuccess: async () => {
-        await refetch();
-      }
+        await refetch()
+      },
     })
   }
-  
+
   if (isLoading) {
     return (
-      <div className='w-full h-full flex items-center justify-center'>
-        <Loader2 className='animate-spin mx-auto size-6' />
+      <div className='flex h-full w-full items-center justify-center'>
+        <Loader2 className='mx-auto size-6 animate-spin' />
       </div>
     )
   }
@@ -52,7 +52,7 @@ function ListingPage() {
           </Button>
         </div>
       ) : (
-        <div className='flex flex-col gap-6 w-full'>
+        <div className='flex w-full flex-col gap-6'>
           <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
             <div className='space-y-1'>
               <h1 className='text-2xl font-semibold tracking-tight sm:text-3xl'>
@@ -63,22 +63,22 @@ function ListingPage() {
               </p>
             </div>
 
-            <Button>
+            {/* <Button>
               <PlusIcon />
               New publication
-            </Button>
+            </Button> */}
           </div>
 
-          <div className="w-full flex items-center gap-4">
-            <WebsiteIntegrationCard customListingId={data?.custom_listing?.id ?? null} />
+          <div className='flex w-full items-center gap-4'>
+            <WebsiteIntegrationCard
+              customListingId={data?.custom_listing?.id ?? null}
+              listingId={data!.id}
+            />
           </div>
-
         </div>
       )}
     </Main>
   )
 }
 
-export default ListingPage;
-
-
+export default ListingPage

@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AnimatePresence, motion } from 'motion/react'
 import { type Resolver, useForm } from 'react-hook-form'
-import { CheckCircle2, ChevronRight, Loader2, Sparkles, XIcon } from 'lucide-react'
+import { CheckCircle2, ChevronRight, Loader2, XIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
-  Drawer, DrawerClose,
+  Drawer,
+  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -30,6 +31,20 @@ import {
 
 import PropertySelectionScreen from '@/features/custom-listing/components/property-selection-form'
 import SelectedPropertiesPreview from '@/features/custom-listing/components/selected-properties-preview'
+import InputDomainAddons from '@/components/ui/input-domain-addons'
+import { useAuthStore } from '@/stores/auth-store'
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldTitle,
+} from '@/components/ui/field'
+import { Checkbox } from '@/components/ui/checkbox'
+import { useCreateWebsiteIntegration } from '../query'
+import { invalidateListing } from '@/features/listing/query'
+import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 type DrawerMode = 'create' | 'edit'
 type DrawerScreen = 'form' | 'properties'
@@ -39,8 +54,9 @@ type WebsiteIntegrationDrawerProps = {
   onOpenChange: (open: boolean) => void
   mode: DrawerMode
   initialValues?: Partial<TWebsiteIntegrationSchema>
-  initialPropertyIds?: string[]
-  onSubmit?: (values: TWebsiteIntegrationSchema) => void | Promise<void>
+  initialPropertyIds?: number[]
+  onSubmit?: () => void
+  listingId: number
 }
 
 function WebsiteIntegrationDrawer({
@@ -50,14 +66,29 @@ function WebsiteIntegrationDrawer({
   initialValues,
   initialPropertyIds,
   onSubmit,
+  listingId,
 }: WebsiteIntegrationDrawerProps) {
   const [screen, setScreen] = useState<DrawerScreen>('form')
+  const { user } = useAuthStore((s) => s.auth)
+
+  const queryClient = useQueryClient()
+  const { mutate, isPending: isSaving } = useCreateWebsiteIntegration()
+
+  const orgDomainSlug = useMemo(() => {
+    if (user?.active_organization) {
+      return user?.active_organization.title.split(' ').join('-')
+    }
+
+    return ''
+  }, [user?.active_organization])
 
   const form = useForm<TWebsiteIntegrationSchema>({
-    resolver: zodResolver(websiteIntegrationSchema) as Resolver<TWebsiteIntegrationSchema>,
+    resolver: zodResolver(
+      websiteIntegrationSchema
+    ) as Resolver<TWebsiteIntegrationSchema>,
     defaultValues: {
       headline: '',
-      domain: '',
+      subdomain: orgDomainSlug,
       contact_email: '',
       contact_phone: '',
       is_published: true,
@@ -71,7 +102,7 @@ function WebsiteIntegrationDrawer({
 
     form.reset({
       headline: initialValues?.headline ?? '',
-      domain: initialValues?.domain ?? '',
+      subdomain: initialValues?.subdomain ?? orgDomainSlug,
       contact_email: initialValues?.contact_email ?? '',
       contact_phone: initialValues?.contact_phone ?? '',
       is_published: initialValues?.is_published ?? true,
@@ -80,14 +111,25 @@ function WebsiteIntegrationDrawer({
     })
 
     setScreen('form')
-  }, [open, initialValues, initialPropertyIds, form])
+  }, [open, initialValues, initialPropertyIds, form, orgDomainSlug])
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const propertyIds = form.watch('property_ids') ?? []
 
-  const isSaving = false
-
-  const submit = form.handleSubmit(async (values) => {
-    await onSubmit?.(values)
+  const submit = form.handleSubmit((payload) => {
+    mutate(
+      {
+        listingId,
+        payload,
+      },
+      {
+        async onSuccess() {
+          await invalidateListing(queryClient)
+          toast.success('Website listing!')
+          onSubmit?.()
+        },
+      }
+    )
   })
 
   return (
@@ -154,14 +196,15 @@ function WebsiteIntegrationDrawer({
 
                             <FormField
                               control={form.control}
-                              name='domain'
+                              name='subdomain'
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>Domain</FormLabel>
 
                                   <FormControl>
-                                    <Input
-                                      placeholder='example.com'
+                                    <InputDomainAddons
+                                      defaultDomain={orgDomainSlug}
+                                      placeholder='my-website'
                                       {...field}
                                     />
                                   </FormControl>
@@ -212,6 +255,38 @@ function WebsiteIntegrationDrawer({
                             </div>
                           </div>
 
+                          <FormField
+                            control={form.control}
+                            name='is_published'
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <FieldLabel>
+                                    <Field orientation='horizontal'>
+                                      <Checkbox
+                                        onBlur={field.onBlur}
+                                        disabled={field.disabled}
+                                        name={field.name}
+                                        checked={field.value}
+                                        onCheckedChange={(checked) =>
+                                          field.onChange(checked)
+                                        }
+                                      />
+                                      <FieldContent>
+                                        <FieldTitle>Published</FieldTitle>
+                                        <FieldDescription>
+                                          This will make your website available
+                                          immediattely. This can be changed to
+                                          draft later
+                                        </FieldDescription>
+                                      </FieldContent>
+                                    </Field>
+                                  </FieldLabel>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+
                           <div className='rounded-2xl border bg-muted/20 p-5'>
                             <div className='mb-5 flex items-start justify-between gap-4'>
                               <div>
@@ -220,8 +295,7 @@ function WebsiteIntegrationDrawer({
                                 </h3>
 
                                 <p className='mt-1 text-sm text-muted-foreground'>
-                                  Select the properties connected to this
-                                  integration.
+                                  Select the properties to show on your website
                                 </p>
                               </div>
 
@@ -255,50 +329,15 @@ function WebsiteIntegrationDrawer({
                               )}
                             />
                           </div>
-
-                          <div className='rounded-2xl border p-5'>
-                            <div className='flex items-center gap-2 text-sm font-medium'>
-                              <Sparkles className='h-4 w-4 text-muted-foreground' />
-                              Quick summary
-                            </div>
-
-                            <div className='mt-4 grid gap-3 lg:grid-cols-3'>
-                              <div className='rounded-xl bg-muted/40 p-3 text-sm'>
-                                <div className='text-muted-foreground'>
-                                  Mode
-                                </div>
-
-                                <div className='mt-1 font-medium'>{mode}</div>
-                              </div>
-
-                              <div className='rounded-xl bg-muted/40 p-3 text-sm'>
-                                <div className='text-muted-foreground'>
-                                  Properties
-                                </div>
-
-                                <div className='mt-1 font-medium'>
-                                  {propertyIds.length}
-                                </div>
-                              </div>
-
-                              <div className='rounded-xl bg-muted/40 p-3 text-sm'>
-                                <div className='text-muted-foreground'>
-                                  Status
-                                </div>
-
-                                <div className='mt-1 font-medium'>Draft</div>
-                              </div>
-                            </div>
-                          </div>
                         </div>
                       </div>
 
-                      <DrawerFooter className='border-t px-8 py-5 flex items-center gap-2'>
+                      <DrawerFooter className='flex items-center gap-2 border-t px-8 py-5'>
                         <Button
                           type='submit'
                           className='gap-2'
                           disabled={isSaving}
-                          size="lg"
+                          size='lg'
                         >
                           {isSaving ? (
                             <Loader2 className='h-4 w-4 animate-spin' />
@@ -310,12 +349,6 @@ function WebsiteIntegrationDrawer({
                             ? 'Create integration'
                             : 'Save changes'}
                         </Button>
-
-                        {/*<DrawerClose asChild>*/}
-                        {/*  <Button type='button' variant='outline' size="lg">*/}
-                        {/*    Cancel*/}
-                        {/*  </Button>*/}
-                        {/*</DrawerClose>*/}
                       </DrawerFooter>
                     </form>
                   </Form>
