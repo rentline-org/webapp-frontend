@@ -42,6 +42,7 @@ import WebsiteIntegrationDropdownActions from './website-integration-dropdown-ac
 import { toast } from 'sonner'
 import { invalidateListing } from '@/features/listing/query'
 import { useQueryClient } from '@tanstack/react-query'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 type Props = {
   customListingId: number | null
@@ -52,6 +53,8 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create')
   const [expanded, setExpanded] = useState(false)
+
+  const isMobile = useIsMobile()
 
   const queryClient = useQueryClient()
 
@@ -174,32 +177,49 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
 
   const hasIntegration = !!customListing
   const isPublished = customListing?.is_published ?? false
+  const cardSize = useMemo<{
+    collapsed: { width?: number; height?: number }
+    expanded: { width?: number; height?: number }
+  }>(() => {
+    if (isMobile) {
+      return {
+        collapsed: { height: 240 },
+        expanded: { height: hasIntegration ? 600 : 420 },
+      }
+    }
+
+    return {
+      collapsed: { width: 450, height: 240 },
+      expanded: { width: 720, height: 380 },
+    }
+  }, [hasIntegration, isMobile])
 
   return (
     <>
       <Expandable
-        expandDirection='horizontal'
+        className='w-full max-w-full'
+        expandDirection={isMobile ? 'vertical' : 'horizontal'}
         expandBehavior='replace'
         initialDelay={0.1}
         expanded={expanded}
         onToggle={() => setExpanded(!expanded)}
       >
         {({ isExpanded }) => (
-          <ExpandableTrigger>
+          <ExpandableTrigger className='w-full max-w-full'>
             <ExpandableCard
-              className='w-full'
-              collapsedSize={{ width: 450, height: 240 }}
-              expandedSize={{ width: 720, height: 380 }}
+              className='w-full max-w-full'
+              collapsedSize={cardSize.collapsed}
+              expandedSize={cardSize.expanded}
               hoverToExpand={false}
               expandDelay={150}
               collapseDelay={200}
             >
-              <ExpandableCardHeader>
+              <ExpandableCardHeader className='p-4 sm:p-6'>
                 {isLoading ? (
-                  <div className='flex w-full items-start justify-between gap-4'>
-                    <div className='space-y-3'>
+                  <div className='flex w-full flex-col items-start justify-between gap-3 sm:flex-row sm:gap-4'>
+                    <div className='w-full space-y-3 sm:w-auto'>
                       <Skeleton className='h-5 w-24' />
-                      <Skeleton className='h-7 w-48' />
+                      <Skeleton className='h-7 w-full max-w-48' />
                       <Skeleton className='h-4 w-36' />
                     </div>
                     <Skeleton className='h-9 w-9 rounded-md' />
@@ -207,7 +227,7 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                 ) : isError ? (
                   <WebsiteErrorContent error={error} />
                 ) : !hasIntegration ? (
-                  <div className='flex w-full items-center justify-between gap-4'>
+                  <div className='flex w-full items-start justify-between gap-3 sm:items-center sm:gap-4'>
                     <div className='min-w-0 space-y-2'>
                       <div className='flex flex-wrap items-center gap-2'>
                         <Badge variant='destructive' className='gap-1'>
@@ -238,7 +258,7 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                   </div>
                 ) : (
                   // ── Active State (Collapsed) ─────────────────
-                  <div className='flex w-full items-center justify-between gap-4'>
+                  <div className='flex w-full items-start justify-between gap-3 sm:items-center sm:gap-4'>
                     <div className='min-w-0 flex-1 space-y-2'>
                       <div className='flex flex-wrap items-center gap-2'>
                         <Badge variant='default' className='gap-1'>
@@ -266,24 +286,26 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                       </div>
                     </div>
 
-                    <WebsiteIntegrationDropdownActions
-                      isPublished={isPublished}
-                      hasIntegration={true}
-                      onEdit={openEditDrawer}
-                      onPublishToggle={handlePublishToggle}
-                      onView={handleViewLive}
-                      onCopyLink={handleCopyLink}
-                      onDelete={handleDelete}
-                    />
+                    <div onClick={(event) => event.stopPropagation()}>
+                      <WebsiteIntegrationDropdownActions
+                        isPublished={isPublished}
+                        hasIntegration={true}
+                        onEdit={openEditDrawer}
+                        onPublishToggle={handlePublishToggle}
+                        onView={handleViewLive}
+                        onCopyLink={handleCopyLink}
+                        onDelete={handleDelete}
+                      />
+                    </div>
                   </div>
                 )}
               </ExpandableCardHeader>
 
-              <ExpandableCardContent>
+              <ExpandableCardContent className='px-4 pt-0 pb-4 sm:pb-6'>
                 {isLoading ? (
-                  <div className='flex gap-4'>
-                    <Skeleton className='h-28 w-40 rounded-xl' />
-                    <Skeleton className='h-28 w-40 rounded-xl' />
+                  <div className='flex flex-col gap-3 sm:flex-row sm:gap-4'>
+                    <Skeleton className='h-28 w-full rounded-xl sm:w-40' />
+                    <Skeleton className='h-28 w-full rounded-xl sm:w-40' />
                   </div>
                 ) : isError ? (
                   <div className='rounded-xl border border-dashed p-4 text-sm text-muted-foreground'>
@@ -291,7 +313,7 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                   </div>
                 ) : !hasIntegration ? (
                   <ExpandableContent preset='blur-md'>
-                    <div className='rounded-xl border border-dashed p-6 text-center'>
+                    <div className='rounded-xl border border-dashed p-4 text-center sm:p-6'>
                       <div className='mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted'>
                         <Globe2 className='h-6 w-6 text-muted-foreground' />
                       </div>
@@ -302,7 +324,13 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                         Set up your custom subdomain, contact methods, and
                         properties.
                       </p>
-                      <Button className='mt-4 gap-2' onClick={openCreateDrawer}>
+                      <Button
+                        className='mt-4 w-full gap-2 sm:w-auto'
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openCreateDrawer()
+                        }}
+                      >
                         <Plus className='h-4 w-4' />
                         Create Integration
                       </Button>
@@ -310,17 +338,20 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                   </ExpandableContent>
                 ) : isExpanded ? (
                   <ExpandableContent preset='blur-md'>
-                    <div className='flex h-full gap-4'>
+                    <div className='flex h-full min-w-0 flex-col gap-3 md:flex-row md:gap-4'>
                       {/* Left: Domain + Properties */}
-                      <div className='flex-1 space-y-3'>
+                      <div className='min-w-0 flex-1 space-y-3'>
                         <div className='rounded-md border bg-muted/20 p-3'>
-                          <div className='mb-2 flex items-center justify-between'>
+                          <div className='mb-2 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between'>
                             <div className='flex items-center gap-2 text-sm font-medium'>
                               <Globe2 className='h-4 w-4 text-muted-foreground' />
                               Website URL
                             </div>
                             {customListing.subdomain && (
-                              <div>
+                              <div
+                                className='flex flex-wrap items-center gap-1'
+                                onClick={(event) => event.stopPropagation()}
+                              >
                                 <Button
                                   variant='ghost'
                                   size='sm'
@@ -350,10 +381,13 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                                 href={`https://${customListing.subdomain}.rentline.io`}
                                 target='_blank'
                                 rel='noopener noreferrer'
-                                className='flex items-center gap-1 text-primary hover:underline'
+                                className='flex min-w-0 items-center gap-1 text-primary hover:underline'
+                                onClick={(event) => event.stopPropagation()}
                               >
-                                <Link2 className='h-3.5 w-3.5' />
-                                {customListing.subdomain}.rentline.io
+                                <Link2 className='h-3.5 w-3.5 shrink-0' />
+                                <span className='min-w-0 break-all'>
+                                  {customListing.subdomain}.rentline.io
+                                </span>
                               </a>
                             ) : (
                               'No custom subdomain configured'
@@ -362,8 +396,8 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                         </div>
 
                         <div className='rounded-md border bg-muted/20 p-3'>
-                          <div className='mb-2 flex w-full items-center justify-between'>
-                            <div className='flex items-center gap-2'>
+                          <div className='mb-2 flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+                            <div className='flex min-w-0 flex-wrap items-center gap-2'>
                               <div className='mb-0 flex items-center gap-2 text-sm font-medium'>
                                 <Building className='h-4 w-4 text-muted-foreground' />
                                 Properties
@@ -375,7 +409,8 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                             <Button
                               variant='ghost'
                               size='sm'
-                              className='h-7 gap-1 text-xs'
+                              className='h-7 w-full gap-1 text-xs sm:w-auto'
+                              onClick={(event) => event.stopPropagation()}
                             >
                               <Edit className='size-4' />
                               Edit
@@ -388,36 +423,36 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                       </div>
 
                       {/* Right: Config + Actions */}
-                      <div className='h-49 w-48 space-y-3'>
+                      <div className='w-full space-y-3 md:h-49 md:w-48'>
                         <div className='h-full space-y-2 rounded-md border bg-muted/20 p-3'>
                           <h4 className='flex items-center gap-2 text-sm font-medium'>
                             <Settings2 className='h-4 w-4 text-muted-foreground' />
                             Config
                           </h4>
                           <div className='space-y-1.5 text-xs'>
-                            <div className='flex justify-between'>
+                            <div className='flex items-start justify-between gap-3'>
                               <span className='text-muted-foreground'>
                                 Contact
                               </span>
-                              <span className='font-medium'>
+                              <span className='text-right font-medium break-words'>
                                 {contactSummary}
                               </span>
                             </div>
-                            <div className='flex justify-between'>
+                            <div className='flex items-start justify-between gap-3'>
                               <span className='text-muted-foreground'>
                                 Contact form
                               </span>
-                              <span>
+                              <span className='text-right'>
                                 {customListing.show_contact_form
                                   ? 'Enabled'
                                   : 'Disabled'}
                               </span>
                             </div>
-                            <div className='flex justify-between'>
+                            <div className='flex items-start justify-between gap-3'>
                               <span className='text-muted-foreground'>
                                 Langs
                               </span>
-                              <span className='font-medium'>
+                              <span className='text-right font-medium break-words'>
                                 {languagesLabel}
                               </span>
                             </div>
@@ -464,10 +499,10 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                 ) : null}
               </ExpandableCardContent>
 
-              <ExpandableCardFooter>
-                <div className='flex flex-col gap-1 px-2 text-xs text-muted-foreground'>
+              <ExpandableCardFooter className='px-4 pt-0 pb-4'>
+                <div className='flex flex-col gap-1 text-xs text-muted-foreground sm:px-2'>
                   {!isExpanded && (
-                    <div className='flex items-center gap-1 text-xs text-muted-foreground'>
+                    <div className='flex flex-wrap items-center gap-1 text-xs text-muted-foreground'>
                       <span>Click to expand details</span>{' '}
                       <ArrowUpRightFromCircle className='size-3' />
                     </div>

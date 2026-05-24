@@ -41,7 +41,7 @@ function PropertySelectionForm({
       exit={{ x: 48, opacity: 0 }}
       transition={{ duration: 0.22, ease: 'easeOut' }}
     >
-      <div className='border-b px-6 py-5'>
+      <div className='border-b px-4 py-4 sm:px-6 sm:py-5'>
         <div className='flex flex-col items-start gap-4'>
           <Button
             variant='outline'
@@ -64,7 +64,7 @@ function PropertySelectionForm({
         </div>
       </div>
 
-      <div className='flex-1 overflow-y-auto px-6 py-5'>
+      <div className='flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5'>
         {isLoading ? (
           <PropertyPickerSkeleton />
         ) : isError ? (
@@ -133,9 +133,9 @@ function PropertySelectionForm({
         )}
       </div>
 
-      <div className='border-t px-6 py-4'>
+      <div className='border-t px-4 py-4 sm:px-6'>
         <Button
-          className='gap-2'
+          className='w-full gap-2 sm:w-auto'
           disabled={!value.length}
           onClick={() => onSelect(value)}
         >

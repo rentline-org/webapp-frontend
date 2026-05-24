@@ -45,6 +45,7 @@ import { useCreateWebsiteIntegration } from '../query'
 import { invalidateListing } from '@/features/listing/query'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 type DrawerMode = 'create' | 'edit'
 type DrawerScreen = 'form' | 'properties'
@@ -70,6 +71,7 @@ function WebsiteIntegrationDrawer({
 }: WebsiteIntegrationDrawerProps) {
   const [screen, setScreen] = useState<DrawerScreen>('form')
   const { user } = useAuthStore((s) => s.auth)
+  const isMobile = useIsMobile()
 
   const queryClient = useQueryClient()
   const { mutate, isPending: isSaving } = useCreateWebsiteIntegration()
@@ -133,12 +135,16 @@ function WebsiteIntegrationDrawer({
   })
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} direction='right'>
-      <DrawerContent className='w-full p-0 data-[vaul-drawer-direction=right]:w-150'>
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      direction={isMobile ? 'bottom' : 'right'}
+    >
+      <DrawerContent className='w-full p-0 data-[vaul-drawer-direction=bottom]:h-[92svh] data-[vaul-drawer-direction=bottom]:!max-h-[92svh] data-[vaul-drawer-direction=right]:w-150'>
         <div className='flex h-full flex-col overflow-hidden'>
-          <DrawerHeader className='flex w-full flex-row items-center justify-between border-b px-8 py-6 text-left'>
-            <div className='flex flex-col gap-1'>
-              <DrawerTitle className='text-xl'>
+          <DrawerHeader className='flex w-full flex-row items-start justify-between gap-3 border-b px-4 py-4 text-left sm:items-center sm:px-8 sm:py-6'>
+            <div className='flex min-w-0 flex-col gap-1'>
+              <DrawerTitle className='text-lg sm:text-xl'>
                 {mode === 'create'
                   ? 'Create website integration'
                   : 'Edit website integration'}
@@ -150,7 +156,7 @@ function WebsiteIntegrationDrawer({
               </DrawerDescription>
             </div>
             <DrawerClose asChild>
-              <Button size='icon' variant='ghost'>
+              <Button size='icon' variant='ghost' className='shrink-0'>
                 <XIcon />
               </Button>
             </DrawerClose>
@@ -172,9 +178,9 @@ function WebsiteIntegrationDrawer({
                 >
                   <Form {...form}>
                     <form onSubmit={submit} className='flex h-full flex-col'>
-                      <div className='flex-1 overflow-y-auto px-8 py-6'>
-                        <div className='mx-auto flex w-full max-w-4xl flex-col gap-8'>
-                          <div className='grid gap-6'>
+                      <div className='flex-1 overflow-y-auto px-4 py-5 sm:px-8 sm:py-6'>
+                        <div className='mx-auto flex w-full max-w-4xl flex-col gap-6 sm:gap-8'>
+                          <div className='grid gap-5 sm:gap-6'>
                             <FormField
                               control={form.control}
                               name='headline'
@@ -214,7 +220,7 @@ function WebsiteIntegrationDrawer({
                               )}
                             />
 
-                            <div className='grid gap-6 lg:grid-cols-2'>
+                            <div className='grid gap-5 sm:gap-6 lg:grid-cols-2'>
                               <FormField
                                 control={form.control}
                                 name='contact_email'
@@ -287,8 +293,8 @@ function WebsiteIntegrationDrawer({
                             )}
                           />
 
-                          <div className='rounded-2xl border bg-muted/20 p-5'>
-                            <div className='mb-5 flex items-start justify-between gap-4'>
+                          <div className='rounded-xl border bg-muted/20 p-4 sm:rounded-2xl sm:p-5'>
+                            <div className='mb-5 flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between'>
                               <div>
                                 <h3 className='text-sm font-medium'>
                                   Properties
@@ -302,7 +308,7 @@ function WebsiteIntegrationDrawer({
                               <Button
                                 type='button'
                                 variant='outline'
-                                className='gap-2'
+                                className='w-full gap-2 sm:w-auto'
                                 onClick={() => setScreen('properties')}
                               >
                                 {propertyIds.length
@@ -332,10 +338,10 @@ function WebsiteIntegrationDrawer({
                         </div>
                       </div>
 
-                      <DrawerFooter className='flex items-center gap-2 border-t px-8 py-5'>
+                      <DrawerFooter className='flex items-center gap-2 border-t px-4 py-4 sm:px-8 sm:py-5'>
                         <Button
                           type='submit'
-                          className='gap-2'
+                          className='w-full gap-2 sm:w-auto'
                           disabled={isSaving}
                           size='lg'
                         >
