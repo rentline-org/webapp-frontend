@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { useMemo, useState } from 'react'
 import {
   ArrowUpRightFromCircle,
@@ -7,13 +6,10 @@ import {
   Copy,
   Edit,
   ExternalLink,
-  Eye,
   EyeOff,
   Globe2,
   Link2,
-  PencilLine,
   Plus,
-  Power,
   Settings2,
   Sparkles,
 } from 'lucide-react'
@@ -33,8 +29,10 @@ import {
 } from '@/components/ui/expandable'
 
 import {
+  invalidateWebsiteIntegration,
   useDeleteWebsiteIntegration,
   useGetWebsiteIntegration,
+  useUpdatePublishedStatus,
 } from '@/features/custom-listing/query'
 import WebsiteIntegrationDrawer from '@/features/custom-listing/components/website-integration-drawer.tsx'
 import PropertyThumbnailList from '@/features/custom-listing/components/property-thumbnail-list.tsx'
@@ -53,6 +51,7 @@ type Props = {
 function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit'>('create')
+  const [expanded, setExpanded] = useState(false)
 
   const queryClient = useQueryClient()
 
@@ -66,9 +65,12 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
   const { mutateAsync: deleteWebsiteAsync, isPending } =
     useDeleteWebsiteIntegration()
 
+  const { mutate: updatePublishedStatus, isPending: isPendingPublished } =
+    useUpdatePublishedStatus()
+
   const isLoading = useMemo(
-    () => isLoadingListing || isPending,
-    [isLoadingListing, isPending]
+    () => isLoadingListing || isPending || isPendingPublished,
+    [isLoadingListing, isPending, isPendingPublished]
   )
 
   const propertyCount = useMemo(() => {
@@ -116,7 +118,26 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
   }
 
   const handlePublishToggle = () => {
-    console.log(`Toggle publish: ${!customListing?.is_published}`)
+    if (!customListing || !customListing.id) return
+
+    updatePublishedStatus(
+      {
+        customListingId: customListing.id,
+        status: !customListing.is_published,
+      },
+      {
+        async onSuccess() {
+          toast.success(
+            !customListing.is_published
+              ? 'Website published successfully'
+              : 'Your link is now no longer accessible'
+          )
+
+          await invalidateWebsiteIntegration(customListing.id, queryClient)
+          setExpanded(true)
+        },
+      }
+    )
   }
 
   const handleViewLive = () => {
@@ -127,9 +148,12 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
 
   const handleCopyLink = async () => {
     if (customListing?.subdomain) {
-      await navigator.clipboard.writeText(
-        `https://${customListing.subdomain}.rentline.io`
-      )
+      await navigator.clipboard
+        .writeText(`https://${customListing.subdomain}.rentline.io`)
+        .then(() => {
+          toast.success('Website link copied successfully!')
+          setExpanded(true)
+        })
     }
   }
 
@@ -157,6 +181,8 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
         expandDirection='horizontal'
         expandBehavior='replace'
         initialDelay={0.1}
+        expanded={expanded}
+        onToggle={() => setExpanded(!expanded)}
       >
         {({ isExpanded }) => (
           <ExpandableTrigger>
@@ -200,7 +226,7 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                         Create a custom listing to publish your website.
                       </p>
                     </div>
-                    <WebsiteIntegrationDropdownActions
+                    {/* <WebsiteIntegrationDropdownActions
                       isPublished={false}
                       hasIntegration={false}
                       onEdit={openCreateDrawer}
@@ -208,7 +234,7 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                       onView={handleViewLive}
                       onCopyLink={handleCopyLink}
                       onDelete={handleDelete}
-                    />
+                    /> */}
                   </div>
                 ) : (
                   // ── Active State (Collapsed) ─────────────────
@@ -287,7 +313,7 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                     <div className='flex h-full gap-4'>
                       {/* Left: Domain + Properties */}
                       <div className='flex-1 space-y-3'>
-                        <div className='rounded-xl border bg-muted/20 p-3'>
+                        <div className='rounded-md border bg-muted/20 p-3'>
                           <div className='mb-2 flex items-center justify-between'>
                             <div className='flex items-center gap-2 text-sm font-medium'>
                               <Globe2 className='h-4 w-4 text-muted-foreground' />
@@ -304,15 +330,17 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                                   <Copy className='h-3 w-3' />
                                   Copy
                                 </Button>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  onClick={handleViewLive}
-                                  className='h-7 gap-1 text-xs'
-                                >
-                                  <ExternalLink className='size-4' />
-                                  Open Link
-                                </Button>
+                                {customListing.is_published && (
+                                  <Button
+                                    variant='ghost'
+                                    size='sm'
+                                    onClick={handleViewLive}
+                                    className='h-7 gap-1 text-xs'
+                                  >
+                                    <ExternalLink className='size-4' />
+                                    Open Link
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -333,7 +361,7 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                           </p>
                         </div>
 
-                        <div className='rounded-xl border bg-muted/20 p-3'>
+                        <div className='rounded-md border bg-muted/20 p-3'>
                           <div className='mb-2 flex w-full items-center justify-between'>
                             <div className='flex items-center gap-2'>
                               <div className='mb-0 flex items-center gap-2 text-sm font-medium'>
@@ -341,7 +369,7 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                                 Properties
                               </div>
                               <Badge variant='secondary'>
-                                {propertyCount} published
+                                {propertyCount} Available
                               </Badge>
                             </div>
                             <Button
@@ -360,8 +388,8 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                       </div>
 
                       {/* Right: Config + Actions */}
-                      <div className='w-48 space-y-3'>
-                        <div className='space-y-2 rounded-xl border bg-muted/20 p-3'>
+                      <div className='h-49 w-48 space-y-3'>
+                        <div className='h-full space-y-2 rounded-md border bg-muted/20 p-3'>
                           <h4 className='flex items-center gap-2 text-sm font-medium'>
                             <Settings2 className='h-4 w-4 text-muted-foreground' />
                             Config
@@ -375,16 +403,16 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                                 {contactSummary}
                               </span>
                             </div>
-                            {/* <div className='flex justify-between'>
+                            <div className='flex justify-between'>
                               <span className='text-muted-foreground'>
-                                Fallbacks
+                                Contact form
                               </span>
-                              <span className='font-medium'>
-                                {customListing.use_organization_defaults
-                                  ? 'Org'
-                                  : 'Custom'}
+                              <span>
+                                {customListing.show_contact_form
+                                  ? 'Enabled'
+                                  : 'Disabled'}
                               </span>
-                            </div> */}
+                            </div>
                             <div className='flex justify-between'>
                               <span className='text-muted-foreground'>
                                 Langs
@@ -396,7 +424,7 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                           </div>
                         </div>
 
-                        <div className='grid grid-cols-2 gap-2'>
+                        {/* <div className='grid grid-cols-2 gap-2'>
                           <Button
                             variant={isPublished ? 'outline' : 'default'}
                             size='sm'
@@ -429,7 +457,7 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
                             <Eye className='h-3.5 w-3.5' />
                             View
                           </Button>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </ExpandableContent>
@@ -458,6 +486,14 @@ function WebsiteIntegrationCard({ customListingId, listingId }: Props) {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         mode={drawerMode}
+        initialValues={{
+          headline: customListing?.headline ?? '',
+          subdomain: customListing?.subdomain,
+          is_published: customListing?.is_published,
+          contact_email: customListing?.contact_email ?? '',
+          contact_phone: customListing?.contact_phone ?? '',
+          property_ids: customListing?.properties?.flatMap((p) => p.id),
+        }}
         listingId={listingId}
         onSubmit={() => {
           refetch()

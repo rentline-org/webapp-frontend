@@ -1,9 +1,15 @@
-import { handleDelete, handleGet, handlePost, type IResponse } from '@/api'
+import {
+  handleDelete,
+  handleGet,
+  handlePatch,
+  handlePost,
+  type IResponse,
+} from '@/api'
 import type {
   ICustomListing,
   TWebsiteIntegrationSchema,
 } from '@/features/custom-listing/types'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { type QueryClient, useMutation, useQuery } from '@tanstack/react-query'
 
 const CUSTOM_LISTING_ENDPOINT = 'custom-listing'
 const getCustomListingMutationEndpoint = (listingId: number) => {
@@ -57,6 +63,18 @@ async function handleDeleteWebsiteIntegration(customListingId: number) {
   return response.data
 }
 
+async function handlePublishedSettings(
+  customListingId: number,
+  status: boolean = true
+): Promise<void> {
+  const baseEndpoint = CUSTOM_LISTING_ENDPOINT.concat(
+    `/${customListingId.toString()}`
+  )
+  const endpoint = baseEndpoint.concat(status ? '/publish' : '/draft')
+
+  await handlePatch<IResponse<null>, unknown>(endpoint)
+}
+
 export function useGetWebsiteIntegration(customListingId: number | null) {
   return useQuery({
     queryKey: [CUSTOM_LISTING_ENDPOINT, customListingId],
@@ -101,5 +119,29 @@ export function useDeleteWebsiteIntegration() {
     mutationFn: async (customListingId: number) => {
       return await handleDeleteWebsiteIntegration(customListingId)
     },
+  })
+}
+
+export function useUpdatePublishedStatus() {
+  return useMutation({
+    mutationKey: [CUSTOM_LISTING_ENDPOINT, 'publish'],
+    mutationFn: async ({
+      customListingId,
+      status,
+    }: {
+      customListingId: number
+      status: boolean
+    }) => {
+      return await handlePublishedSettings(customListingId, status)
+    },
+  })
+}
+
+export async function invalidateWebsiteIntegration(
+  customListingId: number,
+  queryClient: QueryClient
+) {
+  await queryClient.invalidateQueries({
+    queryKey: [CUSTOM_LISTING_ENDPOINT, customListingId],
   })
 }

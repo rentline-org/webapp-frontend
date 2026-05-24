@@ -21,12 +21,7 @@ import type { IProperty } from '../types'
 
 const routeApi = getRouteApi('/_authenticated/properties/$propertySlug')
 
-function DetailsActionsMenu({
-  property,
-}: {
-  property: IProperty
-  // onUploadImages: () => void
-}) {
+function DetailsActionsMenu({ property }: { property: IProperty }) {
   const { mutate, isPending: isDeleting } = useDeleteProperty(property)
   const navigate = routeApi.useNavigate()
 
@@ -36,13 +31,13 @@ function DetailsActionsMenu({
   }
 
   const onDelete = () => {
+    navigate({
+      to: '/properties',
+    })
+
     mutate(undefined, {
       async onSuccess() {
         toast.success('Property Deleted')
-
-        navigate({
-          to: '/properties',
-        })
       },
     })
   }

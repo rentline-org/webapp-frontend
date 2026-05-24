@@ -436,12 +436,12 @@ const ExpandableCard = React.forwardRef<HTMLDivElement, ExpandableCardProps>(
       >
         <div
           className={cn(
-            'grid grid-cols-1 rounded-lg sm:rounded-xl md:rounded-4xl',
+            'grid grid-cols-1 rounded-lg sm:rounded-xl md:rounded-md',
             'shadow-[inset_0_0_1px_1px_hsl(var(--border)/0.3)] dark:shadow-[inset_0_0_1px_1px_hsl(var(--border)/0.5)]',
             'sm:shadow-[inset_0_0_2px_1px_hsl(var(--border)/0.3)] dark:sm:shadow-[inset_0_0_2px_1px_hsl(var(--border)/0.5)]',
             'ring-1 ring-border/50',
             'max-w-[calc(100%-1rem)] sm:max-w-[calc(100%-2rem)] md:max-w-[calc(100%-4rem)]',
-            'mx-auto w-full',
+            'w-full',
             'transition-all duration-300 ease-in-out'
           )}
         >
