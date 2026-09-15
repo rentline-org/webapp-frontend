@@ -25,6 +25,7 @@ import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-p
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedPropertiesRouteRouteImport } from './routes/_authenticated/properties/route'
 import { Route as AuthenticatedListingsRouteRouteImport } from './routes/_authenticated/listings/route'
+import { Route as AuthenticatedDocumentsRouteRouteImport } from './routes/_authenticated/documents/route'
 import { Route as AuthenticatedContactsRouteRouteImport } from './routes/_authenticated/contacts/route'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
@@ -32,6 +33,7 @@ import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedPropertiesIndexRouteImport } from './routes/_authenticated/properties/index'
 import { Route as AuthenticatedListingsIndexRouteImport } from './routes/_authenticated/listings/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents/index'
 import { Route as AuthenticatedContactsIndexRouteImport } from './routes/_authenticated/contacts/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings/organization'
@@ -128,6 +130,12 @@ const AuthenticatedListingsRouteRoute =
     path: '/listings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDocumentsRouteRoute =
+  AuthenticatedDocumentsRouteRouteImport.update({
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedContactsRouteRoute =
   AuthenticatedContactsRouteRouteImport.update({
     id: '/contacts',
@@ -167,6 +175,12 @@ const AuthenticatedHelpCenterIndexRoute =
     id: '/help-center/',
     path: '/help-center/',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDocumentsIndexRoute =
+  AuthenticatedDocumentsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDocumentsRouteRoute,
   } as any)
 const AuthenticatedContactsIndexRoute =
   AuthenticatedContactsIndexRouteImport.update({
@@ -256,6 +270,7 @@ const AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/contacts': typeof AuthenticatedContactsRouteRouteWithChildren
+  '/documents': typeof AuthenticatedDocumentsRouteRouteWithChildren
   '/listings': typeof AuthenticatedListingsRouteRouteWithChildren
   '/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -279,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
   '/contacts/': typeof AuthenticatedContactsIndexRoute
+  '/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/listings/': typeof AuthenticatedListingsIndexRoute
   '/properties/': typeof AuthenticatedPropertiesIndexRoute
@@ -311,6 +327,7 @@ export interface FileRoutesByTo {
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/contacts': typeof AuthenticatedContactsIndexRoute
+  '/documents': typeof AuthenticatedDocumentsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/listings': typeof AuthenticatedListingsIndexRoute
   '/properties': typeof AuthenticatedPropertiesIndexRoute
@@ -326,6 +343,7 @@ export interface FileRoutesById {
   '/(auth)': typeof authRouteRouteWithChildren
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/contacts': typeof AuthenticatedContactsRouteRouteWithChildren
+  '/_authenticated/documents': typeof AuthenticatedDocumentsRouteRouteWithChildren
   '/_authenticated/listings': typeof AuthenticatedListingsRouteRouteWithChildren
   '/_authenticated/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -350,6 +368,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/contacts/': typeof AuthenticatedContactsIndexRoute
+  '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/listings/': typeof AuthenticatedListingsIndexRoute
   '/_authenticated/properties/': typeof AuthenticatedPropertiesIndexRoute
@@ -366,6 +385,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/contacts'
+    | '/documents'
     | '/listings'
     | '/properties'
     | '/settings'
@@ -389,6 +409,7 @@ export interface FileRouteTypes {
     | '/settings/organization'
     | '/chats/'
     | '/contacts/'
+    | '/documents/'
     | '/help-center/'
     | '/listings/'
     | '/properties/'
@@ -421,6 +442,7 @@ export interface FileRouteTypes {
     | '/settings/organization'
     | '/chats'
     | '/contacts'
+    | '/documents'
     | '/help-center'
     | '/listings'
     | '/properties'
@@ -435,6 +457,7 @@ export interface FileRouteTypes {
     | '/(auth)'
     | '/_authenticated'
     | '/_authenticated/contacts'
+    | '/_authenticated/documents'
     | '/_authenticated/listings'
     | '/_authenticated/properties'
     | '/_authenticated/settings'
@@ -459,6 +482,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/organization'
     | '/_authenticated/chats/'
     | '/_authenticated/contacts/'
+    | '/_authenticated/documents/'
     | '/_authenticated/help-center/'
     | '/_authenticated/listings/'
     | '/_authenticated/properties/'
@@ -595,6 +619,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedListingsRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/documents': {
+      id: '/_authenticated/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof AuthenticatedDocumentsRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/contacts': {
       id: '/_authenticated/contacts'
       path: '/contacts'
@@ -643,6 +674,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/help-center/'
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/documents/': {
+      id: '/_authenticated/documents/'
+      path: '/'
+      fullPath: '/documents/'
+      preLoaderRoute: typeof AuthenticatedDocumentsIndexRouteImport
+      parentRoute: typeof AuthenticatedDocumentsRouteRoute
     }
     '/_authenticated/contacts/': {
       id: '/_authenticated/contacts/'
@@ -781,6 +819,20 @@ const AuthenticatedContactsRouteRouteWithChildren =
     AuthenticatedContactsRouteRouteChildren,
   )
 
+interface AuthenticatedDocumentsRouteRouteChildren {
+  AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
+}
+
+const AuthenticatedDocumentsRouteRouteChildren: AuthenticatedDocumentsRouteRouteChildren =
+  {
+    AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
+  }
+
+const AuthenticatedDocumentsRouteRouteWithChildren =
+  AuthenticatedDocumentsRouteRoute._addFileChildren(
+    AuthenticatedDocumentsRouteRouteChildren,
+  )
+
 interface AuthenticatedListingsRouteRouteChildren {
   AuthenticatedListingsIndexRoute: typeof AuthenticatedListingsIndexRoute
 }
@@ -875,6 +927,7 @@ const AuthenticatedSettingsRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedContactsRouteRoute: typeof AuthenticatedContactsRouteRouteWithChildren
+  AuthenticatedDocumentsRouteRoute: typeof AuthenticatedDocumentsRouteRouteWithChildren
   AuthenticatedListingsRouteRoute: typeof AuthenticatedListingsRouteRouteWithChildren
   AuthenticatedPropertiesRouteRoute: typeof AuthenticatedPropertiesRouteRouteWithChildren
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -888,6 +941,8 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedContactsRouteRoute: AuthenticatedContactsRouteRouteWithChildren,
+  AuthenticatedDocumentsRouteRoute:
+    AuthenticatedDocumentsRouteRouteWithChildren,
   AuthenticatedListingsRouteRoute: AuthenticatedListingsRouteRouteWithChildren,
   AuthenticatedPropertiesRouteRoute:
     AuthenticatedPropertiesRouteRouteWithChildren,
