@@ -25,12 +25,14 @@ import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-p
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedPropertiesRouteRouteImport } from './routes/_authenticated/properties/route'
 import { Route as AuthenticatedListingsRouteRouteImport } from './routes/_authenticated/listings/route'
+import { Route as AuthenticatedContactsRouteRouteImport } from './routes/_authenticated/contacts/route'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedPropertiesIndexRouteImport } from './routes/_authenticated/properties/index'
 import { Route as AuthenticatedListingsIndexRouteImport } from './routes/_authenticated/listings/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedContactsIndexRouteImport } from './routes/_authenticated/contacts/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings/organization'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
@@ -126,6 +128,12 @@ const AuthenticatedListingsRouteRoute =
     path: '/listings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedContactsRouteRoute =
+  AuthenticatedContactsRouteRouteImport.update({
+    id: '/contacts',
+    path: '/contacts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -159,6 +167,12 @@ const AuthenticatedHelpCenterIndexRoute =
     id: '/help-center/',
     path: '/help-center/',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedContactsIndexRoute =
+  AuthenticatedContactsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedContactsRouteRoute,
   } as any)
 const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
   id: '/chats/',
@@ -241,6 +255,7 @@ const AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/contacts': typeof AuthenticatedContactsRouteRouteWithChildren
   '/listings': typeof AuthenticatedListingsRouteRouteWithChildren
   '/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -263,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
+  '/contacts/': typeof AuthenticatedContactsIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/listings/': typeof AuthenticatedListingsIndexRoute
   '/properties/': typeof AuthenticatedPropertiesIndexRoute
@@ -294,6 +310,7 @@ export interface FileRoutesByTo {
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/contacts': typeof AuthenticatedContactsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/listings': typeof AuthenticatedListingsIndexRoute
   '/properties': typeof AuthenticatedPropertiesIndexRoute
@@ -308,6 +325,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(auth)': typeof authRouteRouteWithChildren
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/contacts': typeof AuthenticatedContactsRouteRouteWithChildren
   '/_authenticated/listings': typeof AuthenticatedListingsRouteRouteWithChildren
   '/_authenticated/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -331,6 +349,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
+  '/_authenticated/contacts/': typeof AuthenticatedContactsIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/listings/': typeof AuthenticatedListingsIndexRoute
   '/_authenticated/properties/': typeof AuthenticatedPropertiesIndexRoute
@@ -346,6 +365,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/contacts'
     | '/listings'
     | '/properties'
     | '/settings'
@@ -368,6 +388,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/organization'
     | '/chats/'
+    | '/contacts/'
     | '/help-center/'
     | '/listings/'
     | '/properties/'
@@ -399,6 +420,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/organization'
     | '/chats'
+    | '/contacts'
     | '/help-center'
     | '/listings'
     | '/properties'
@@ -412,6 +434,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/(auth)'
     | '/_authenticated'
+    | '/_authenticated/contacts'
     | '/_authenticated/listings'
     | '/_authenticated/properties'
     | '/_authenticated/settings'
@@ -435,6 +458,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/notifications'
     | '/_authenticated/settings/organization'
     | '/_authenticated/chats/'
+    | '/_authenticated/contacts/'
     | '/_authenticated/help-center/'
     | '/_authenticated/listings/'
     | '/_authenticated/properties/'
@@ -571,6 +595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedListingsRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/contacts': {
+      id: '/_authenticated/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof AuthenticatedContactsRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/users/': {
       id: '/_authenticated/users/'
       path: '/users'
@@ -612,6 +643,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/help-center/'
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/contacts/': {
+      id: '/_authenticated/contacts/'
+      path: '/'
+      fullPath: '/contacts/'
+      preLoaderRoute: typeof AuthenticatedContactsIndexRouteImport
+      parentRoute: typeof AuthenticatedContactsRouteRoute
     }
     '/_authenticated/chats/': {
       id: '/_authenticated/chats/'
@@ -729,6 +767,20 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
+interface AuthenticatedContactsRouteRouteChildren {
+  AuthenticatedContactsIndexRoute: typeof AuthenticatedContactsIndexRoute
+}
+
+const AuthenticatedContactsRouteRouteChildren: AuthenticatedContactsRouteRouteChildren =
+  {
+    AuthenticatedContactsIndexRoute: AuthenticatedContactsIndexRoute,
+  }
+
+const AuthenticatedContactsRouteRouteWithChildren =
+  AuthenticatedContactsRouteRoute._addFileChildren(
+    AuthenticatedContactsRouteRouteChildren,
+  )
+
 interface AuthenticatedListingsRouteRouteChildren {
   AuthenticatedListingsIndexRoute: typeof AuthenticatedListingsIndexRoute
 }
@@ -822,6 +874,7 @@ const AuthenticatedSettingsRouteRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedContactsRouteRoute: typeof AuthenticatedContactsRouteRouteWithChildren
   AuthenticatedListingsRouteRoute: typeof AuthenticatedListingsRouteRouteWithChildren
   AuthenticatedPropertiesRouteRoute: typeof AuthenticatedPropertiesRouteRouteWithChildren
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -834,6 +887,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedContactsRouteRoute: AuthenticatedContactsRouteRouteWithChildren,
   AuthenticatedListingsRouteRoute: AuthenticatedListingsRouteRouteWithChildren,
   AuthenticatedPropertiesRouteRoute:
     AuthenticatedPropertiesRouteRouteWithChildren,

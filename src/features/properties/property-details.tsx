@@ -10,6 +10,8 @@ import {
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Main } from '@/components/layout/main'
+import { PropertyContactsPanel } from '@/features/contacts/components/property-contacts-panel'
+import { PropertyLeasesPanel } from '@/features/documents/components/property-leases-panel'
 import DetailsHeader from './components/details-header'
 import PropertyImagesDialog from './components/images-dialog'
 import ModulePlaceholder from './components/module-placeholder'
@@ -118,30 +120,14 @@ const PropertyDetails = () => {
             value='leases'
             className='mt-6 focus-visible:outline-none'
           >
-            <ModulePlaceholder
-              title='Leases'
-              description='Lease records will be connected here later.'
-              items={[
-                { label: 'Active leases', value: '—' },
-                { label: 'Expiring soon', value: '—' },
-                { label: 'Rent roll', value: '—' },
-              ]}
-            />
+            <PropertyLeasesPanel property={property} />
           </TabsContent>
 
           <TabsContent
             value='contacts'
             className='mt-6 focus-visible:outline-none'
           >
-            <ModulePlaceholder
-              title='Contacts'
-              description='Owners, vendors, brokers, and other related contacts can live here.'
-              items={[
-                { label: 'Primary contact', value: '—' },
-                { label: 'Vendor count', value: '—' },
-                { label: 'Last updated', value: '—' },
-              ]}
-            />
+            <PropertyContactsPanel property={property} />
           </TabsContent>
 
           <TabsContent

@@ -18,6 +18,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { resetContactsQuery } from '@/features/contacts/query'
+import { resetDocumentsQuery } from '@/features/documents/query'
 import { invalidatePropertiesQuery } from '@/features/properties/query'
 import { invalidateUserProfile } from '@/features/settings/profile/query'
 import type { IUserProfileData } from '@/features/settings/profile/types'
@@ -59,6 +61,8 @@ export function OrgSwitcher({ userProfile, isLoading, isFetching }: Props) {
         await Promise.all([
           invalidateUserProfile(queryClient),
           invalidatePropertiesQuery(queryClient),
+          resetContactsQuery(queryClient),
+          resetDocumentsQuery(queryClient),
         ])
 
         toast.info(`Using organization: ${org.title}`)
