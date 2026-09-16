@@ -1,5 +1,6 @@
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { getCookie } from '@/lib/cookies'
+import { getAppLocale } from '@/i18n'
 import { ApiError } from './errors'
 
 export type ApiErrorResponse = {
@@ -31,7 +32,7 @@ export const RentlineAuth = axios.create({
   withXSRFToken: true,
 })
 
-RentlineApi.interceptors.request.use((config) => {
+const attachRequestContext = (config: AxiosRequestConfig) => {
   // const token = getCookie('token')
   const activeOrgId = getCookie('active_org')
 
@@ -40,11 +41,16 @@ RentlineApi.interceptors.request.use((config) => {
   // }
 
   if (activeOrgId) {
-    config.headers['X-Organization-Id'] = String(activeOrgId)
+    config.headers?.set('X-Organization-Id', String(activeOrgId))
   }
 
+  config.headers?.set('Accept-Language', getAppLocale())
+
   return config
-})
+}
+
+RentlineApi.interceptors.request.use(attachRequestContext)
+RentlineAuth.interceptors.request.use(attachRequestContext)
 
 export const handleGet = async <TResponse, TParams = unknown>(
   url: string,

@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import {
@@ -34,13 +35,33 @@ import {
 } from './types'
 
 export function NavGroup({ title, items }: NavGroupProps) {
+  const { t } = useTranslation('navigation')
   const { state, isMobile } = useSidebar()
   const href = useLocation({ select: (location) => location.href })
+  const localizedTitle =
+    title === 'General'
+      ? t('groups.general')
+      : title === 'System'
+        ? t('groups.system')
+        : title
+  const localizedItems = items.map((item) => ({
+    ...item,
+    title: translateNavTitle(item.title, t),
+    ...(item.items
+      ? {
+          items: item.items.map((subItem) => ({
+            ...subItem,
+            title: translateNavTitle(subItem.title, t),
+          })),
+        }
+      : {}),
+  })) as NavItem[]
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{title}</SidebarGroupLabel>
+      <SidebarGroupLabel>{localizedTitle}</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => {
+        {localizedItems.map((item) => {
           const key = `${item.title}-${item.url}`
 
           if (!item.items)
@@ -56,6 +77,27 @@ export function NavGroup({ title, items }: NavGroupProps) {
       </SidebarMenu>
     </SidebarGroup>
   )
+}
+
+function translateNavTitle(
+  title: string,
+  t: (key: string) => string
+): string {
+  const keys: Record<string, string> = {
+    Home: 'home',
+    Properties: 'properties',
+    Accounting: 'accounting',
+    Listings: 'listings',
+    Maintenance: 'maintenance',
+    Contacts: 'contacts',
+    Reports: 'reports',
+    Documents: 'documents',
+    Leases: 'leases',
+    Settings: 'settings',
+    'Help Center': 'helpCenter',
+  }
+
+  return keys[title] ? t(keys[title]) : title
 }
 
 function NavBadge({ children }: { children: ReactNode }) {

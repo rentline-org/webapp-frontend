@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
+import axios from 'axios'
 import {
   handleDelete,
   handleGet,
@@ -12,17 +13,25 @@ import {
   RentlineApi,
   type IResponse,
 } from '@/api'
+import {
+  normalizePaginatedResponse,
+  type IPaginatedData,
+} from '@/api/pagination'
 import { handleServerError } from '@/lib/handle-server-error'
 import type {
   IDocument,
   IDocumentFile,
   IDocumentFilters,
+  IDocumentKind,
   IDocumentUpdatePayload,
+  IDocumentUploadVariables,
   TDocumentUpdateVariables,
 } from '../types'
 import {
   DOCUMENTS_ENDPOINT,
+  DOCUMENT_KINDS_ENDPOINT,
   documentKey,
+  documentKindsKey,
   documentListKey,
   documentsKey,
   patchDocumentCaches,
@@ -31,12 +40,23 @@ import {
 
 const getDocuments = async (
   filters: IDocumentFilters
-): Promise<IDocument[]> => {
-  const response = await handleGet<IResponse<IDocument[]>, IDocumentFilters>(
+): Promise<IPaginatedData<IDocument>> => {
+  const response = await handleGet<unknown, IDocumentFilters>(
     DOCUMENTS_ENDPOINT,
     filters
   )
 
+  return normalizePaginatedResponse<IDocument>(
+    response,
+    filters.page,
+    filters.per_page
+  )
+}
+
+const getDocumentKinds = async (): Promise<IDocumentKind[]> => {
+  const response = await handleGet<IResponse<IDocumentKind[]>>(
+    DOCUMENT_KINDS_ENDPOINT
+  )
   return response.data
 }
 
@@ -48,12 +68,50 @@ const getDocument = async (documentId: number): Promise<IDocument> => {
   return response.data
 }
 
-const createDocument = async (payload: FormData): Promise<IDocument> => {
+const createDocument = async ({
+  payload,
+  onProgress,
+  signal,
+}: IDocumentUploadVariables): Promise<IDocument> => {
   const response = await handlePost<IResponse<IDocument>, FormData>(
     DOCUMENTS_ENDPOINT,
-    payload
+    payload,
+    {
+      signal,
+      onUploadProgress: (event) => {
+        if (!onProgress || !event.total) return
+        onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)))
+      },
+    }
   )
 
+  return response.data
+}
+
+const archiveDocument = async (document: IDocument): Promise<IDocument> => {
+  const response = await handlePost<IResponse<IDocument>>(
+    `${DOCUMENTS_ENDPOINT}/${document.id}/archive`
+  )
+  return response.data
+}
+
+const createDocumentRevision = async ({
+  document,
+  ...upload
+}: IDocumentUploadVariables & { document: IDocument }): Promise<IDocument> => {
+  const response = await handlePost<IResponse<IDocument>, FormData>(
+    `${DOCUMENTS_ENDPOINT}/${document.id}/versions`,
+    upload.payload,
+    {
+      signal: upload.signal,
+      onUploadProgress: (event) => {
+        if (!upload.onProgress || !event.total) return
+        upload.onProgress(
+          Math.min(100, Math.round((event.loaded / event.total) * 100))
+        )
+      },
+    }
+  )
   return response.data
 }
 
@@ -107,6 +165,14 @@ export function useGetDocuments(filters: IDocumentFilters = {}) {
   })
 }
 
+export function useGetDocumentKinds() {
+  return useQuery({
+    queryKey: documentKindsKey,
+    queryFn: getDocumentKinds,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 export function useGetDocument(documentId: number, enabled = true) {
   return useQuery({
     queryKey: documentKey(documentId),
@@ -125,7 +191,39 @@ export function useCreateDocument() {
       queryClient.setQueryData(documentKey(document.id), document)
       await invalidateDocumentsQuery(queryClient)
     },
+    onError: (error) => {
+      if (!axios.isCancel(error)) handleServerError(error)
+    },
+  })
+}
+
+export function useArchiveDocument() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: [...documentsKey, 'archive'],
+    mutationFn: archiveDocument,
+    onSuccess: async (document) => {
+      patchDocumentCaches(queryClient, document)
+      await invalidateDocumentsQuery(queryClient)
+    },
     onError: handleServerError,
+  })
+}
+
+export function useCreateDocumentRevision() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: [...documentsKey, 'version', 'create'],
+    mutationFn: createDocumentRevision,
+    onSuccess: async (document) => {
+      patchDocumentCaches(queryClient, document)
+      await invalidateDocumentsQuery(queryClient)
+    },
+    onError: (error) => {
+      if (!axios.isCancel(error)) handleServerError(error)
+    },
   })
 }
 

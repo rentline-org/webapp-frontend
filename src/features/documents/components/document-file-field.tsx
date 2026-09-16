@@ -1,4 +1,5 @@
 import { forwardRef, useId } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FileText, Upload, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -43,6 +44,7 @@ export const DocumentFileField = forwardRef<
   },
   ref
 ) {
+  const { t } = useTranslation('documents')
   const generatedId = useId()
   const inputId = `document-file-${generatedId}`
   const descriptionId = `${inputId}-description`
@@ -62,7 +64,7 @@ export const DocumentFileField = forwardRef<
         type='file'
         accept={accept}
         disabled={disabled}
-        required={required && !currentFile}
+        aria-required={required}
         aria-invalid={Boolean(error)}
         aria-describedby={
           [description ? descriptionId : null, error ? errorId : null]
@@ -88,12 +90,13 @@ export const DocumentFileField = forwardRef<
             <FileText className='size-4 text-muted-foreground' />
           </div>
           <div className='min-w-0 flex-1'>
-            <p className='truncate text-sm font-medium'>
-              {displayedFile.name}
-            </p>
+            <p className='truncate text-sm font-medium'>{displayedFile.name}</p>
             <p className='text-xs text-muted-foreground'>
               {formatFileSize(displayedFile.size)}
-              {currentFile && !value ? ' · Current file' : ' · Ready to upload'}
+              {' · '}
+              {currentFile && !value
+                ? t('files.current')
+                : t('files.ready')}
             </p>
           </div>
 
@@ -106,7 +109,9 @@ export const DocumentFileField = forwardRef<
               onClick={() => onChange(null)}
             >
               <X />
-              <span className='sr-only'>Remove {value.name}</span>
+              <span className='sr-only'>
+                {t('files.removeNamed', { name: value.name })}
+              </span>
             </Button>
           ) : null}
         </div>
@@ -124,9 +129,9 @@ export const DocumentFileField = forwardRef<
           <span className='flex size-9 items-center justify-center rounded-full border bg-background'>
             <Upload className='size-4 text-muted-foreground' />
           </span>
-          <span className='text-sm font-medium'>Choose a file</span>
+          <span className='text-sm font-medium'>{t('files.choose')}</span>
           <span className='text-xs font-normal text-muted-foreground'>
-            Up to 10 MB
+            {t('files.maxSize')}
           </span>
         </Label>
       )}

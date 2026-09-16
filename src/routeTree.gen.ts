@@ -25,6 +25,7 @@ import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-p
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedPropertiesRouteRouteImport } from './routes/_authenticated/properties/route'
 import { Route as AuthenticatedListingsRouteRouteImport } from './routes/_authenticated/listings/route'
+import { Route as AuthenticatedLeasesRouteRouteImport } from './routes/_authenticated/leases/route'
 import { Route as AuthenticatedDocumentsRouteRouteImport } from './routes/_authenticated/documents/route'
 import { Route as AuthenticatedContactsRouteRouteImport } from './routes/_authenticated/contacts/route'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
@@ -32,6 +33,7 @@ import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedPropertiesIndexRouteImport } from './routes/_authenticated/properties/index'
 import { Route as AuthenticatedListingsIndexRouteImport } from './routes/_authenticated/listings/index'
+import { Route as AuthenticatedLeasesIndexRouteImport } from './routes/_authenticated/leases/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents/index'
 import { Route as AuthenticatedContactsIndexRouteImport } from './routes/_authenticated/contacts/index'
@@ -44,7 +46,9 @@ import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_auth
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedPropertiesNewRouteRouteImport } from './routes/_authenticated/properties/new/route'
 import { Route as AuthenticatedPropertiesPropertySlugRouteRouteImport } from './routes/_authenticated/properties/$propertySlug/route'
+import { Route as AuthenticatedLeasesLeaseIdRouteRouteImport } from './routes/_authenticated/leases/$leaseId/route'
 import { Route as AuthenticatedPropertiesPropertySlugIndexRouteImport } from './routes/_authenticated/properties/$propertySlug/index'
+import { Route as AuthenticatedLeasesLeaseIdIndexRouteImport } from './routes/_authenticated/leases/$leaseId/index'
 import { Route as authPasswordResetTokenIndexRouteImport } from './routes/(auth)/password-reset/$token/index'
 import { Route as AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteImport } from './routes/_authenticated/properties/$propertySlug/units/$unitSlug/route'
 import { Route as AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRouteImport } from './routes/_authenticated/properties/$propertySlug/units/$unitSlug/index'
@@ -130,6 +134,12 @@ const AuthenticatedListingsRouteRoute =
     path: '/listings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLeasesRouteRoute =
+  AuthenticatedLeasesRouteRouteImport.update({
+    id: '/leases',
+    path: '/leases',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDocumentsRouteRoute =
   AuthenticatedDocumentsRouteRouteImport.update({
     id: '/documents',
@@ -169,6 +179,12 @@ const AuthenticatedListingsIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedListingsRouteRoute,
+  } as any)
+const AuthenticatedLeasesIndexRoute =
+  AuthenticatedLeasesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedLeasesRouteRoute,
   } as any)
 const AuthenticatedHelpCenterIndexRoute =
   AuthenticatedHelpCenterIndexRouteImport.update({
@@ -241,11 +257,23 @@ const AuthenticatedPropertiesPropertySlugRouteRoute =
     path: '/$propertySlug',
     getParentRoute: () => AuthenticatedPropertiesRouteRoute,
   } as any)
+const AuthenticatedLeasesLeaseIdRouteRoute =
+  AuthenticatedLeasesLeaseIdRouteRouteImport.update({
+    id: '/$leaseId',
+    path: '/$leaseId',
+    getParentRoute: () => AuthenticatedLeasesRouteRoute,
+  } as any)
 const AuthenticatedPropertiesPropertySlugIndexRoute =
   AuthenticatedPropertiesPropertySlugIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedPropertiesPropertySlugRouteRoute,
+  } as any)
+const AuthenticatedLeasesLeaseIdIndexRoute =
+  AuthenticatedLeasesLeaseIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedLeasesLeaseIdRouteRoute,
   } as any)
 const authPasswordResetTokenIndexRoute =
   authPasswordResetTokenIndexRouteImport.update({
@@ -271,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/contacts': typeof AuthenticatedContactsRouteRouteWithChildren
   '/documents': typeof AuthenticatedDocumentsRouteRouteWithChildren
+  '/leases': typeof AuthenticatedLeasesRouteRouteWithChildren
   '/listings': typeof AuthenticatedListingsRouteRouteWithChildren
   '/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -284,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/not-found': typeof errorsNotFoundRoute
+  '/leases/$leaseId': typeof AuthenticatedLeasesLeaseIdRouteRouteWithChildren
   '/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRouteRouteWithChildren
   '/properties/new': typeof AuthenticatedPropertiesNewRouteRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
@@ -296,12 +326,14 @@ export interface FileRoutesByFullPath {
   '/contacts/': typeof AuthenticatedContactsIndexRoute
   '/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/leases/': typeof AuthenticatedLeasesIndexRoute
   '/listings/': typeof AuthenticatedListingsIndexRoute
   '/properties/': typeof AuthenticatedPropertiesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks/': typeof AuthenticatedTasksIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
   '/password-reset/$token/': typeof authPasswordResetTokenIndexRoute
+  '/leases/$leaseId/': typeof AuthenticatedLeasesLeaseIdIndexRoute
   '/properties/$propertySlug/': typeof AuthenticatedPropertiesPropertySlugIndexRoute
   '/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteWithChildren
   '/properties/$propertySlug/units/$unitSlug/': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
@@ -329,12 +361,14 @@ export interface FileRoutesByTo {
   '/contacts': typeof AuthenticatedContactsIndexRoute
   '/documents': typeof AuthenticatedDocumentsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/leases': typeof AuthenticatedLeasesIndexRoute
   '/listings': typeof AuthenticatedListingsIndexRoute
   '/properties': typeof AuthenticatedPropertiesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/password-reset/$token': typeof authPasswordResetTokenIndexRoute
+  '/leases/$leaseId': typeof AuthenticatedLeasesLeaseIdIndexRoute
   '/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugIndexRoute
   '/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
 }
@@ -344,6 +378,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/contacts': typeof AuthenticatedContactsRouteRouteWithChildren
   '/_authenticated/documents': typeof AuthenticatedDocumentsRouteRouteWithChildren
+  '/_authenticated/leases': typeof AuthenticatedLeasesRouteRouteWithChildren
   '/_authenticated/listings': typeof AuthenticatedListingsRouteRouteWithChildren
   '/_authenticated/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -358,6 +393,7 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/(errors)/not-found': typeof errorsNotFoundRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/leases/$leaseId': typeof AuthenticatedLeasesLeaseIdRouteRouteWithChildren
   '/_authenticated/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRouteRouteWithChildren
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRouteRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
@@ -370,12 +406,14 @@ export interface FileRoutesById {
   '/_authenticated/contacts/': typeof AuthenticatedContactsIndexRoute
   '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/_authenticated/leases/': typeof AuthenticatedLeasesIndexRoute
   '/_authenticated/listings/': typeof AuthenticatedListingsIndexRoute
   '/_authenticated/properties/': typeof AuthenticatedPropertiesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/(auth)/password-reset/$token/': typeof authPasswordResetTokenIndexRoute
+  '/_authenticated/leases/$leaseId/': typeof AuthenticatedLeasesLeaseIdIndexRoute
   '/_authenticated/properties/$propertySlug/': typeof AuthenticatedPropertiesPropertySlugIndexRoute
   '/_authenticated/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteWithChildren
   '/_authenticated/properties/$propertySlug/units/$unitSlug/': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
@@ -386,6 +424,7 @@ export interface FileRouteTypes {
     | '/'
     | '/contacts'
     | '/documents'
+    | '/leases'
     | '/listings'
     | '/properties'
     | '/settings'
@@ -399,6 +438,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/not-found'
+    | '/leases/$leaseId'
     | '/properties/$propertySlug'
     | '/properties/new'
     | '/errors/$error'
@@ -411,12 +451,14 @@ export interface FileRouteTypes {
     | '/contacts/'
     | '/documents/'
     | '/help-center/'
+    | '/leases/'
     | '/listings/'
     | '/properties/'
     | '/settings/'
     | '/tasks/'
     | '/users/'
     | '/password-reset/$token/'
+    | '/leases/$leaseId/'
     | '/properties/$propertySlug/'
     | '/properties/$propertySlug/units/$unitSlug'
     | '/properties/$propertySlug/units/$unitSlug/'
@@ -444,12 +486,14 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/documents'
     | '/help-center'
+    | '/leases'
     | '/listings'
     | '/properties'
     | '/settings'
     | '/tasks'
     | '/users'
     | '/password-reset/$token'
+    | '/leases/$leaseId'
     | '/properties/$propertySlug'
     | '/properties/$propertySlug/units/$unitSlug'
   id:
@@ -458,6 +502,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/_authenticated/contacts'
     | '/_authenticated/documents'
+    | '/_authenticated/leases'
     | '/_authenticated/listings'
     | '/_authenticated/properties'
     | '/_authenticated/settings'
@@ -472,6 +517,7 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/(errors)/not-found'
     | '/_authenticated/'
+    | '/_authenticated/leases/$leaseId'
     | '/_authenticated/properties/$propertySlug'
     | '/_authenticated/properties/new'
     | '/_authenticated/errors/$error'
@@ -484,12 +530,14 @@ export interface FileRouteTypes {
     | '/_authenticated/contacts/'
     | '/_authenticated/documents/'
     | '/_authenticated/help-center/'
+    | '/_authenticated/leases/'
     | '/_authenticated/listings/'
     | '/_authenticated/properties/'
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
     | '/(auth)/password-reset/$token/'
+    | '/_authenticated/leases/$leaseId/'
     | '/_authenticated/properties/$propertySlug/'
     | '/_authenticated/properties/$propertySlug/units/$unitSlug'
     | '/_authenticated/properties/$propertySlug/units/$unitSlug/'
@@ -619,6 +667,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedListingsRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/leases': {
+      id: '/_authenticated/leases'
+      path: '/leases'
+      fullPath: '/leases'
+      preLoaderRoute: typeof AuthenticatedLeasesRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/documents': {
       id: '/_authenticated/documents'
       path: '/documents'
@@ -667,6 +722,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/listings/'
       preLoaderRoute: typeof AuthenticatedListingsIndexRouteImport
       parentRoute: typeof AuthenticatedListingsRouteRoute
+    }
+    '/_authenticated/leases/': {
+      id: '/_authenticated/leases/'
+      path: '/'
+      fullPath: '/leases/'
+      preLoaderRoute: typeof AuthenticatedLeasesIndexRouteImport
+      parentRoute: typeof AuthenticatedLeasesRouteRoute
     }
     '/_authenticated/help-center/': {
       id: '/_authenticated/help-center/'
@@ -752,12 +814,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPropertiesPropertySlugRouteRouteImport
       parentRoute: typeof AuthenticatedPropertiesRouteRoute
     }
+    '/_authenticated/leases/$leaseId': {
+      id: '/_authenticated/leases/$leaseId'
+      path: '/$leaseId'
+      fullPath: '/leases/$leaseId'
+      preLoaderRoute: typeof AuthenticatedLeasesLeaseIdRouteRouteImport
+      parentRoute: typeof AuthenticatedLeasesRouteRoute
+    }
     '/_authenticated/properties/$propertySlug/': {
       id: '/_authenticated/properties/$propertySlug/'
       path: '/'
       fullPath: '/properties/$propertySlug/'
       preLoaderRoute: typeof AuthenticatedPropertiesPropertySlugIndexRouteImport
       parentRoute: typeof AuthenticatedPropertiesPropertySlugRouteRoute
+    }
+    '/_authenticated/leases/$leaseId/': {
+      id: '/_authenticated/leases/$leaseId/'
+      path: '/'
+      fullPath: '/leases/$leaseId/'
+      preLoaderRoute: typeof AuthenticatedLeasesLeaseIdIndexRouteImport
+      parentRoute: typeof AuthenticatedLeasesLeaseIdRouteRoute
     }
     '/(auth)/password-reset/$token/': {
       id: '/(auth)/password-reset/$token/'
@@ -831,6 +907,37 @@ const AuthenticatedDocumentsRouteRouteChildren: AuthenticatedDocumentsRouteRoute
 const AuthenticatedDocumentsRouteRouteWithChildren =
   AuthenticatedDocumentsRouteRoute._addFileChildren(
     AuthenticatedDocumentsRouteRouteChildren,
+  )
+
+interface AuthenticatedLeasesLeaseIdRouteRouteChildren {
+  AuthenticatedLeasesLeaseIdIndexRoute: typeof AuthenticatedLeasesLeaseIdIndexRoute
+}
+
+const AuthenticatedLeasesLeaseIdRouteRouteChildren: AuthenticatedLeasesLeaseIdRouteRouteChildren =
+  {
+    AuthenticatedLeasesLeaseIdIndexRoute: AuthenticatedLeasesLeaseIdIndexRoute,
+  }
+
+const AuthenticatedLeasesLeaseIdRouteRouteWithChildren =
+  AuthenticatedLeasesLeaseIdRouteRoute._addFileChildren(
+    AuthenticatedLeasesLeaseIdRouteRouteChildren,
+  )
+
+interface AuthenticatedLeasesRouteRouteChildren {
+  AuthenticatedLeasesLeaseIdRouteRoute: typeof AuthenticatedLeasesLeaseIdRouteRouteWithChildren
+  AuthenticatedLeasesIndexRoute: typeof AuthenticatedLeasesIndexRoute
+}
+
+const AuthenticatedLeasesRouteRouteChildren: AuthenticatedLeasesRouteRouteChildren =
+  {
+    AuthenticatedLeasesLeaseIdRouteRoute:
+      AuthenticatedLeasesLeaseIdRouteRouteWithChildren,
+    AuthenticatedLeasesIndexRoute: AuthenticatedLeasesIndexRoute,
+  }
+
+const AuthenticatedLeasesRouteRouteWithChildren =
+  AuthenticatedLeasesRouteRoute._addFileChildren(
+    AuthenticatedLeasesRouteRouteChildren,
   )
 
 interface AuthenticatedListingsRouteRouteChildren {
@@ -928,6 +1035,7 @@ const AuthenticatedSettingsRouteRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedContactsRouteRoute: typeof AuthenticatedContactsRouteRouteWithChildren
   AuthenticatedDocumentsRouteRoute: typeof AuthenticatedDocumentsRouteRouteWithChildren
+  AuthenticatedLeasesRouteRoute: typeof AuthenticatedLeasesRouteRouteWithChildren
   AuthenticatedListingsRouteRoute: typeof AuthenticatedListingsRouteRouteWithChildren
   AuthenticatedPropertiesRouteRoute: typeof AuthenticatedPropertiesRouteRouteWithChildren
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -943,6 +1051,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedContactsRouteRoute: AuthenticatedContactsRouteRouteWithChildren,
   AuthenticatedDocumentsRouteRoute:
     AuthenticatedDocumentsRouteRouteWithChildren,
+  AuthenticatedLeasesRouteRoute: AuthenticatedLeasesRouteRouteWithChildren,
   AuthenticatedListingsRouteRoute: AuthenticatedListingsRouteRouteWithChildren,
   AuthenticatedPropertiesRouteRoute:
     AuthenticatedPropertiesRouteRouteWithChildren,

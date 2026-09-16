@@ -9,6 +9,7 @@ import {
   BadgeDollarSign,
   Clipboard,
   File,
+  FileKey2,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -56,6 +57,11 @@ export const sidebarData: SidebarData = {
           title: 'Documents',
           url: '/documents',
           icon: File,
+        },
+        {
+          title: 'Leases',
+          url: '/leases',
+          icon: FileKey2,
         },
       ],
     },

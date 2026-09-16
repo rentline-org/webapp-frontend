@@ -35,13 +35,9 @@ export function PropertyLeasesPanel({
     }),
     [property.id, unitId]
   )
-  const {
-    data: leases = [],
-    isLoading,
-    isError,
-    isFetching,
-    refetch,
-  } = useGetDocuments(filters)
+  const { data, isLoading, isError, isFetching, refetch } =
+    useGetDocuments(filters)
+  const leases = data?.items ?? []
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingDocument, setEditingDocument] = useState<IDocument | null>(null)

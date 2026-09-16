@@ -1,6 +1,6 @@
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import type { LeaseStatus } from '../types'
-import { LEASE_STATUS_LABELS } from '../utils/constants'
 
 const variants: Record<LeaseStatus, 'info' | 'success' | 'outline'> = {
   upcoming: 'info',
@@ -9,9 +9,11 @@ const variants: Record<LeaseStatus, 'info' | 'success' | 'outline'> = {
 }
 
 export function LeaseStatusBadge({ status }: { status: LeaseStatus }) {
+  const { t } = useTranslation('leases')
+
   return (
     <Badge variant={variants[status]} className='rounded-full'>
-      {LEASE_STATUS_LABELS[status]}
+      {t(`timing.${status === 'active' ? 'current' : status}`)}
     </Badge>
   )
 }
