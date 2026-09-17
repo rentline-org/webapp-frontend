@@ -22,6 +22,7 @@ import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authOtpRouteImport } from './routes/(auth)/otp'
 import { Route as authOnboardingRouteImport } from './routes/(auth)/onboarding'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
+import { Route as authAcceptInvitationRouteImport } from './routes/(auth)/accept-invitation'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedPropertiesRouteRouteImport } from './routes/_authenticated/properties/route'
 import { Route as AuthenticatedListingsRouteRouteImport } from './routes/_authenticated/listings/route'
@@ -47,8 +48,12 @@ import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenti
 import { Route as AuthenticatedPropertiesNewRouteRouteImport } from './routes/_authenticated/properties/new/route'
 import { Route as AuthenticatedPropertiesPropertySlugRouteRouteImport } from './routes/_authenticated/properties/$propertySlug/route'
 import { Route as AuthenticatedLeasesLeaseIdRouteRouteImport } from './routes/_authenticated/leases/$leaseId/route'
+import { Route as AuthenticatedDocumentsDocumentIdRouteRouteImport } from './routes/_authenticated/documents/$documentId/route'
+import { Route as AuthenticatedContactsContactIdRouteRouteImport } from './routes/_authenticated/contacts/$contactId/route'
 import { Route as AuthenticatedPropertiesPropertySlugIndexRouteImport } from './routes/_authenticated/properties/$propertySlug/index'
 import { Route as AuthenticatedLeasesLeaseIdIndexRouteImport } from './routes/_authenticated/leases/$leaseId/index'
+import { Route as AuthenticatedDocumentsDocumentIdIndexRouteImport } from './routes/_authenticated/documents/$documentId/index'
+import { Route as AuthenticatedContactsContactIdIndexRouteImport } from './routes/_authenticated/contacts/$contactId/index'
 import { Route as authPasswordResetTokenIndexRouteImport } from './routes/(auth)/password-reset/$token/index'
 import { Route as AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteImport } from './routes/_authenticated/properties/$propertySlug/units/$unitSlug/route'
 import { Route as AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRouteImport } from './routes/_authenticated/properties/$propertySlug/units/$unitSlug/index'
@@ -114,6 +119,11 @@ const authOnboardingRoute = authOnboardingRouteImport.update({
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => authRouteRoute,
+} as any)
+const authAcceptInvitationRoute = authAcceptInvitationRouteImport.update({
+  id: '/accept-invitation',
+  path: '/accept-invitation',
   getParentRoute: () => authRouteRoute,
 } as any)
 const AuthenticatedSettingsRouteRoute =
@@ -263,6 +273,18 @@ const AuthenticatedLeasesLeaseIdRouteRoute =
     path: '/$leaseId',
     getParentRoute: () => AuthenticatedLeasesRouteRoute,
   } as any)
+const AuthenticatedDocumentsDocumentIdRouteRoute =
+  AuthenticatedDocumentsDocumentIdRouteRouteImport.update({
+    id: '/$documentId',
+    path: '/$documentId',
+    getParentRoute: () => AuthenticatedDocumentsRouteRoute,
+  } as any)
+const AuthenticatedContactsContactIdRouteRoute =
+  AuthenticatedContactsContactIdRouteRouteImport.update({
+    id: '/$contactId',
+    path: '/$contactId',
+    getParentRoute: () => AuthenticatedContactsRouteRoute,
+  } as any)
 const AuthenticatedPropertiesPropertySlugIndexRoute =
   AuthenticatedPropertiesPropertySlugIndexRouteImport.update({
     id: '/',
@@ -274,6 +296,18 @@ const AuthenticatedLeasesLeaseIdIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedLeasesLeaseIdRouteRoute,
+  } as any)
+const AuthenticatedDocumentsDocumentIdIndexRoute =
+  AuthenticatedDocumentsDocumentIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDocumentsDocumentIdRouteRoute,
+  } as any)
+const AuthenticatedContactsContactIdIndexRoute =
+  AuthenticatedContactsContactIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedContactsContactIdRouteRoute,
   } as any)
 const authPasswordResetTokenIndexRoute =
   authPasswordResetTokenIndexRouteImport.update({
@@ -303,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/listings': typeof AuthenticatedListingsRouteRouteWithChildren
   '/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
+  '/accept-invitation': typeof authAcceptInvitationRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/onboarding': typeof authOnboardingRoute
   '/otp': typeof authOtpRoute
@@ -313,6 +348,8 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/not-found': typeof errorsNotFoundRoute
+  '/contacts/$contactId': typeof AuthenticatedContactsContactIdRouteRouteWithChildren
+  '/documents/$documentId': typeof AuthenticatedDocumentsDocumentIdRouteRouteWithChildren
   '/leases/$leaseId': typeof AuthenticatedLeasesLeaseIdRouteRouteWithChildren
   '/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRouteRouteWithChildren
   '/properties/new': typeof AuthenticatedPropertiesNewRouteRoute
@@ -333,12 +370,15 @@ export interface FileRoutesByFullPath {
   '/tasks/': typeof AuthenticatedTasksIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
   '/password-reset/$token/': typeof authPasswordResetTokenIndexRoute
+  '/contacts/$contactId/': typeof AuthenticatedContactsContactIdIndexRoute
+  '/documents/$documentId/': typeof AuthenticatedDocumentsDocumentIdIndexRoute
   '/leases/$leaseId/': typeof AuthenticatedLeasesLeaseIdIndexRoute
   '/properties/$propertySlug/': typeof AuthenticatedPropertiesPropertySlugIndexRoute
   '/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteWithChildren
   '/properties/$propertySlug/units/$unitSlug/': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
 }
 export interface FileRoutesByTo {
+  '/accept-invitation': typeof authAcceptInvitationRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/onboarding': typeof authOnboardingRoute
   '/otp': typeof authOtpRoute
@@ -368,6 +408,8 @@ export interface FileRoutesByTo {
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/password-reset/$token': typeof authPasswordResetTokenIndexRoute
+  '/contacts/$contactId': typeof AuthenticatedContactsContactIdIndexRoute
+  '/documents/$documentId': typeof AuthenticatedDocumentsDocumentIdIndexRoute
   '/leases/$leaseId': typeof AuthenticatedLeasesLeaseIdIndexRoute
   '/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugIndexRoute
   '/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugIndexRoute
@@ -382,6 +424,7 @@ export interface FileRoutesById {
   '/_authenticated/listings': typeof AuthenticatedListingsRouteRouteWithChildren
   '/_authenticated/properties': typeof AuthenticatedPropertiesRouteRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
+  '/(auth)/accept-invitation': typeof authAcceptInvitationRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/onboarding': typeof authOnboardingRoute
   '/(auth)/otp': typeof authOtpRoute
@@ -393,6 +436,8 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/(errors)/not-found': typeof errorsNotFoundRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/contacts/$contactId': typeof AuthenticatedContactsContactIdRouteRouteWithChildren
+  '/_authenticated/documents/$documentId': typeof AuthenticatedDocumentsDocumentIdRouteRouteWithChildren
   '/_authenticated/leases/$leaseId': typeof AuthenticatedLeasesLeaseIdRouteRouteWithChildren
   '/_authenticated/properties/$propertySlug': typeof AuthenticatedPropertiesPropertySlugRouteRouteWithChildren
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRouteRoute
@@ -413,6 +458,8 @@ export interface FileRoutesById {
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/(auth)/password-reset/$token/': typeof authPasswordResetTokenIndexRoute
+  '/_authenticated/contacts/$contactId/': typeof AuthenticatedContactsContactIdIndexRoute
+  '/_authenticated/documents/$documentId/': typeof AuthenticatedDocumentsDocumentIdIndexRoute
   '/_authenticated/leases/$leaseId/': typeof AuthenticatedLeasesLeaseIdIndexRoute
   '/_authenticated/properties/$propertySlug/': typeof AuthenticatedPropertiesPropertySlugIndexRoute
   '/_authenticated/properties/$propertySlug/units/$unitSlug': typeof AuthenticatedPropertiesPropertySlugUnitsUnitSlugRouteRouteWithChildren
@@ -428,6 +475,7 @@ export interface FileRouteTypes {
     | '/listings'
     | '/properties'
     | '/settings'
+    | '/accept-invitation'
     | '/forgot-password'
     | '/onboarding'
     | '/otp'
@@ -438,6 +486,8 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/not-found'
+    | '/contacts/$contactId'
+    | '/documents/$documentId'
     | '/leases/$leaseId'
     | '/properties/$propertySlug'
     | '/properties/new'
@@ -458,12 +508,15 @@ export interface FileRouteTypes {
     | '/tasks/'
     | '/users/'
     | '/password-reset/$token/'
+    | '/contacts/$contactId/'
+    | '/documents/$documentId/'
     | '/leases/$leaseId/'
     | '/properties/$propertySlug/'
     | '/properties/$propertySlug/units/$unitSlug'
     | '/properties/$propertySlug/units/$unitSlug/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/accept-invitation'
     | '/forgot-password'
     | '/onboarding'
     | '/otp'
@@ -493,6 +546,8 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/users'
     | '/password-reset/$token'
+    | '/contacts/$contactId'
+    | '/documents/$documentId'
     | '/leases/$leaseId'
     | '/properties/$propertySlug'
     | '/properties/$propertySlug/units/$unitSlug'
@@ -506,6 +561,7 @@ export interface FileRouteTypes {
     | '/_authenticated/listings'
     | '/_authenticated/properties'
     | '/_authenticated/settings'
+    | '/(auth)/accept-invitation'
     | '/(auth)/forgot-password'
     | '/(auth)/onboarding'
     | '/(auth)/otp'
@@ -517,6 +573,8 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/(errors)/not-found'
     | '/_authenticated/'
+    | '/_authenticated/contacts/$contactId'
+    | '/_authenticated/documents/$documentId'
     | '/_authenticated/leases/$leaseId'
     | '/_authenticated/properties/$propertySlug'
     | '/_authenticated/properties/new'
@@ -537,6 +595,8 @@ export interface FileRouteTypes {
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
     | '/(auth)/password-reset/$token/'
+    | '/_authenticated/contacts/$contactId/'
+    | '/_authenticated/documents/$documentId/'
     | '/_authenticated/leases/$leaseId/'
     | '/_authenticated/properties/$propertySlug/'
     | '/_authenticated/properties/$propertySlug/units/$unitSlug'
@@ -644,6 +704,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof authForgotPasswordRouteImport
+      parentRoute: typeof authRouteRoute
+    }
+    '/(auth)/accept-invitation': {
+      id: '/(auth)/accept-invitation'
+      path: '/accept-invitation'
+      fullPath: '/accept-invitation'
+      preLoaderRoute: typeof authAcceptInvitationRouteImport
       parentRoute: typeof authRouteRoute
     }
     '/_authenticated/settings': {
@@ -821,6 +888,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLeasesLeaseIdRouteRouteImport
       parentRoute: typeof AuthenticatedLeasesRouteRoute
     }
+    '/_authenticated/documents/$documentId': {
+      id: '/_authenticated/documents/$documentId'
+      path: '/$documentId'
+      fullPath: '/documents/$documentId'
+      preLoaderRoute: typeof AuthenticatedDocumentsDocumentIdRouteRouteImport
+      parentRoute: typeof AuthenticatedDocumentsRouteRoute
+    }
+    '/_authenticated/contacts/$contactId': {
+      id: '/_authenticated/contacts/$contactId'
+      path: '/$contactId'
+      fullPath: '/contacts/$contactId'
+      preLoaderRoute: typeof AuthenticatedContactsContactIdRouteRouteImport
+      parentRoute: typeof AuthenticatedContactsRouteRoute
+    }
     '/_authenticated/properties/$propertySlug/': {
       id: '/_authenticated/properties/$propertySlug/'
       path: '/'
@@ -834,6 +915,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/leases/$leaseId/'
       preLoaderRoute: typeof AuthenticatedLeasesLeaseIdIndexRouteImport
       parentRoute: typeof AuthenticatedLeasesLeaseIdRouteRoute
+    }
+    '/_authenticated/documents/$documentId/': {
+      id: '/_authenticated/documents/$documentId/'
+      path: '/'
+      fullPath: '/documents/$documentId/'
+      preLoaderRoute: typeof AuthenticatedDocumentsDocumentIdIndexRouteImport
+      parentRoute: typeof AuthenticatedDocumentsDocumentIdRouteRoute
+    }
+    '/_authenticated/contacts/$contactId/': {
+      id: '/_authenticated/contacts/$contactId/'
+      path: '/'
+      fullPath: '/contacts/$contactId/'
+      preLoaderRoute: typeof AuthenticatedContactsContactIdIndexRouteImport
+      parentRoute: typeof AuthenticatedContactsContactIdRouteRoute
     }
     '/(auth)/password-reset/$token/': {
       id: '/(auth)/password-reset/$token/'
@@ -860,6 +955,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface authRouteRouteChildren {
+  authAcceptInvitationRoute: typeof authAcceptInvitationRoute
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authOnboardingRoute: typeof authOnboardingRoute
   authOtpRoute: typeof authOtpRoute
@@ -869,6 +965,7 @@ interface authRouteRouteChildren {
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
+  authAcceptInvitationRoute: authAcceptInvitationRoute,
   authForgotPasswordRoute: authForgotPasswordRoute,
   authOnboardingRoute: authOnboardingRoute,
   authOtpRoute: authOtpRoute,
@@ -881,12 +978,30 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
+interface AuthenticatedContactsContactIdRouteRouteChildren {
+  AuthenticatedContactsContactIdIndexRoute: typeof AuthenticatedContactsContactIdIndexRoute
+}
+
+const AuthenticatedContactsContactIdRouteRouteChildren: AuthenticatedContactsContactIdRouteRouteChildren =
+  {
+    AuthenticatedContactsContactIdIndexRoute:
+      AuthenticatedContactsContactIdIndexRoute,
+  }
+
+const AuthenticatedContactsContactIdRouteRouteWithChildren =
+  AuthenticatedContactsContactIdRouteRoute._addFileChildren(
+    AuthenticatedContactsContactIdRouteRouteChildren,
+  )
+
 interface AuthenticatedContactsRouteRouteChildren {
+  AuthenticatedContactsContactIdRouteRoute: typeof AuthenticatedContactsContactIdRouteRouteWithChildren
   AuthenticatedContactsIndexRoute: typeof AuthenticatedContactsIndexRoute
 }
 
 const AuthenticatedContactsRouteRouteChildren: AuthenticatedContactsRouteRouteChildren =
   {
+    AuthenticatedContactsContactIdRouteRoute:
+      AuthenticatedContactsContactIdRouteRouteWithChildren,
     AuthenticatedContactsIndexRoute: AuthenticatedContactsIndexRoute,
   }
 
@@ -895,12 +1010,30 @@ const AuthenticatedContactsRouteRouteWithChildren =
     AuthenticatedContactsRouteRouteChildren,
   )
 
+interface AuthenticatedDocumentsDocumentIdRouteRouteChildren {
+  AuthenticatedDocumentsDocumentIdIndexRoute: typeof AuthenticatedDocumentsDocumentIdIndexRoute
+}
+
+const AuthenticatedDocumentsDocumentIdRouteRouteChildren: AuthenticatedDocumentsDocumentIdRouteRouteChildren =
+  {
+    AuthenticatedDocumentsDocumentIdIndexRoute:
+      AuthenticatedDocumentsDocumentIdIndexRoute,
+  }
+
+const AuthenticatedDocumentsDocumentIdRouteRouteWithChildren =
+  AuthenticatedDocumentsDocumentIdRouteRoute._addFileChildren(
+    AuthenticatedDocumentsDocumentIdRouteRouteChildren,
+  )
+
 interface AuthenticatedDocumentsRouteRouteChildren {
+  AuthenticatedDocumentsDocumentIdRouteRoute: typeof AuthenticatedDocumentsDocumentIdRouteRouteWithChildren
   AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
 }
 
 const AuthenticatedDocumentsRouteRouteChildren: AuthenticatedDocumentsRouteRouteChildren =
   {
+    AuthenticatedDocumentsDocumentIdRouteRoute:
+      AuthenticatedDocumentsDocumentIdRouteRouteWithChildren,
     AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
   }
 

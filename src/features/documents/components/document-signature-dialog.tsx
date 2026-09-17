@@ -81,8 +81,12 @@ export function DocumentSignatureDialog({
       uploadMutation.mutate(
         { document, file: signedFile },
         {
-          onSuccess: () => {
-            toast.success(`${document.title} was marked as signed.`)
+          onSuccess: (savedDocument) => {
+            toast.success(
+              savedDocument.is_signed
+                ? `${document.title} was marked as signed.`
+                : `The signed copy for ${document.title} was uploaded. Complete the remaining signer statuses to finish signature tracking.`
+            )
             closeDialog()
           },
         }

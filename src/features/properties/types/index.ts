@@ -17,7 +17,13 @@ export type TPropertyTypeFilter = TPropertyType | 'all'
 
 export type IPropertyResponse = IResponse<IProperty[]>
 
-export type TabKey = 'overview' | 'units' | 'leases' | 'contacts' | 'accounting'
+export type TabKey =
+  | 'overview'
+  | 'units'
+  | 'leases'
+  | 'documents'
+  | 'contacts'
+  | 'accounting'
 
 export interface IProperty {
   id: number

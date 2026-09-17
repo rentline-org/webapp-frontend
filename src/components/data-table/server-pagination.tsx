@@ -112,7 +112,7 @@ export function ServerPagination({
                   variant={page === meta.current_page ? 'default' : 'outline'}
                   className='size-9 p-0'
                   disabled={disabled}
-                  onClick={() => onPageChange(page)}
+                  onClick={() => onPageChange(Number(page))}
                 >
                   {page}
                 </Button>

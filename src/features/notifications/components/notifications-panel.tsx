@@ -1,8 +1,8 @@
-import React from 'react'
-import { formatDistanceToNow } from 'date-fns'
-import { Bell, CheckCircle, Expand, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Link } from '@tanstack/react-router'
+import { Bell, Check, Loader2, X } from 'lucide-react'
+import { useAppFormatters } from '@/i18n/use-formatters'
 import { cn } from '@/lib/utils'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,149 +16,97 @@ import {
 } from '@/components/ui/drawer'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-
-type Notification = {
-  id: string
-  type: 'lease' | 'maintenance' | 'payment' | 'tenant' | 'system'
-  title: string
-  description: string
-  time: Date
-  isUnread: boolean
-  avatar?: string
-  icon?: React.ReactNode
-}
-
-const sampleNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'maintenance',
-    title: 'Olivia Martin submitted a maintenance request',
-    description: 'Leaking faucet in Unit 12B - Kitchen',
-    time: new Date(Date.now() - 1000 * 60 * 45),
-    isUnread: true,
-    avatar: 'https://i.pravatar.cc/150?u=olivia',
-  },
-  {
-    id: '2',
-    type: 'payment',
-    title: 'Jackson Lee paid rent for Unit 8A',
-    description: '$1,450 • Received via bank transfer',
-    time: new Date(Date.now() - 1000 * 60 * 60 * 3),
-    isUnread: true,
-    avatar: 'https://i.pravatar.cc/150?u=jackson',
-  },
-  {
-    id: '3',
-    type: 'lease',
-    title: 'Isabella Nguyen lease renewal is due soon',
-    description: 'Unit 5C • Expires in 18 days',
-    time: new Date(Date.now() - 1000 * 60 * 60 * 7),
-    isUnread: false,
-    avatar: 'https://i.pravatar.cc/150?u=isabella',
-  },
-  {
-    id: '4',
-    type: 'maintenance',
-    title: 'New maintenance request from William Kim',
-    description: 'AC not cooling properly - Unit 3D',
-    time: new Date(Date.now() - 1000 * 60 * 60 * 12),
-    isUnread: true,
-    avatar: 'https://i.pravatar.cc/150?u=william',
-  },
-  {
-    id: '5',
-    type: 'system',
-    title: 'Subscription renewed successfully',
-    description: 'Pro Plan • Next billing: May 25, 2026',
-    time: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    isUnread: false,
-    icon: <CheckCircle className='h-5 w-5 text-emerald-500' />,
-  },
-]
+import {
+  type IOperationsNotification,
+  useGetNotifications,
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+} from '../query'
 
 export default function NotificationsPanel() {
-  const unreadCount = sampleNotifications.filter((n) => n.isUnread).length
+  const { t } = useTranslation('dashboard')
+  const query = useGetNotifications()
+  const markAllRead = useMarkAllNotificationsRead()
+  const notifications = query.data?.items ?? []
+  const unread = notifications.filter((notification) => !notification.read_at)
 
   return (
     <Drawer direction='right'>
       <DrawerTrigger asChild>
-        <button className='relative flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-accent'>
-          <Bell className='h-5 w-5' />
-          {unreadCount > 0 && (
+        <button
+          type='button'
+          aria-label={t('notifications.title')}
+          className='relative flex size-9 items-center justify-center rounded-full transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
+        >
+          <Bell className='size-5' />
+          {unread.length > 0 ? (
             <Badge
               variant='destructive'
-              className='absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center p-0 text-[10px] font-medium'
+              className='absolute -top-1 -right-1 flex size-5 items-center justify-center p-0 text-[10px] font-medium'
             >
-              {unreadCount}
+              {Math.min(unread.length, 99)}
             </Badge>
-          )}
+          ) : null}
         </button>
       </DrawerTrigger>
 
-      <DrawerContent className='fixed right-0 z-50 mt-0 flex h-full w-full flex-col rounded-none border-l bg-background md:w-112.5 lg:w-125'>
-        <DrawerHeader className='px-4 py-5 md:px-6'>
-          <div className='flex w-full items-center justify-between'>
-            <div>
-              <DrawerTitle className='text-lg md:text-xl'>
-                Notifications
-              </DrawerTitle>
-              <DrawerDescription className='text-xs md:text-sm'>
-                Stay updated with your rental activity
+      <DrawerContent className='fixed right-0 z-50 mt-0 flex h-full w-full flex-col rounded-none border-l bg-background p-0 sm:max-w-md'>
+        <DrawerHeader className='border-b px-4 py-5 text-left sm:px-6'>
+          <div className='flex items-start justify-between gap-4'>
+            <div className='space-y-1'>
+              <DrawerTitle>{t('notifications.title')}</DrawerTitle>
+              <DrawerDescription>
+                {t('notifications.description')}
               </DrawerDescription>
             </div>
-
-            <div className='flex items-center gap-1 md:gap-3'>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='hidden sm:inline-flex'
-              >
-                <Expand className='size-5' />
+            <DrawerClose asChild>
+              <Button type='button' variant='ghost' size='icon'>
+                <X />
+                <span className='sr-only'>{t('notifications.close')}</span>
               </Button>
-              <DrawerClose asChild>
-                <Button variant='ghost' size='icon' className='h-9 w-9'>
-                  <X className='size-5' />
-                </Button>
-              </DrawerClose>
-            </div>
+            </DrawerClose>
           </div>
         </DrawerHeader>
 
-        <Tabs
-          defaultValue='all'
-          className='flex flex-1 flex-col overflow-hidden'
-        >
-          <TabsList className='flex w-full items-center justify-between rounded-none border-b px-4 md:px-6'>
-            <div className='flex items-center gap-1'>
-              <TabsTrigger value='all' className='text-xs md:text-sm'>
-                All
+        <Tabs defaultValue='all' className='flex min-h-0 flex-1 flex-col'>
+          <div className='flex items-center justify-between gap-3 border-b px-4 py-2 sm:px-6'>
+            <TabsList className='h-9'>
+              <TabsTrigger value='all'>{t('notifications.all')}</TabsTrigger>
+              <TabsTrigger value='unread'>
+                {t('notifications.unread')}
+                {unread.length ? ` (${unread.length})` : ''}
               </TabsTrigger>
-              <TabsTrigger value='unread' className='text-xs md:text-sm'>
-                Unread{' '}
-                <span className='ml-1 hidden sm:inline'>({unreadCount})</span>
-              </TabsTrigger>
-            </div>
-
+            </TabsList>
             <Button
-              variant='link'
+              type='button'
+              variant='ghost'
               size='sm'
-              className='text-xs md:text-sm'
-              onClick={() => {}}
+              disabled={unread.length === 0 || markAllRead.isPending}
+              onClick={() => markAllRead.mutate()}
             >
-              Mark all as read
+              {markAllRead.isPending ? (
+                <Loader2 className='animate-spin' />
+              ) : (
+                <Check />
+              )}
+              <span className='hidden sm:inline'>
+                {t('notifications.markAll')}
+              </span>
             </Button>
-          </TabsList>
+          </div>
 
-          <TabsContent value='all' className='mt-0 flex-1 overflow-hidden p-0'>
-            <NotificationList notifications={sampleNotifications} />
-          </TabsContent>
-
-          <TabsContent
-            value='unread'
-            className='mt-0 flex-1 overflow-hidden p-0'
-          >
+          <TabsContent value='all' className='mt-0 min-h-0 flex-1'>
             <NotificationList
-              notifications={sampleNotifications.filter((n) => n.isUnread)}
+              notifications={notifications}
+              isLoading={query.isLoading}
+              isError={query.isError}
+            />
+          </TabsContent>
+          <TabsContent value='unread' className='mt-0 min-h-0 flex-1'>
+            <NotificationList
+              notifications={unread}
+              isLoading={query.isLoading}
+              isError={query.isError}
             />
           </TabsContent>
         </Tabs>
@@ -169,58 +117,121 @@ export default function NotificationsPanel() {
 
 function NotificationList({
   notifications,
+  isLoading,
+  isError,
 }: {
-  notifications: Notification[]
+  notifications: IOperationsNotification[]
+  isLoading: boolean
+  isError: boolean
 }) {
+  const { t } = useTranslation('dashboard')
+
+  if (isLoading) {
+    return (
+      <div className='flex h-full min-h-56 items-center justify-center'>
+        <Loader2 className='size-5 animate-spin text-muted-foreground' />
+        <span className='sr-only'>{t('notifications.loading')}</span>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <p className='px-6 py-12 text-center text-sm text-muted-foreground'>
+        {t('notifications.loadError')}
+      </p>
+    )
+  }
+
+  if (notifications.length === 0) {
+    return (
+      <p className='px-6 py-12 text-center text-sm text-muted-foreground'>
+        {t('notifications.empty')}
+      </p>
+    )
+  }
+
   return (
-    <ScrollArea className='h-full w-full px-4 py-4 md:px-6'>
-      <div className='space-y-3 pb-8'>
+    <ScrollArea className='h-full'>
+      <div className='divide-y'>
         {notifications.map((notification) => (
-          <div
-            key={notification.id}
-            className={cn(
-              'flex gap-3 rounded-xl border bg-card p-3 transition-all hover:bg-accent/50 md:gap-4 md:p-4',
-              notification.isUnread
-                ? 'border-primary/20 bg-primary/5'
-                : 'border-border'
-            )}
-          >
-            {/* Avatar / Icon */}
-            <div className='mt-0.5 shrink-0'>
-              {notification.avatar ? (
-                <Avatar className='h-9 w-9 md:h-10 md:w-10'>
-                  <AvatarImage src={notification.avatar} />
-                  <AvatarFallback className='text-[10px] md:text-xs'>
-                    {notification.title.substring(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-              ) : (
-                <div className='flex h-9 w-9 items-center justify-center rounded-full bg-muted md:h-10 md:w-10'>
-                  {notification.icon}
-                </div>
-              )}
-            </div>
-
-            {/* Content */}
-            <div className='min-w-0 flex-1'>
-              <p className='text-xs leading-snug font-semibold text-foreground md:text-sm'>
-                {notification.title}
-              </p>
-              <p className='mt-1 line-clamp-2 text-xs text-muted-foreground md:text-sm'>
-                {notification.description}
-              </p>
-              <p className='mt-2 text-[10px] font-medium text-muted-foreground md:text-xs'>
-                {formatDistanceToNow(notification.time, { addSuffix: true })}
-              </p>
-            </div>
-
-            {/* Unread indicator */}
-            {notification.isUnread && (
-              <div className='mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]' />
-            )}
-          </div>
+          <NotificationRow key={notification.id} notification={notification} />
         ))}
       </div>
     </ScrollArea>
+  )
+}
+
+function NotificationRow({
+  notification,
+}: {
+  notification: IOperationsNotification
+}) {
+  const { t } = useTranslation('dashboard')
+  const { formatDate } = useAppFormatters()
+  const markRead = useMarkNotificationRead()
+
+  return (
+    <article
+      className={cn(
+        'space-y-3 px-4 py-4 sm:px-6',
+        !notification.read_at && 'bg-primary/[0.04]'
+      )}
+    >
+      <div className='flex items-start gap-3'>
+        <span
+          className={cn(
+            'mt-1 size-2 shrink-0 rounded-full',
+            notification.read_at ? 'bg-muted' : 'bg-primary'
+          )}
+        />
+        <div className='min-w-0 flex-1'>
+          <p className='font-medium'>{notification.data.title}</p>
+          <p className='mt-1 text-xs text-muted-foreground'>
+            {t('notifications.itemCount', {
+              count: notification.data.count,
+            })}{' '}
+            · {formatDate(notification.created_at)}
+          </p>
+        </div>
+        {!notification.read_at ? (
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            disabled={markRead.isPending}
+            aria-label={t('notifications.markRead')}
+            onClick={() => markRead.mutate(notification.id)}
+          >
+            {markRead.isPending ? (
+              <Loader2 className='animate-spin' />
+            ) : (
+              <Check />
+            )}
+          </Button>
+        ) : null}
+      </div>
+
+      <ul className='ml-5 space-y-1 text-sm text-muted-foreground'>
+        {notification.data.action_items.slice(0, 3).map((item) => (
+          <li key={item.id} className='truncate'>
+            {item.title}
+          </li>
+        ))}
+      </ul>
+
+      <DrawerClose asChild>
+        <Button asChild variant='outline' size='sm' className='ml-5'>
+          <Link
+            to='/tasks'
+            onClick={() => {
+              if (!notification.read_at) markRead.mutate(notification.id)
+            }}
+          >
+            {t('notifications.openActions')}
+          </Link>
+        </Button>
+      </DrawerClose>
+    </article>
   )
 }

@@ -1,4 +1,8 @@
-import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
+import axios, {
+  type AxiosRequestConfig,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
+} from 'axios'
 import { getCookie } from '@/lib/cookies'
 import { getAppLocale } from '@/i18n'
 import { ApiError } from './errors'
@@ -32,7 +36,7 @@ export const RentlineAuth = axios.create({
   withXSRFToken: true,
 })
 
-const attachRequestContext = (config: AxiosRequestConfig) => {
+const attachRequestContext = (config: InternalAxiosRequestConfig) => {
   // const token = getCookie('token')
   const activeOrgId = getCookie('active_org')
 
@@ -41,10 +45,10 @@ const attachRequestContext = (config: AxiosRequestConfig) => {
   // }
 
   if (activeOrgId) {
-    config.headers?.set('X-Organization-Id', String(activeOrgId))
+    config.headers.set('X-Organization-Id', String(activeOrgId))
   }
 
-  config.headers?.set('Accept-Language', getAppLocale())
+  config.headers.set('Accept-Language', getAppLocale())
 
   return config
 }

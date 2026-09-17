@@ -1,10 +1,18 @@
-import { useEffect, useMemo, type FormEvent } from 'react'
-import { useForm, useWatch, type Resolver } from 'react-hook-form'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
+import {
+  useFieldArray,
+  useForm,
+  useWatch,
+  type Resolver,
+} from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FileLock2, Loader2, LockKeyhole, X } from 'lucide-react'
+import { Loader2, LockKeyhole, Plus, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { ApiError } from '@/api/errors'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Drawer,
   DrawerClose,
@@ -24,6 +32,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Progress } from '@/components/ui/progress'
 import {
   Select,
   SelectContent,
@@ -35,21 +45,31 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useGetContacts } from '@/features/contacts/query'
+import { useGetLeases } from '@/features/leases/query'
 import { useGetProperties } from '@/features/properties/query'
-import { useCreateDocument, useUpdateDocument } from '../query'
+import {
+  useCreateDocument,
+  useGetDocumentKinds,
+  useUpdateDocument,
+} from '../query'
 import { toDocumentFormData, toDocumentUpdatePayload } from '../query/dto'
 import {
   createDocumentFormSchema,
+  documentPartyRoleValues,
+  type DocumentPartyRole,
   type DocumentType,
   type IDocument,
+  type IDocumentKindField,
   type TDocumentForm,
 } from '../types'
 import {
   DOCUMENT_ACCEPT,
+  DOCUMENT_KIND_I18N_KEYS,
   DOCUMENT_TYPE_OPTIONS,
   SIGNED_DOCUMENT_ACCEPT,
 } from '../utils/constants'
 import { DocumentFileField } from './document-file-field'
+import { DocumentSupportingFilesField } from './document-supporting-files-field'
 
 type DocumentFormDrawerProps = {
   open: boolean
@@ -69,6 +89,96 @@ type FormSectionProps = {
 
 const NONE_VALUE = '__none__'
 
+const emptyDetails: TDocumentForm['details'] = {
+  change_summary: '',
+  management_fee_type: null,
+  management_fee_value: null,
+  exclusive: false,
+  commission_type: null,
+  commission_value: null,
+  calculation_basis: '',
+  advertising_permitted: false,
+  creci_reference: '',
+  inspection_type: null,
+  inspected_on: '',
+  outcome: '',
+  provider: '',
+  policy_number: '',
+  coverage_amount: null,
+  premium_amount: null,
+  deductible_amount: null,
+  currency: 'BRL',
+  service_scope: '',
+  recurring_cost: null,
+  frequency: null,
+  issuer: '',
+  certificate_number: '',
+  registry_office: '',
+  registration_number: '',
+  acquisition_date: '',
+}
+
+const systemKindFields: Partial<Record<DocumentType, IDocumentKindField[]>> = {
+  lease_addendum: [{ key: 'change_summary', type: 'textarea', required: true }],
+  property_management_agreement: [
+    {
+      key: 'management_fee_type',
+      type: 'select',
+      options: ['fixed', 'percentage'],
+    },
+    { key: 'management_fee_value', type: 'decimal' },
+  ],
+  brokerage_authorization: [
+    { key: 'exclusive', type: 'boolean' },
+    {
+      key: 'commission_type',
+      type: 'select',
+      options: ['fixed', 'percentage'],
+    },
+    { key: 'commission_value', type: 'decimal' },
+    { key: 'calculation_basis', type: 'text' },
+    { key: 'advertising_permitted', type: 'boolean' },
+    { key: 'creci_reference', type: 'text' },
+  ],
+  inspection_report: [
+    {
+      key: 'inspection_type',
+      type: 'select',
+      options: ['move_in', 'move_out', 'routine'],
+      required: true,
+    },
+    { key: 'inspected_on', type: 'date', required: true },
+    { key: 'outcome', type: 'textarea' },
+  ],
+  insurance_policy: [
+    { key: 'provider', type: 'text' },
+    { key: 'policy_number', type: 'text' },
+    { key: 'coverage_amount', type: 'decimal' },
+    { key: 'premium_amount', type: 'decimal' },
+    { key: 'deductible_amount', type: 'decimal' },
+    { key: 'currency', type: 'currency' },
+  ],
+  service_contract: [
+    { key: 'service_scope', type: 'textarea' },
+    { key: 'recurring_cost', type: 'decimal' },
+    { key: 'currency', type: 'currency' },
+    {
+      key: 'frequency',
+      type: 'select',
+      options: ['one_time', 'monthly', 'quarterly', 'yearly'],
+    },
+  ],
+  compliance_certificate: [
+    { key: 'issuer', type: 'text' },
+    { key: 'certificate_number', type: 'text' },
+  ],
+  ownership_record: [
+    { key: 'registry_office', type: 'text' },
+    { key: 'registration_number', type: 'text' },
+    { key: 'acquisition_date', type: 'date' },
+  ],
+}
+
 const getDefaultValues = (
   document: IDocument | null | undefined,
   initialType: DocumentType,
@@ -76,28 +186,45 @@ const getDefaultValues = (
   initialUnitId?: number
 ): TDocumentForm => {
   const type = document?.type ?? initialType
+  const leaseId =
+    document?.contexts?.leases?.[0]?.id ??
+    document?.lease_links?.[0]?.lease_id ??
+    null
 
   return {
     type,
+    custom_kind_id: document?.custom_kind_id ?? null,
     title: document?.title ?? '',
     purpose: document?.purpose ?? '',
     description: document?.description ?? '',
+    reference_number: document?.reference_number ?? '',
+    issued_on: document?.issued_on ?? '',
+    effective_on: document?.effective_on ?? '',
+    expires_on: document?.expires_on ?? '',
+    lifecycle: document?.lifecycle ?? 'draft',
     property_id: document?.property_id ?? initialPropertyId ?? null,
     unit_id: document?.unit_id ?? initialUnitId ?? null,
+    lease_id: leaseId,
     requires_signature:
       type === 'lease' ? true : (document?.requires_signature ?? false),
-    // Existing signature state is managed by its dedicated action, not PATCH.
     is_signed: false,
     file: null,
     signed_file: null,
-    lease: {
-      tenant_contact_id: document?.lease?.tenant_contact_id ?? null,
-      starts_on: document?.lease?.starts_on ?? '',
-      ends_on: document?.lease?.ends_on ?? '',
-      rent_amount: document?.lease?.rent_amount ?? null,
-      security_deposit: document?.lease?.security_deposit ?? null,
-      notes: document?.lease?.notes ?? '',
-    },
+    supporting_files: [],
+    parties:
+      document?.parties?.map((party) => ({
+        contact_id: party.contact_id,
+        role: party.role as DocumentPartyRole,
+        is_primary: party.is_primary,
+      })) ?? [],
+    signer_contact_ids:
+      document?.signers?.flatMap((signer) =>
+        signer.contact_id ? [signer.contact_id] : []
+      ) ?? [],
+    details: {
+      ...emptyDetails,
+      ...(document?.details ?? {}),
+    } as TDocumentForm['details'],
   }
 }
 
@@ -115,7 +242,56 @@ function FormSection({ title, description, children }: FormSectionProps) {
   )
 }
 
+const detailLabelKeys: Record<string, string> = {
+  change_summary: 'changeSummary',
+  management_fee_type: 'managementFeeType',
+  management_fee_value: 'managementFeeValue',
+  exclusive: 'exclusive',
+  commission_type: 'commissionType',
+  commission_value: 'commissionValue',
+  calculation_basis: 'calculationBasis',
+  advertising_permitted: 'advertisingAllowed',
+  creci_reference: 'creciNumber',
+  inspection_type: 'inspectionType',
+  inspected_on: 'inspectionDate',
+  outcome: 'inspectionOutcome',
+  provider: 'providerName',
+  policy_number: 'policyNumber',
+  coverage_amount: 'coverageAmount',
+  premium_amount: 'premiumAmount',
+  deductible_amount: 'deductibleAmount',
+  currency: 'currency',
+  service_scope: 'serviceScope',
+  recurring_cost: 'recurringCost',
+  frequency: 'frequency',
+  issuer: 'issuer',
+  certificate_number: 'certificateNumber',
+  registry_office: 'registryOffice',
+  registration_number: 'registryNumber',
+  acquisition_date: 'acquisitionDate',
+}
+
+function normalizeOption(option: string | { value: string; label: string }) {
+  return typeof option === 'string' ? { value: option, label: option } : option
+}
+
 export function DocumentFormDrawer({
+  open,
+  ...props
+}: DocumentFormDrawerProps) {
+  if (!open) return null
+
+  const instanceKey = [
+    props.document?.id ?? 'new',
+    props.initialType ?? 'generic',
+    props.initialPropertyId ?? 'organization',
+    props.initialUnitId ?? 'all-units',
+  ].join(':')
+
+  return <DocumentFormDrawerContent key={instanceKey} {...props} open={open} />
+}
+
+function DocumentFormDrawerContent({
   open,
   onOpenChange,
   document,
@@ -124,21 +300,32 @@ export function DocumentFormDrawer({
   initialUnitId,
   onSaved,
 }: DocumentFormDrawerProps) {
+  const { t } = useTranslation(['documents', 'common'])
   const isMobile = useIsMobile()
   const { data: properties = [], isLoading: isLoadingProperties } =
     useGetProperties()
-  const { data: contacts = [], isLoading: isLoadingContacts } =
-    useGetContacts()
+  const { data: contacts = [], isLoading: isLoadingContacts } = useGetContacts()
+  const leasesQuery = useGetLeases({ per_page: 100, sort: 'starts_on:desc' })
+  const kindsQuery = useGetDocumentKinds()
   const createMutation = useCreateDocument()
   const updateMutation = useUpdateDocument()
+  const abortController = useRef<AbortController | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const isEditing = Boolean(document)
   const isSaving = createMutation.isPending || updateMutation.isPending
-  const isContextLocked = Boolean(document?.is_signed)
+  const isContextLocked = Boolean(
+    document?.is_signed || document?.lifecycle === 'active'
+  )
 
+  const schema = useMemo(
+    () =>
+      createDocumentFormSchema(!isEditing, (key) =>
+        t(`documents:validation.${key}`)
+      ),
+    [isEditing, t]
+  )
   const form = useForm<TDocumentForm>({
-    resolver: zodResolver(
-      createDocumentFormSchema(!isEditing)
-    ) as Resolver<TDocumentForm>,
+    resolver: zodResolver(schema) as Resolver<TDocumentForm>,
     mode: 'onTouched',
     defaultValues: getDefaultValues(
       document,
@@ -147,28 +334,27 @@ export function DocumentFormDrawer({
       initialUnitId
     ),
   })
+  const {
+    fields: partyFields,
+    append: appendParty,
+    remove: removeParty,
+  } = useFieldArray({
+    control: form.control,
+    name: 'parties',
+  })
 
-  useEffect(() => {
-    if (!open) return
-
-    form.reset(
-      getDefaultValues(
-        document,
-        initialType,
-        initialPropertyId,
-        initialUnitId
-      )
-    )
-  }, [
-    document,
-    form,
-    initialPropertyId,
-    initialType,
-    initialUnitId,
-    open,
-  ])
+  useEffect(
+    () => () => {
+      abortController.current?.abort()
+    },
+    []
+  )
 
   const selectedType = useWatch({ control: form.control, name: 'type' })
+  const customKindId = useWatch({
+    control: form.control,
+    name: 'custom_kind_id',
+  })
   const selectedPropertyId = useWatch({
     control: form.control,
     name: 'property_id',
@@ -181,6 +367,38 @@ export function DocumentFormDrawer({
     control: form.control,
     name: 'is_signed',
   })
+  const selectedSignerIds = useWatch({
+    control: form.control,
+    name: 'signer_contact_ids',
+  })
+  const selectedParties = useWatch({
+    control: form.control,
+    name: 'parties',
+  })
+  const details = useWatch({ control: form.control, name: 'details' })
+
+  const catalogKinds = kindsQuery.data ?? []
+  const selectedKind = catalogKinds.find((kind) =>
+    selectedType === 'custom'
+      ? kind.type === 'custom' && kind.custom_kind_id === customKindId
+      : kind.type === selectedType
+  )
+  const selectedKindValue =
+    selectedKind?.key ??
+    (selectedType === 'custom' && customKindId
+      ? `custom:${customKindId}`
+      : selectedType)
+  const structuredFields =
+    selectedKind?.fields ?? systemKindFields[selectedType] ?? []
+  const requiredPartyRoles = selectedKind?.required_parties ?? []
+  const supportsLeaseContext =
+    selectedKind?.allowed_scopes.includes('lease') ??
+    [
+      'lease',
+      'lease_addendum',
+      'inspection_report',
+      'insurance_policy',
+    ].includes(selectedType)
 
   const selectedProperty = properties.find(
     (property) => property.id === selectedPropertyId
@@ -201,51 +419,118 @@ export function DocumentFormDrawer({
 
     return options
   }, [document, selectedProperty, selectedPropertyId])
-  const tenants = contacts.filter((contact) => contact.type === 'tenant')
-  const currentTenantMissing = Boolean(
-    document?.lease?.tenant_contact_id &&
-      !tenants.some(
-        (tenant) => tenant.id === document.lease?.tenant_contact_id
-      )
-  )
+
+  useEffect(() => {
+    if (isEditing || !selectedKind) return
+
+    const currentParties = form.getValues('parties')
+    const missingParties = selectedKind.required_parties.filter(
+      (role) => !currentParties.some((party) => party.role === role)
+    )
+    if (missingParties.length === 0) return
+
+    form.setValue(
+      'parties',
+      [
+        ...currentParties,
+        ...missingParties.map((role) => ({
+          contact_id: null,
+          role,
+          is_primary: true,
+        })),
+      ],
+      { shouldDirty: false }
+    )
+  }, [form, isEditing, selectedKind])
+
+  const mapServerErrors = (error: unknown) => {
+    if (!(error instanceof ApiError) || !error.errors) return
+    const aliases: Record<string, string> = {
+      document_kind_id: 'custom_kind_id',
+      'lease_links.0.lease_id': 'lease_id',
+      supporting_files: 'supporting_files',
+    }
+
+    Object.entries(error.errors).forEach(([serverPath, messages]) => {
+      form.setError((aliases[serverPath] ?? serverPath) as never, {
+        type: 'server',
+        message: messages[0] ?? error.message,
+      })
+    })
+  }
+
+  const handleSuccess = (savedDocument: IDocument) => {
+    toast.success(
+      isEditing
+        ? t('documents:form.updateSuccess')
+        : t('documents:form.addSuccess', { title: savedDocument.title })
+    )
+    abortController.current = null
+    setUploadProgress(0)
+    onSaved?.(savedDocument)
+    onOpenChange(false)
+  }
 
   const saveDocument = (values: TDocumentForm) => {
-    const mutationOptions = {
-      onSuccess: (savedDocument: IDocument) => {
-        toast.success(
-          isEditing ? 'Document updated.' : `${savedDocument.title} was added.`
+    const missingParty = requiredPartyRoles.find(
+      (role) =>
+        !values.parties.some(
+          (party) => party.role === role && party.contact_id !== null
         )
-        onSaved?.(savedDocument)
-        onOpenChange(false)
-      },
+    )
+    if (missingParty) {
+      form.setError('parties', {
+        type: 'required',
+        message: t('documents:validation.requiredParties'),
+      })
+      return
     }
 
     if (document) {
       updateMutation.mutate(
-        {
-          document,
-          payload: toDocumentUpdatePayload(values, document),
-        },
-        mutationOptions
+        { document, payload: toDocumentUpdatePayload(values, document) },
+        { onSuccess: handleSuccess, onError: mapServerErrors }
       )
       return
     }
 
-    createMutation.mutate(toDocumentFormData(values), mutationOptions)
+    const controller = new AbortController()
+    abortController.current = controller
+    setUploadProgress(0)
+    createMutation.mutate(
+      {
+        payload: toDocumentFormData(values),
+        signal: controller.signal,
+        onProgress: setUploadProgress,
+      },
+      {
+        onSuccess: handleSuccess,
+        onError: (error) => {
+          abortController.current = null
+          mapServerErrors(error)
+        },
+      }
+    )
   }
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
-    if (!isContextLocked) {
-      void form.handleSubmit(saveDocument)(event)
-      return
-    }
+    void form.handleSubmit(saveDocument)(event)
+  }
 
-    event.preventDefault()
-    void form
-      .trigger(['title', 'purpose', 'description'], { shouldFocus: true })
-      .then((isValid) => {
-        if (isValid) saveDocument(form.getValues())
-      })
+  const cancelUpload = () => {
+    abortController.current?.abort()
+    abortController.current = null
+    createMutation.reset()
+    setUploadProgress(0)
+    toast.info(t('documents:form.uploadCancelled'))
+  }
+
+  const setDetail = (key: string, value: unknown) => {
+    form.setValue(
+      'details',
+      { ...details, [key]: value } as TDocumentForm['details'],
+      { shouldDirty: true, shouldValidate: true }
+    )
   }
 
   return (
@@ -256,18 +541,24 @@ export function DocumentFormDrawer({
       }}
       direction={isMobile ? 'bottom' : 'right'}
     >
-      <DrawerContent className='w-full p-0 data-[vaul-drawer-direction=bottom]:h-[94svh] data-[vaul-drawer-direction=bottom]:!max-h-[94svh] data-[vaul-drawer-direction=right]:w-160'>
+      <DrawerContent className='w-full p-0 data-[vaul-drawer-direction=bottom]:h-[94svh] data-[vaul-drawer-direction=bottom]:!max-h-[94svh] data-[vaul-drawer-direction=right]:w-[min(46rem,100vw)]'>
         <Form {...form}>
-          <form onSubmit={submit} className='flex h-full flex-col'>
+          <form onSubmit={submit} className='flex h-full min-h-0 flex-col'>
             <DrawerHeader className='flex-row items-start gap-3 px-4 py-4 text-left sm:px-6 sm:py-5'>
               <div className='min-w-0 flex-1 space-y-1'>
                 <DrawerTitle>
-                  {isEditing ? 'Edit document' : 'Add document'}
+                  {t(
+                    isEditing
+                      ? 'documents:form.editTitle'
+                      : 'documents:form.addTitle'
+                  )}
                 </DrawerTitle>
                 <DrawerDescription>
-                  {isEditing
-                    ? 'Update how this document is described and where it is used.'
-                    : 'Upload a file and record exactly what it is used for.'}
+                  {t(
+                    isEditing
+                      ? 'documents:form.editDescription'
+                      : 'documents:form.addDescription'
+                  )}
                 </DrawerDescription>
               </div>
               <DrawerClose asChild>
@@ -279,28 +570,26 @@ export function DocumentFormDrawer({
                   className='shrink-0'
                 >
                   <X />
-                  <span className='sr-only'>Close</span>
+                  <span className='sr-only'>{t('documents:form.close')}</span>
                 </Button>
               </DrawerClose>
             </DrawerHeader>
 
-            <div className='flex-1 overflow-y-auto px-4 py-5 sm:px-6'>
+            <div className='min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6'>
               <div className='space-y-5'>
                 {isContextLocked ? (
                   <Alert>
                     <LockKeyhole />
-                    <AlertTitle>Signed agreement details are locked</AlertTitle>
+                    <AlertTitle>{t('documents:form.lockedTitle')}</AlertTitle>
                     <AlertDescription>
-                      You can still edit the title, purpose, and description.
-                      Remove the signed status before changing its property,
-                      unit, tenant, or lease terms.
+                      {t('documents:form.lockedDescription')}
                     </AlertDescription>
                   </Alert>
                 ) : null}
 
                 <FormSection
-                  title='Document details'
-                  description='Give the file a clear name and explain why the organization keeps it.'
+                  title={t('documents:form.detailsTitle')}
+                  description={t('documents:form.detailsDescription')}
                 >
                   <div className='grid gap-5 sm:grid-cols-2'>
                     <FormField
@@ -308,46 +597,86 @@ export function DocumentFormDrawer({
                       name='type'
                       render={({ field }) => (
                         <FormItem className='sm:col-span-2'>
-                          <FormLabel>Document type</FormLabel>
+                          <FormLabel>{t('documents:form.kind')}</FormLabel>
                           <Select
-                            value={field.value}
-                            disabled={isEditing || isSaving}
+                            value={selectedKindValue}
+                            disabled={
+                              isEditing || isSaving || kindsQuery.isLoading
+                            }
                             onValueChange={(value) => {
-                              const nextType = value as DocumentType
+                              const kind = catalogKinds.find(
+                                (item) => item.key === value
+                              )
+                              const nextType =
+                                kind?.type ?? (value as DocumentType)
                               field.onChange(nextType)
-                              if (nextType === 'lease') {
-                                form.setValue('requires_signature', true, {
-                                  shouldDirty: true,
-                                  shouldValidate: true,
-                                })
-                              }
+                              form.setValue(
+                                'custom_kind_id',
+                                kind?.custom_kind_id ?? null,
+                                { shouldDirty: true, shouldValidate: true }
+                              )
+                              form.setValue(
+                                'requires_signature',
+                                nextType === 'lease' ||
+                                  Boolean(kind?.default_requires_signature),
+                                { shouldDirty: true, shouldValidate: true }
+                              )
                             }}
                           >
                             <FormControl>
                               <SelectTrigger className='w-full'>
-                                <SelectValue placeholder='Select a document type' />
+                                <SelectValue
+                                  placeholder={t(
+                                    'documents:form.kindPlaceholder'
+                                  )}
+                                />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {DOCUMENT_TYPE_OPTIONS.map((option) => (
-                                <SelectItem
-                                  key={option.value}
-                                  value={option.value}
-                                  textValue={option.label}
-                                >
-                                  <span className='flex flex-col items-start'>
-                                    <span>{option.label}</span>
-                                    <span className='text-xs text-muted-foreground'>
-                                      {option.description}
+                              {(catalogKinds.length
+                                ? catalogKinds
+                                : DOCUMENT_TYPE_OPTIONS
+                              ).map((kind) => {
+                                const isCatalogKind = 'key' in kind
+                                const value = isCatalogKind
+                                  ? kind.key
+                                  : kind.value
+                                const type = isCatalogKind
+                                  ? kind.type
+                                  : kind.value
+                                const label = isCatalogKind
+                                  ? kind.label
+                                  : t(
+                                      `documents:kinds.${DOCUMENT_KIND_I18N_KEYS[type]}.label`
+                                    )
+                                const description = isCatalogKind
+                                  ? ''
+                                  : t(
+                                      `documents:kinds.${DOCUMENT_KIND_I18N_KEYS[type]}.description`
+                                    )
+
+                                return (
+                                  <SelectItem
+                                    key={value}
+                                    value={value}
+                                    textValue={label}
+                                  >
+                                    <span className='flex flex-col items-start'>
+                                      <span>{label}</span>
+                                      {description ? (
+                                        <span className='text-xs text-muted-foreground'>
+                                          {description}
+                                        </span>
+                                      ) : null}
                                     </span>
-                                  </span>
-                                </SelectItem>
-                              ))}
+                                  </SelectItem>
+                                )
+                              })}
                             </SelectContent>
                           </Select>
                           {isEditing ? (
                             <FormDescription>
-                              The document type cannot be changed after upload.
+                              {t('documents:form.kindLocked')}
                             </FormDescription>
                           ) : null}
                           <FormMessage />
@@ -360,65 +689,112 @@ export function DocumentFormDrawer({
                       name='title'
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Title</FormLabel>
+                          <FormLabel>{t('common:fields.title')}</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder='e.g. Lease — Apartment 4B'
-                              disabled={isSaving}
                               {...field}
+                              placeholder={t('documents:form.titlePlaceholder')}
+                              disabled={isSaving}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name='purpose'
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Used for</FormLabel>
+                          <FormLabel>{t('documents:form.purpose')}</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder='e.g. Current residential tenancy'
-                              disabled={isSaving}
                               {...field}
+                              placeholder={t(
+                                'documents:form.purposePlaceholder'
+                              )}
+                              disabled={isSaving}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name='description'
                       render={({ field }) => (
                         <FormItem className='sm:col-span-2'>
-                          <FormLabel>Description</FormLabel>
+                          <FormLabel>
+                            {t('common:fields.description')}
+                          </FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder='Optional internal context or notes about this file.'
-                              rows={3}
-                              disabled={isSaving}
                               {...field}
+                              rows={3}
+                              placeholder={t(
+                                'documents:form.descriptionPlaceholder'
+                              )}
+                              disabled={isSaving}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name='reference_number'
+                      render={({ field }) => (
+                        <FormItem className='sm:col-span-2'>
+                          <FormLabel>
+                            {t('documents:form.referenceNumber')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input {...field} disabled={isSaving} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {(
+                      [
+                        ['issued_on', 'issuedOn'],
+                        ['effective_on', 'effectiveOn'],
+                        ['expires_on', 'expiresOn'],
+                      ] as const
+                    ).map(([name, label]) => (
+                      <FormField
+                        key={name}
+                        control={form.control}
+                        name={name}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              {t(`documents:form.${label}`)}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type='date'
+                                {...field}
+                                disabled={isSaving}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
                   </div>
                 </FormSection>
 
                 <FormSection
-                  title='Used for'
-                  description={
-                    selectedType === 'lease'
-                      ? 'Connect the agreement to the property and unit it governs.'
-                      : 'Optionally connect the file to a property or unit. Leave both empty for organization-wide safekeeping.'
-                  }
+                  title={t('documents:form.contextTitle')}
+                  description={t(
+                    supportsLeaseContext
+                      ? 'documents:form.contextLease'
+                      : 'documents:form.contextGeneric'
+                  )}
                 >
                   <div className='grid gap-5 sm:grid-cols-2'>
                     <FormField
@@ -426,53 +802,38 @@ export function DocumentFormDrawer({
                       name='property_id'
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Property</FormLabel>
+                          <FormLabel>{t('common:fields.property')}</FormLabel>
                           <Select
-                            value={field.value ? String(field.value) : NONE_VALUE}
+                            value={
+                              field.value ? String(field.value) : NONE_VALUE
+                            }
                             disabled={
                               isSaving || isContextLocked || isLoadingProperties
                             }
                             onValueChange={(value) => {
-                              const nextPropertyId =
+                              const propertyId =
                                 value === NONE_VALUE ? null : Number(value)
-                              field.onChange(nextPropertyId)
-
-                              const currentUnitId = form.getValues('unit_id')
-                              const unitBelongsToProperty = properties
-                                .find(
-                                  (property) =>
-                                    property.id === nextPropertyId
-                                )
-                                ?.units?.some(
-                                  (unit) => unit.id === currentUnitId
-                                )
-
-                              if (!unitBelongsToProperty) {
-                                form.setValue('unit_id', null, {
-                                  shouldDirty: true,
-                                  shouldValidate: true,
-                                })
-                              }
+                              field.onChange(propertyId)
+                              const unitId = form.getValues('unit_id')
+                              const belongs = properties
+                                .find((item) => item.id === propertyId)
+                                ?.units?.some((unit) => unit.id === unitId)
+                              if (!belongs) form.setValue('unit_id', null)
                             }}
                           >
                             <FormControl>
                               <SelectTrigger className='w-full'>
-                                <SelectValue placeholder='Select a property' />
+                                <SelectValue
+                                  placeholder={t(
+                                    'documents:form.propertyPlaceholder'
+                                  )}
+                                />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value={NONE_VALUE}>
-                                Organization only
+                                {t('documents:form.organizationOnly')}
                               </SelectItem>
-                              {document?.property &&
-                              !properties.some(
-                                (property) =>
-                                  property.id === document.property?.id
-                              ) ? (
-                                <SelectItem value={String(document.property.id)}>
-                                  {document.property.title}
-                                </SelectItem>
-                              ) : null}
                               {properties.map((property) => (
                                 <SelectItem
                                   key={property.id}
@@ -487,15 +848,16 @@ export function DocumentFormDrawer({
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name='unit_id'
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Unit</FormLabel>
+                          <FormLabel>{t('common:fields.unit')}</FormLabel>
                           <Select
-                            value={field.value ? String(field.value) : NONE_VALUE}
+                            value={
+                              field.value ? String(field.value) : NONE_VALUE
+                            }
                             disabled={
                               isSaving ||
                               isContextLocked ||
@@ -511,17 +873,17 @@ export function DocumentFormDrawer({
                             <FormControl>
                               <SelectTrigger className='w-full'>
                                 <SelectValue
-                                  placeholder={
+                                  placeholder={t(
                                     selectedPropertyId
-                                      ? 'Select a unit'
-                                      : 'Select a property first'
-                                  }
+                                      ? 'documents:form.unitPlaceholder'
+                                      : 'documents:form.propertyFirst'
+                                  )}
                                 />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value={NONE_VALUE}>
-                                No specific unit
+                                {t('documents:form.noSpecificUnit')}
                               </SelectItem>
                               {units.map((unit) => (
                                 <SelectItem
@@ -537,29 +899,23 @@ export function DocumentFormDrawer({
                         </FormItem>
                       )}
                     />
-                  </div>
-                </FormSection>
-
-                {selectedType === 'lease' ? (
-                  <FormSection
-                    title='Lease terms'
-                    description='Record the tenant, agreement period, and financial terms alongside the uploaded lease.'
-                  >
-                    <div className='grid gap-5 sm:grid-cols-2'>
+                    {supportsLeaseContext ? (
                       <FormField
                         control={form.control}
-                        name='lease.tenant_contact_id'
+                        name='lease_id'
                         render={({ field }) => (
                           <FormItem className='sm:col-span-2'>
-                            <FormLabel>Tenant</FormLabel>
+                            <FormLabel>
+                              {t('documents:form.linkedLease')}
+                            </FormLabel>
                             <Select
                               value={
-                                field.value
-                                  ? String(field.value)
-                                  : NONE_VALUE
+                                field.value ? String(field.value) : NONE_VALUE
                               }
                               disabled={
-                                isSaving || isContextLocked || isLoadingContacts
+                                isSaving ||
+                                isContextLocked ||
+                                leasesQuery.isLoading
                               }
                               onValueChange={(value) =>
                                 field.onChange(
@@ -569,174 +925,356 @@ export function DocumentFormDrawer({
                             >
                               <FormControl>
                                 <SelectTrigger className='w-full'>
-                                  <SelectValue placeholder='Select a tenant' />
+                                  <SelectValue
+                                    placeholder={t(
+                                      'documents:form.linkedLeasePlaceholder'
+                                    )}
+                                  />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
                                 <SelectItem value={NONE_VALUE}>
-                                  Select a tenant
+                                  {t('common:optional')}
                                 </SelectItem>
-                                {currentTenantMissing &&
-                                document?.lease?.tenant_contact_id ? (
-                                  <SelectItem
-                                    value={String(
-                                      document.lease.tenant_contact_id
-                                    )}
-                                  >
-                                    {document.lease.tenant.name}
-                                  </SelectItem>
-                                ) : null}
-                                {tenants.map((tenant) => (
-                                  <SelectItem
-                                    key={tenant.id}
-                                    value={String(tenant.id)}
-                                  >
-                                    {tenant.name}
-                                  </SelectItem>
-                                ))}
+                                {(leasesQuery.data?.items ?? []).map(
+                                  (lease) => (
+                                    <SelectItem
+                                      key={lease.id}
+                                      value={String(lease.id)}
+                                    >
+                                      {lease.title || `#${lease.id}`}
+                                    </SelectItem>
+                                  )
+                                )}
                               </SelectContent>
                             </Select>
-                            {tenants.length === 0 && !isLoadingContacts ? (
-                              <FormDescription>
-                                Add a tenant contact before creating a lease.
-                              </FormDescription>
-                            ) : null}
-                            {document?.lease &&
-                            !document.lease.tenant_contact_id ? (
-                              <FormDescription>
-                                Original tenant: {document.lease.tenant.name}
-                              </FormDescription>
-                            ) : null}
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                    ) : null}
+                  </div>
+                </FormSection>
 
-                      <FormField
-                        control={form.control}
-                        name='lease.starts_on'
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Starts on</FormLabel>
-                            <FormControl>
-                              <Input
-                                type='date'
-                                disabled={isSaving || isContextLocked}
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                <FormSection
+                  title={t('documents:form.partiesTitle')}
+                  description={t('documents:form.partiesDescription')}
+                >
+                  <div className='space-y-3'>
+                    {partyFields.length === 0 ? (
+                      <p className='text-sm text-muted-foreground'>
+                        {t('documents:form.noParties')}
+                      </p>
+                    ) : null}
+                    {partyFields.map((partyField, index) => {
+                      const role =
+                        selectedParties[index]?.role ?? partyField.role
+                      const isRequired = requiredPartyRoles.includes(role)
 
-                      <FormField
-                        control={form.control}
-                        name='lease.ends_on'
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Ends on</FormLabel>
-                            <FormControl>
-                              <Input
-                                type='date'
-                                disabled={isSaving || isContextLocked}
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      return (
+                        <div
+                          key={partyField.id}
+                          className='grid gap-3 rounded-lg border p-3 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_auto] sm:items-end'
+                        >
+                          <FormField
+                            control={form.control}
+                            name={`parties.${index}.role`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  {t('documents:form.partyRole')}
+                                </FormLabel>
+                                <Select
+                                  value={field.value}
+                                  disabled={
+                                    isSaving || isContextLocked || isRequired
+                                  }
+                                  onValueChange={field.onChange}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className='w-full'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {documentPartyRoleValues.map(
+                                      (partyRole) => (
+                                        <SelectItem
+                                          key={partyRole}
+                                          value={partyRole}
+                                        >
+                                          {t(
+                                            `documents:parties.roles.${partyRole}`,
+                                            {
+                                              defaultValue: partyRole.replace(
+                                                /_/g,
+                                                ' '
+                                              ),
+                                            }
+                                          )}
+                                        </SelectItem>
+                                      )
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                                {isRequired ? (
+                                  <FormDescription>
+                                    {t('documents:form.requiredParty')}
+                                  </FormDescription>
+                                ) : null}
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
-                      <FormField
-                        control={form.control}
-                        name='lease.rent_amount'
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Rent amount</FormLabel>
-                            <FormControl>
-                              <Input
-                                type='number'
-                                min='0'
-                                step='0.01'
-                                inputMode='decimal'
-                                placeholder='0.00'
+                          <FormField
+                            control={form.control}
+                            name={`parties.${index}.contact_id`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>
+                                  {t('documents:form.partyContact')}
+                                </FormLabel>
+                                <Select
+                                  value={
+                                    field.value
+                                      ? String(field.value)
+                                      : NONE_VALUE
+                                  }
+                                  disabled={
+                                    isSaving ||
+                                    isContextLocked ||
+                                    isLoadingContacts
+                                  }
+                                  onValueChange={(value) =>
+                                    field.onChange(
+                                      value === NONE_VALUE
+                                        ? null
+                                        : Number(value)
+                                    )
+                                  }
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className='w-full'>
+                                      <SelectValue
+                                        placeholder={t(
+                                          'documents:form.partyContactPlaceholder'
+                                        )}
+                                      />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value={NONE_VALUE}>
+                                      {t(
+                                        'documents:form.partyContactPlaceholder'
+                                      )}
+                                    </SelectItem>
+                                    {contacts.map((contact) => (
+                                      <SelectItem
+                                        key={contact.id}
+                                        value={String(contact.id)}
+                                      >
+                                        {contact.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <Button
+                            type='button'
+                            size='icon'
+                            variant='ghost'
+                            disabled={isSaving || isContextLocked || isRequired}
+                            aria-label={t('documents:form.removeParty')}
+                            onClick={() => removeParty(index)}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </div>
+                      )
+                    })}
+
+                    <FormField
+                      control={form.control}
+                      name='parties'
+                      render={() => (
+                        <FormItem>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
+                      disabled={isSaving || isContextLocked}
+                      onClick={() =>
+                        appendParty({
+                          contact_id: null,
+                          role: 'other',
+                          is_primary: false,
+                        })
+                      }
+                    >
+                      <Plus />
+                      {t('documents:form.addParty')}
+                    </Button>
+                  </div>
+                </FormSection>
+
+                {structuredFields.length ? (
+                  <FormSection
+                    title={t('documents:form.typeDetailsTitle')}
+                    description={t('documents:form.typeDetailsDescription')}
+                  >
+                    <div className='grid gap-5 sm:grid-cols-2'>
+                      {structuredFields.map((definition) => {
+                        const key =
+                          definition.key as keyof TDocumentForm['details']
+                        const value = details[key]
+                        const label =
+                          definition.label ??
+                          t(
+                            `documents:form.${detailLabelKeys[definition.key] ?? definition.key}`
+                          )
+
+                        if (definition.type === 'boolean') {
+                          return (
+                            <div
+                              key={definition.key}
+                              className='flex items-center justify-between gap-4 rounded-lg border px-4 py-3 sm:col-span-2'
+                            >
+                              <Label>{label}</Label>
+                              <Switch
+                                checked={Boolean(value)}
                                 disabled={isSaving || isContextLocked}
-                                value={field.value ?? ''}
-                                onBlur={field.onBlur}
-                                name={field.name}
-                                ref={field.ref}
-                                onChange={(event) =>
-                                  field.onChange(
-                                    event.target.value === ''
-                                      ? null
-                                      : Number(event.target.value)
-                                  )
+                                onCheckedChange={(checked) =>
+                                  setDetail(definition.key, checked)
                                 }
                               />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                            </div>
+                          )
+                        }
 
-                      <FormField
-                        control={form.control}
-                        name='lease.security_deposit'
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Security deposit</FormLabel>
-                            <FormControl>
-                              <Input
-                                type='number'
-                                min='0'
-                                step='0.01'
-                                inputMode='decimal'
-                                placeholder='Optional'
+                        if (definition.type === 'select') {
+                          return (
+                            <div key={definition.key} className='space-y-2'>
+                              <Label>{label}</Label>
+                              <Select
+                                value={
+                                  typeof value === 'string' && value
+                                    ? value
+                                    : NONE_VALUE
+                                }
                                 disabled={isSaving || isContextLocked}
-                                value={field.value ?? ''}
-                                onBlur={field.onBlur}
-                                name={field.name}
-                                ref={field.ref}
-                                onChange={(event) =>
-                                  field.onChange(
-                                    event.target.value === ''
-                                      ? null
-                                      : Number(event.target.value)
+                                onValueChange={(next) =>
+                                  setDetail(
+                                    definition.key,
+                                    next === NONE_VALUE ? null : next
                                   )
                                 }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                              >
+                                <SelectTrigger className='w-full'>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value={NONE_VALUE}>
+                                    {t('common:optional')}
+                                  </SelectItem>
+                                  {(definition.options ?? []).map((item) => {
+                                    const option = normalizeOption(item)
+                                    return (
+                                      <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                      >
+                                        {t(
+                                          `documents:form.option_${option.value}`,
+                                          {
+                                            defaultValue: option.label.replace(
+                                              /_/g,
+                                              ' '
+                                            ),
+                                          }
+                                        )}
+                                      </SelectItem>
+                                    )
+                                  })}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )
+                        }
 
-                      <FormField
-                        control={form.control}
-                        name='lease.notes'
-                        render={({ field }) => (
-                          <FormItem className='sm:col-span-2'>
-                            <FormLabel>Lease notes</FormLabel>
-                            <FormControl>
+                        const isNumeric = ['number', 'decimal'].includes(
+                          definition.type
+                        )
+
+                        return (
+                          <div
+                            key={definition.key}
+                            className={
+                              definition.type === 'textarea'
+                                ? 'space-y-2 sm:col-span-2'
+                                : 'space-y-2'
+                            }
+                          >
+                            <Label>{label}</Label>
+                            {definition.type === 'textarea' ? (
                               <Textarea
-                                rows={3}
-                                placeholder='Optional renewal, payment, or tenancy notes.'
                                 disabled={isSaving || isContextLocked}
-                                {...field}
+                                value={typeof value === 'string' ? value : ''}
+                                rows={3}
+                                onChange={(event) =>
+                                  setDetail(definition.key, event.target.value)
+                                }
                               />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                            ) : (
+                              <Input
+                                disabled={isSaving || isContextLocked}
+                                value={
+                                  typeof value === 'string' ||
+                                  typeof value === 'number'
+                                    ? value
+                                    : ''
+                                }
+                                type={
+                                  definition.type === 'date'
+                                    ? 'date'
+                                    : isNumeric
+                                      ? 'number'
+                                      : 'text'
+                                }
+                                min={isNumeric ? '0' : undefined}
+                                step={isNumeric ? '0.01' : undefined}
+                                inputMode={isNumeric ? 'decimal' : undefined}
+                                onChange={(event) =>
+                                  setDetail(
+                                    definition.key,
+                                    isNumeric
+                                      ? event.target.value === ''
+                                        ? null
+                                        : Number(event.target.value)
+                                      : event.target.value
+                                  )
+                                }
+                              />
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   </FormSection>
                 ) : null}
 
                 <FormSection
-                  title='File and signature'
-                  description='Keep the original file private and record whether a separate signed copy is required.'
+                  title={t('documents:form.filesTitle')}
+                  description={t('documents:form.filesDescription')}
                 >
                   <div className='space-y-5'>
                     <FormField
@@ -747,20 +1285,31 @@ export function DocumentFormDrawer({
                           ref={field.ref}
                           value={field.value}
                           onChange={field.onChange}
-                          label='Original document'
+                          label={t('documents:form.primaryFile')}
                           accept={DOCUMENT_ACCEPT}
                           required={!isEditing}
                           disabled={isEditing || isSaving}
                           currentFile={document?.files.original ?? null}
-                          description={
-                            isEditing
-                              ? 'The original file is preserved and cannot be replaced while editing this record.'
-                              : 'PDF, Word, spreadsheet, text, or image. Maximum 10 MB.'
-                          }
+                          description={t('documents:form.primaryDescription')}
                           error={fieldState.error?.message}
                         />
                       )}
                     />
+
+                    {!isEditing ? (
+                      <FormField
+                        control={form.control}
+                        name='supporting_files'
+                        render={({ field, fieldState }) => (
+                          <DocumentSupportingFilesField
+                            value={field.value}
+                            onChange={field.onChange}
+                            disabled={isSaving}
+                            error={fieldState.error?.message}
+                          />
+                        )}
+                      />
+                    ) : null}
 
                     <FormField
                       control={form.control}
@@ -769,12 +1318,10 @@ export function DocumentFormDrawer({
                         <FormItem className='flex items-start justify-between gap-4 rounded-lg border px-4 py-3'>
                           <div className='space-y-1'>
                             <FormLabel className='cursor-pointer'>
-                              Requires signature
+                              {t('documents:form.requiresSignature')}
                             </FormLabel>
                             <FormDescription>
-                              {selectedType === 'lease'
-                                ? 'Leases always require a signature record.'
-                                : 'Track whether a separate signed copy has been received.'}
+                              {t('documents:form.requiresSignatureDescription')}
                             </FormDescription>
                             <FormMessage />
                           </div>
@@ -789,13 +1336,9 @@ export function DocumentFormDrawer({
                               onCheckedChange={(checked) => {
                                 field.onChange(checked)
                                 if (!checked) {
-                                  form.setValue('is_signed', false, {
-                                    shouldDirty: true,
-                                  })
-                                  form.setValue('signed_file', null, {
-                                    shouldDirty: true,
-                                    shouldValidate: true,
-                                  })
+                                  form.setValue('is_signed', false)
+                                  form.setValue('signed_file', null)
+                                  form.setValue('signer_contact_ids', [])
                                 }
                               }}
                             />
@@ -805,6 +1348,61 @@ export function DocumentFormDrawer({
                     />
 
                     {!isEditing && requiresSignature ? (
+                      <div className='space-y-3'>
+                        <Label>{t('documents:form.requiredSigners')}</Label>
+                        <div className='max-h-48 divide-y overflow-y-auto rounded-lg border'>
+                          {isLoadingContacts ? (
+                            <p className='p-4 text-sm text-muted-foreground'>
+                              {t('documents:form.loadingContacts')}
+                            </p>
+                          ) : contacts.length ? (
+                            contacts.map((contact) => {
+                              const selected = selectedSignerIds.includes(
+                                contact.id
+                              )
+                              return (
+                                <Label
+                                  key={contact.id}
+                                  className='flex min-h-11 cursor-pointer items-center gap-3 px-3 py-2 hover:bg-muted/40'
+                                >
+                                  <Checkbox
+                                    checked={selected}
+                                    disabled={isSaving}
+                                    onCheckedChange={(checked) =>
+                                      form.setValue(
+                                        'signer_contact_ids',
+                                        checked
+                                          ? [...selectedSignerIds, contact.id]
+                                          : selectedSignerIds.filter(
+                                              (id) => id !== contact.id
+                                            ),
+                                        { shouldDirty: true }
+                                      )
+                                    }
+                                  />
+                                  <span className='min-w-0'>
+                                    <span className='block truncate text-sm font-medium'>
+                                      {contact.name}
+                                    </span>
+                                    {contact.email ? (
+                                      <span className='block truncate text-xs text-muted-foreground'>
+                                        {contact.email}
+                                      </span>
+                                    ) : null}
+                                  </span>
+                                </Label>
+                              )
+                            })
+                          ) : (
+                            <p className='p-4 text-sm text-muted-foreground'>
+                              {t('documents:form.noContacts')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {!isEditing && requiresSignature ? (
                       <FormField
                         control={form.control}
                         name='is_signed'
@@ -812,11 +1410,10 @@ export function DocumentFormDrawer({
                           <FormItem className='flex items-start justify-between gap-4 rounded-lg border px-4 py-3'>
                             <div className='space-y-1'>
                               <FormLabel className='cursor-pointer'>
-                                Already signed
+                                {t('documents:form.alreadySigned')}
                               </FormLabel>
                               <FormDescription>
-                                Turn this on only when you can upload the signed
-                                copy now.
+                                {t('documents:form.alreadySignedDescription')}
                               </FormDescription>
                               <FormMessage />
                             </div>
@@ -826,12 +1423,8 @@ export function DocumentFormDrawer({
                                 disabled={isSaving}
                                 onCheckedChange={(checked) => {
                                   field.onChange(checked)
-                                  if (!checked) {
-                                    form.setValue('signed_file', null, {
-                                      shouldDirty: true,
-                                      shouldValidate: true,
-                                    })
-                                  }
+                                  if (!checked)
+                                    form.setValue('signed_file', null)
                                 }}
                               />
                             </FormControl>
@@ -849,44 +1442,55 @@ export function DocumentFormDrawer({
                             ref={field.ref}
                             value={field.value}
                             onChange={field.onChange}
-                            label='Signed copy'
+                            label={t('documents:form.signedFile')}
                             accept={SIGNED_DOCUMENT_ACCEPT}
                             required
                             disabled={isSaving}
-                            description='Upload the completed signed copy separately from the original.'
+                            description={t('documents:form.signedDescription')}
                             error={fieldState.error?.message}
                           />
                         )}
                       />
                     ) : null}
 
-                    {isEditing ? (
-                      <Alert>
-                        <FileLock2 />
-                        <AlertTitle>Files are managed separately</AlertTitle>
-                        <AlertDescription>
-                          The original stays unchanged. Use the document actions
-                          to add or remove its signed copy.
-                        </AlertDescription>
-                      </Alert>
+                    {createMutation.isPending ? (
+                      <div className='space-y-2 rounded-lg border bg-muted/30 p-3'>
+                        <div className='flex items-center justify-between gap-3 text-sm'>
+                          <span>
+                            {t('documents:form.uploadProgress', {
+                              progress: uploadProgress,
+                            })}
+                          </span>
+                          <span className='tabular-nums'>
+                            {uploadProgress}%
+                          </span>
+                        </div>
+                        <Progress value={uploadProgress} />
+                      </div>
                     ) : null}
                   </div>
                 </FormSection>
               </div>
             </div>
 
-            <DrawerFooter className='flex-row justify-end gap-2 p-4 sm:p-6'>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() => onOpenChange(false)}
-                disabled={isSaving}
-              >
-                Cancel
-              </Button>
+            <DrawerFooter className='flex-row justify-end gap-2 border-t p-4 sm:p-6'>
+              {createMutation.isPending ? (
+                <Button type='button' variant='outline' onClick={cancelUpload}>
+                  {t('documents:form.cancelUpload')}
+                </Button>
+              ) : (
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSaving}
+                >
+                  {t('common:actions.cancel')}
+                </Button>
+              )}
               <Button type='submit' disabled={isSaving}>
-                {isSaving && <Loader2 className='animate-spin' />}
-                {isEditing ? 'Save changes' : 'Add document'}
+                {isSaving ? <Loader2 className='animate-spin' /> : null}
+                {t(isEditing ? 'common:actions.save' : 'documents:page.add')}
               </Button>
             </DrawerFooter>
           </form>

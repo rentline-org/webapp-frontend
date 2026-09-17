@@ -1,5 +1,6 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
-import { Link2Off, Pencil, Trash2 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { Eye, Link2Off, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -32,6 +33,15 @@ export function ContactRowActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='w-52'>
+        <DropdownMenuItem asChild>
+          <Link
+            to='/contacts/$contactId'
+            params={{ contactId: String(contact.id) }}
+          >
+            <Eye />
+            View details
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onEdit(contact)}>
           <Pencil />
           Edit contact

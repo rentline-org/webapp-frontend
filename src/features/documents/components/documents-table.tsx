@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type SortingState,
 } from '@tanstack/react-table'
 import { Files, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { DataTablePagination } from '@/components/data-table'
+import { useAppFormatters } from '@/i18n/use-formatters'
 import {
   Table,
   TableBody,
@@ -40,6 +40,8 @@ export function DocumentsTable({
   emptyTitle = 'No documents found',
   emptyDescription = 'Add a document or adjust your filters.',
 }: DocumentsTableProps) {
+  const { t } = useTranslation('documents')
+  const { formatDate } = useAppFormatters()
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'updated_at', desc: true },
   ])
@@ -49,8 +51,18 @@ export function DocumentsTable({
         onEdit,
         onDelete,
         onManageSignature,
+        formatDate,
+        labels: {
+          document: t('table.document'),
+          type: t('table.type'),
+          usedFor: t('table.usedFor'),
+          signature: t('table.signature'),
+          updated: t('table.updated'),
+          organizationWide: t('common:organizationWide'),
+          unit: (name) => t('table.unit', { name }),
+        },
       }),
-    [onDelete, onEdit, onManageSignature]
+    [formatDate, onDelete, onEdit, onManageSignature, t]
   )
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -61,18 +73,7 @@ export function DocumentsTable({
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: { pageIndex: 0, pageSize: 10 },
-    },
   })
-
-  useEffect(() => {
-    const lastPageIndex = Math.max(0, table.getPageCount() - 1)
-    if (table.getState().pagination.pageIndex > lastPageIndex) {
-      table.setPageIndex(lastPageIndex)
-    }
-  }, [documents.length, table])
 
   return (
     <div className='flex flex-col gap-4'>
@@ -109,7 +110,7 @@ export function DocumentsTable({
                 <TableCell colSpan={columns.length} className='h-40'>
                   <div className='flex items-center justify-center gap-2 text-sm text-muted-foreground'>
                     <Loader2 className='size-4 animate-spin' />
-                    Loading documents…
+                    {t('table.loading')}
                   </div>
                 </TableCell>
               </TableRow>
@@ -153,8 +154,6 @@ export function DocumentsTable({
           </TableBody>
         </Table>
       </div>
-
-      {documents.length > 10 && <DataTablePagination table={table} />}
     </div>
   )
 }

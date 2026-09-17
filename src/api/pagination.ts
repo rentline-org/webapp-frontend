@@ -30,6 +30,7 @@ type LaravelPaginator<TItem> = {
   per_page?: number
   to?: number | null
   total?: number
+  path?: string
   links?: IPaginationLinks | unknown[]
   meta?: Partial<IPaginationMeta> & { summary?: Record<string, number> }
   summary?: Record<string, number>

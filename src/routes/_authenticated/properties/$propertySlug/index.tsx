@@ -6,7 +6,17 @@ export const Route = createFileRoute(
   '/_authenticated/properties/$propertySlug/'
 )({
   validateSearch: z.object({
-    tab: z.enum(['overview', 'units', 'leases', 'contacts', 'accounting']).optional().catch('overview'),
+    tab: z
+      .enum([
+        'overview',
+        'units',
+        'leases',
+        'documents',
+        'contacts',
+        'accounting',
+      ])
+      .optional()
+      .catch('overview'),
   }),
   component: PropertyDetails,
 })

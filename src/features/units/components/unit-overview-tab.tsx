@@ -50,7 +50,7 @@ const UnitOverviewTab = ({
           propertyId={property.id}
           unitId={unit.id}
         />
-        <ActiveTenantsList />
+        <ActiveTenantsList propertyId={property.id} unitId={unit.id} />
 
         <Card>
           <CardContent className='space-y-4'>

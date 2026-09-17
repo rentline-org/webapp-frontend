@@ -20,9 +20,11 @@ import {
 import { handleServerError } from '@/lib/handle-server-error'
 import type {
   IDocument,
+  IDocumentAuditEvent,
   IDocumentFile,
   IDocumentFilters,
   IDocumentKind,
+  IDocumentSigner,
   IDocumentUpdatePayload,
   IDocumentUploadVariables,
   TDocumentUpdateVariables,
@@ -80,7 +82,9 @@ const createDocument = async ({
       signal,
       onUploadProgress: (event) => {
         if (!onProgress || !event.total) return
-        onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)))
+        onProgress(
+          Math.min(100, Math.round((event.loaded / event.total) * 100))
+        )
       },
     }
   )
@@ -91,6 +95,13 @@ const createDocument = async ({
 const archiveDocument = async (document: IDocument): Promise<IDocument> => {
   const response = await handlePost<IResponse<IDocument>>(
     `${DOCUMENTS_ENDPOINT}/${document.id}/archive`
+  )
+  return response.data
+}
+
+const activateDocument = async (document: IDocument): Promise<IDocument> => {
+  const response = await handlePost<IResponse<IDocument>>(
+    `${DOCUMENTS_ENDPOINT}/${document.id}/activate`
   )
   return response.data
 }
@@ -158,6 +169,16 @@ const removeSignedDocument = async (
   return response.data
 }
 
+const getDocumentAuditEvents = async (
+  documentId: number
+): Promise<IPaginatedData<IDocumentAuditEvent>> => {
+  const response = await handleGet<unknown>(
+    `${DOCUMENTS_ENDPOINT}/${documentId}/audit-events`,
+    { per_page: 100 }
+  )
+  return normalizePaginatedResponse<IDocumentAuditEvent>(response)
+}
+
 export function useGetDocuments(filters: IDocumentFilters = {}) {
   return useQuery({
     queryKey: documentListKey(filters),
@@ -178,6 +199,156 @@ export function useGetDocument(documentId: number, enabled = true) {
     queryKey: documentKey(documentId),
     queryFn: () => getDocument(documentId),
     enabled: enabled && documentId > 0,
+  })
+}
+
+export function useGetDocumentAuditEvents(documentId: number, enabled = true) {
+  return useQuery({
+    queryKey: [...documentKey(documentId), 'audit-events'],
+    queryFn: () => getDocumentAuditEvents(documentId),
+    enabled: enabled && documentId > 0,
+  })
+}
+
+export function useUpdateDocumentSigner() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: [...documentsKey, 'signer', 'update'],
+    mutationFn: async ({
+      document,
+      signer,
+      status,
+    }: {
+      document: IDocument
+      signer: IDocumentSigner
+      status: IDocumentSigner['status']
+    }) => {
+      const response = await handlePatch<
+        IResponse<IDocument>,
+        { status: IDocumentSigner['status'] }
+      >(`${DOCUMENTS_ENDPOINT}/${document.id}/signers/${signer.id}`, {
+        status,
+      })
+      return response.data
+    },
+    onSuccess: async (document) => {
+      patchDocumentCaches(queryClient, document)
+      await invalidateDocumentsQuery(queryClient)
+    },
+    onError: handleServerError,
+  })
+}
+
+export function useAddDocumentSigner() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: [...documentsKey, 'signer', 'add'],
+    mutationFn: async ({
+      document,
+      contactId,
+      role,
+    }: {
+      document: IDocument
+      contactId: number
+      role: string
+    }) => {
+      const response = await handlePost<
+        IResponse<IDocument>,
+        { contact_id: number; role: string }
+      >(`${DOCUMENTS_ENDPOINT}/${document.id}/signers`, {
+        contact_id: contactId,
+        role,
+      })
+      return response.data
+    },
+    onSuccess: async (document) => {
+      patchDocumentCaches(queryClient, document)
+      await invalidateDocumentsQuery(queryClient)
+    },
+    onError: handleServerError,
+  })
+}
+
+export function useRemoveDocumentSigner() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: [...documentsKey, 'signer', 'remove'],
+    mutationFn: async ({
+      document,
+      signer,
+    }: {
+      document: IDocument
+      signer: IDocumentSigner
+    }) => {
+      const response = await handleDelete<IResponse<IDocument>>(
+        `${DOCUMENTS_ENDPOINT}/${document.id}/signers/${signer.id}`
+      )
+      return response.data
+    },
+    onSuccess: async (document) => {
+      patchDocumentCaches(queryClient, document)
+      await invalidateDocumentsQuery(queryClient)
+    },
+    onError: handleServerError,
+  })
+}
+
+export function useGrantDocumentShare() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: [...documentsKey, 'share', 'grant'],
+    mutationFn: async ({
+      document,
+      userId,
+      contactId,
+    }: {
+      document: IDocument
+      userId: number
+      contactId: number
+    }) => {
+      const response = await handlePost<
+        IResponse<IDocument>,
+        { user_id: number; contact_id: number }
+      >(`${DOCUMENTS_ENDPOINT}/${document.id}/shares`, {
+        user_id: userId,
+        contact_id: contactId,
+      })
+      return response.data
+    },
+    onSuccess: async (document) => {
+      patchDocumentCaches(queryClient, document)
+      await invalidateDocumentsQuery(queryClient)
+    },
+    onError: handleServerError,
+  })
+}
+
+export function useRevokeDocumentShare() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: [...documentsKey, 'share', 'revoke'],
+    mutationFn: async ({
+      document,
+      shareId,
+    }: {
+      document: IDocument
+      shareId: number
+    }) => {
+      const response = await handleDelete<IResponse<IDocument>>(
+        `${DOCUMENTS_ENDPOINT}/${document.id}/shares/${shareId}`
+      )
+      return response.data
+    },
+    onSuccess: async (document) => {
+      patchDocumentCaches(queryClient, document)
+      await invalidateDocumentsQuery(queryClient)
+    },
+    onError: handleServerError,
   })
 }
 
@@ -203,6 +374,20 @@ export function useArchiveDocument() {
   return useMutation({
     mutationKey: [...documentsKey, 'archive'],
     mutationFn: archiveDocument,
+    onSuccess: async (document) => {
+      patchDocumentCaches(queryClient, document)
+      await invalidateDocumentsQuery(queryClient)
+    },
+    onError: handleServerError,
+  })
+}
+
+export function useActivateDocument() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: [...documentsKey, 'activate'],
+    mutationFn: activateDocument,
     onSuccess: async (document) => {
       patchDocumentCaches(queryClient, document)
       await invalidateDocumentsQuery(queryClient)

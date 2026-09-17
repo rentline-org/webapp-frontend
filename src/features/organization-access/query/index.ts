@@ -58,6 +58,13 @@ async function getMembers(): Promise<IOrganizationMember[]> {
   return normalizePaginatedResponse<IOrganizationMember>(response).items
 }
 
+async function getInvitations(): Promise<IOrganizationInvitation[]> {
+  const response = await handleGet<unknown>('/organization-invitations', {
+    per_page: 100,
+  })
+  return normalizePaginatedResponse<IOrganizationInvitation>(response).items
+}
+
 async function updateMember({
   memberId,
   payload,
@@ -110,6 +117,50 @@ export function useOrganizationMembers() {
   return useQuery({
     queryKey: organizationMembersKey,
     queryFn: getMembers,
+  })
+}
+
+export function useOrganizationInvitations() {
+  return useQuery({
+    queryKey: organizationInvitationsKey,
+    queryFn: getInvitations,
+  })
+}
+
+export function useResendOrganizationInvitation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: [...organizationInvitationsKey, 'resend'],
+    mutationFn: async (invitationId: number) => {
+      const response = await handlePost<IResponse<IOrganizationInvitation>>(
+        `/organization-invitations/${invitationId}/resend`
+      )
+      return response.data
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: organizationInvitationsKey,
+      })
+    },
+    onError: handleServerError,
+  })
+}
+
+export function useRevokeOrganizationInvitation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: [...organizationInvitationsKey, 'revoke'],
+    mutationFn: async (invitationId: number) => {
+      await handleDelete(`/organization-invitations/${invitationId}`)
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: organizationInvitationsKey,
+      })
+    },
+    onError: handleServerError,
   })
 }
 

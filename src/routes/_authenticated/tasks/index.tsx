@@ -1,20 +1,22 @@
-import z from 'zod'
+import { z } from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
 import { Tasks } from '@/features/tasks'
-import { priorities, statuses } from '@/features/tasks/data/data'
+import type { ActionItemType } from '@/features/operations/types'
+
+const actionItemTypes = [
+  'lease_expiry',
+  'document_expiry',
+  'pending_signature',
+  'missing_move_in_inspection',
+  'expired_insurance',
+  'expired_compliance',
+] as const satisfies readonly ActionItemType[]
 
 const taskSearchSchema = z.object({
-  page: z.number().optional().catch(1),
-  pageSize: z.number().optional().catch(10),
-  status: z
-    .array(z.enum(statuses.map((status) => status.value)))
-    .optional()
-    .catch([]),
-  priority: z
-    .array(z.enum(priorities.map((priority) => priority.value)))
-    .optional()
-    .catch([]),
-  filter: z.string().optional().catch(''),
+  status: z.enum(['open', 'completed', 'dismissed']).optional().catch('open'),
+  type: z.enum(actionItemTypes).optional().catch(undefined),
+  page: z.coerce.number().int().positive().optional().catch(1),
+  perPage: z.coerce.number().int().min(10).max(50).optional().catch(20),
 })
 
 export const Route = createFileRoute('/_authenticated/tasks/')({

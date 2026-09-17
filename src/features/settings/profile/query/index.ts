@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
 import { type QueryClient, useMutation, useQuery } from '@tanstack/react-query'
-import { handleGet, handlePost, type IResponse } from '@/api'
+import { handleGet, handlePatch, handlePost, type IResponse } from '@/api'
+import type { AppLocale } from '@/i18n'
 import { useAuthStore } from '@/stores/auth-store'
+import { handleServerError } from '@/lib/handle-server-error'
 import type {
   IUpdateProfileRequest,
   IUserProfileData,
@@ -83,6 +85,20 @@ export function useUpdateUserProfile() {
     mutationFn: async (payload: IUpdateProfileRequest) => {
       return await handleUpdateUserProfile(payload)
     },
+  })
+}
+
+export function useUpdateUserLocale() {
+  return useMutation({
+    mutationKey: [USER_PROFILE_ENDPOINT, 'locale'],
+    mutationFn: async (locale: AppLocale) => {
+      const response = await handlePatch<
+        IResponse<IUserProfileData>,
+        { locale: AppLocale }
+      >(USER_PROFILE_ENDPOINT.concat('/locale'), { locale })
+      return response.data
+    },
+    onError: handleServerError,
   })
 }
 

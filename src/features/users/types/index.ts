@@ -6,6 +6,8 @@ export interface User {
   first_name: string
   last_name: string
   name: string
+  locale?: 'en' | 'pt-BR'
+  organization_role?: 'owner' | 'admin' | 'manager' | 'agent' | 'tenant' | null
   active_organization: IActiveOrganization
 
   email: string

@@ -93,6 +93,7 @@ function translateNavTitle(
     Reports: 'reports',
     Documents: 'documents',
     Leases: 'leases',
+    Team: 'team',
     Settings: 'settings',
     'Help Center': 'helpCenter',
   }

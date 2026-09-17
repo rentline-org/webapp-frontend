@@ -18,10 +18,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { resetContactsQuery } from '@/features/contacts/query'
-import { resetDocumentsQuery } from '@/features/documents/query'
-import { invalidatePropertiesQuery } from '@/features/properties/query'
-import { invalidateUserProfile } from '@/features/settings/profile/query'
 import type { IUserProfileData } from '@/features/settings/profile/types'
 import type { IOrganizationData } from '../types'
 import { useHandleSelectOrganization } from './query'
@@ -54,16 +50,13 @@ export function OrgSwitcher({ userProfile, isLoading, isFetching }: Props) {
   const handleSelectOrg = (org: IOrganizationData) => {
     mutate(org.id, {
       async onSuccess() {
+        // Every organization-scoped query must be refreshed together so data
+        // from the previous organization can never remain visible.
+        await queryClient.resetQueries()
+
         navigate({
           to: '/',
         })
-
-        await Promise.all([
-          invalidateUserProfile(queryClient),
-          invalidatePropertiesQuery(queryClient),
-          resetContactsQuery(queryClient),
-          resetDocumentsQuery(queryClient),
-        ])
 
         toast.info(`Using organization: ${org.title}`)
       },

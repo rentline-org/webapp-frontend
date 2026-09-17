@@ -43,7 +43,9 @@ const PropertyOverviewTab = ({ property }: Props) => {
         ) : (
           <PropertyGallery property={property} title={"Apartment Complex gallery"} />
         )}
-        {isSingleUnit && <ActiveTenantsList />}
+        {isSingleUnit && (
+          <ActiveTenantsList propertyId={property.id} unitId={unit?.id} />
+        )}
 
         <Card>
           <CardContent className='space-y-4'>

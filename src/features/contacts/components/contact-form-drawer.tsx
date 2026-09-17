@@ -53,6 +53,10 @@ const getDefaultValues = (
 ): TContactForm => ({
   name: contact?.name ?? '',
   type: contact?.type ?? 'tenant',
+  identity_kind: contact?.identity_kind ?? 'person',
+  preferred_locale: contact?.preferred_locale ?? 'en',
+  tax_id_type: contact?.tax_id_type ?? null,
+  tax_id: '',
   email: contact?.email ?? '',
   phone: contact?.phone ?? '',
   property_ids: contact?.property_ids ?? initialPropertyIds,
@@ -87,9 +91,14 @@ export function ContactFormDrawer({
 
   const selectedPropertyIds =
     useWatch({ control: form.control, name: 'property_ids' }) ?? []
+  const identityKind = useWatch({
+    control: form.control,
+    name: 'identity_kind',
+  })
+  const taxIdType = useWatch({ control: form.control, name: 'tax_id_type' })
 
   const submit = form.handleSubmit((values) => {
-    const payload = toContactPayload(values)
+    const payload = toContactPayload(values, contact)
     const mutationOptions = {
       onSuccess: (savedContact: IContact) => {
         toast.success(
@@ -125,7 +134,7 @@ export function ContactFormDrawer({
                   {isEditing ? 'Edit contact' : 'Add contact'}
                 </DrawerTitle>
                 <DrawerDescription>
-                  Save contact details and connect this person to properties.
+                  Save an individual or company and connect it to properties.
                 </DrawerDescription>
               </div>
               <DrawerClose asChild>
@@ -147,14 +156,80 @@ export function ContactFormDrawer({
                 <div className='grid gap-5 sm:grid-cols-2'>
                   <FormField
                     control={form.control}
+                    name='identity_kind'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Identity</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={(value) => {
+                            field.onChange(value)
+                            if (!form.getValues('tax_id')) {
+                              form.setValue(
+                                'tax_id_type',
+                                value === 'company' ? 'cnpj' : 'cpf'
+                              )
+                            }
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger className='w-full'>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value='person'>Person</SelectItem>
+                            <SelectItem value='company'>Company</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='preferred_locale'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Preferred language</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger className='w-full'>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value='en'>English</SelectItem>
+                            <SelectItem value='pt-BR'>Português (Brasil)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name='name'
                     render={({ field }) => (
                       <FormItem className='sm:col-span-2'>
                         <FormLabel>Name</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder='Full name'
-                            autoComplete='name'
+                            placeholder={
+                              identityKind === 'company'
+                                ? 'Legal or trading name'
+                                : 'Full name'
+                            }
+                            autoComplete={
+                              identityKind === 'company'
+                                ? 'organization'
+                                : 'name'
+                            }
                             {...field}
                           />
                         </FormControl>
@@ -168,7 +243,7 @@ export function ContactFormDrawer({
                     name='type'
                     render={({ field }) => (
                       <FormItem className='sm:col-span-2'>
-                        <FormLabel>Contact type</FormLabel>
+                        <FormLabel>Primary relationship</FormLabel>
                         <Select
                           value={field.value}
                           onValueChange={field.onChange}
@@ -195,6 +270,64 @@ export function ContactFormDrawer({
                             ))}
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='tax_id_type'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Brazilian tax ID type</FormLabel>
+                        <Select
+                          value={field.value ?? 'none'}
+                          onValueChange={(value) =>
+                            field.onChange(value === 'none' ? null : value)
+                          }
+                        >
+                          <FormControl>
+                            <SelectTrigger className='w-full'>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value='none'>Not provided</SelectItem>
+                            <SelectItem value='cpf'>CPF</SelectItem>
+                            <SelectItem value='cnpj'>CNPJ</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='tax_id'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{taxIdType?.toUpperCase() ?? 'Tax ID'}</FormLabel>
+                        <FormControl>
+                          <Input
+                            inputMode='numeric'
+                            placeholder={
+                              contact?.tax_id_masked ??
+                              (taxIdType === 'cnpj'
+                                ? '00.000.000/0000-00'
+                                : '000.000.000-00')
+                            }
+                            autoComplete='off'
+                            {...field}
+                          />
+                        </FormControl>
+                        {contact?.tax_id_masked && !field.value && (
+                          <p className='text-xs text-muted-foreground'>
+                            Stored as {contact.tax_id_masked}. Leave blank to keep
+                            it unchanged.
+                          </p>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}

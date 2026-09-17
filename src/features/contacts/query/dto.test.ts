@@ -6,6 +6,10 @@ describe('toContactPayload', () => {
     const payload = toContactPayload({
       name: '  Maria Silva  ',
       type: 'tenant',
+      identity_kind: 'person',
+      preferred_locale: 'pt-BR',
+      tax_id_type: 'cpf',
+      tax_id: ' 529.982.247-25 ',
       email: '   ',
       phone: '  +55 11 99999-9999  ',
       property_ids: [4],
@@ -14,6 +18,10 @@ describe('toContactPayload', () => {
     expect(payload).toEqual({
       name: 'Maria Silva',
       type: 'tenant',
+      identity_kind: 'person',
+      preferred_locale: 'pt-BR',
+      tax_id_type: 'cpf',
+      tax_id: '529.982.247-25',
       email: null,
       phone: '+55 11 99999-9999',
       property_ids: [4],

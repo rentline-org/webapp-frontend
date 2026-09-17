@@ -27,18 +27,44 @@ export const signatureStatusValues = [
   'declined',
 ] as const
 export const leaseStatusValues = ['upcoming', 'active', 'expired'] as const
+export const documentPartyRoleValues = [
+  'owner',
+  'landlord',
+  'manager',
+  'agent',
+  'broker',
+  'tenant',
+  'co_tenant',
+  'occupant',
+  'guarantor',
+  'vendor',
+  'insurer',
+  'inspector',
+  'witness',
+  'issuer',
+  'other',
+] as const
 
 export type DocumentType = (typeof documentTypeValues)[number]
 export type DocumentLifecycle = (typeof documentLifecycleValues)[number]
 export type SignatureStatus = (typeof signatureStatusValues)[number]
 export type LeaseStatus = (typeof leaseStatusValues)[number]
+export type DocumentPartyRole = (typeof documentPartyRoleValues)[number]
 
 export interface IDocumentKindField {
   key: string
-  label: string
-  type: 'text' | 'textarea' | 'date' | 'number' | 'boolean' | 'select'
+  label?: string
+  type:
+    | 'text'
+    | 'textarea'
+    | 'date'
+    | 'number'
+    | 'decimal'
+    | 'currency'
+    | 'boolean'
+    | 'select'
   required?: boolean
-  options?: Array<{ value: string; label: string }>
+  options?: Array<string | { value: string; label: string }>
 }
 
 export interface IDocumentKind {
@@ -50,7 +76,8 @@ export interface IDocumentKind {
   allowed_scopes: Array<'organization' | 'property' | 'unit' | 'lease'>
   supports_expiry: boolean
   default_requires_signature: boolean
-  capabilities: string[]
+  required_parties: DocumentPartyRole[]
+  capabilities: string[] | Record<string, boolean>
   fields: IDocumentKindField[]
 }
 
@@ -111,11 +138,19 @@ export interface ILease {
   reference?: string | null
 }
 
-export interface IDocumentContext {
+export interface IDocumentLeaseContext {
   id: number
-  context_type: 'property' | 'unit'
-  property?: IDocumentProperty | null
-  unit?: IDocumentUnit | null
+  title: string
+  workflow_status?: string | null
+  starts_on?: string | null
+  ends_on?: string | null
+  relation_type?: string
+}
+
+export interface IDocumentContexts {
+  properties: Array<IDocumentProperty & { relation_type?: string }>
+  units: Array<IDocumentUnit & { relation_type?: string }>
+  leases: IDocumentLeaseContext[]
 }
 
 export interface IDocumentParty {
@@ -124,7 +159,8 @@ export interface IDocumentParty {
   role: string
   is_primary: boolean
   ownership_percentage: string | null
-  contact: IDocumentPerson | null
+  contact?: IDocumentPerson | null
+  name?: string | null
   name_snapshot?: string | null
 }
 
@@ -142,6 +178,8 @@ export interface IDocumentVersion {
   id: number
   version_number: number
   notes: string | null
+  creator?: IDocumentPerson | null
+  finalized_at?: string | null
   created_at: string
   files: {
     original: IDocumentFile | null
@@ -150,8 +188,25 @@ export interface IDocumentVersion {
   }
 }
 
+export interface IDocumentShare {
+  id: number
+  contact_id: number | null
+  user: IDocumentPerson & { email?: string | null }
+  granted_at: string | null
+}
+
+export interface IDocumentAuditEvent {
+  id: number
+  event: string
+  actor: IDocumentPerson | null
+  metadata: Record<string, unknown> | null
+  ip_address: string | null
+  created_at: string
+}
+
 export interface IDocumentCapabilities {
   can_update: boolean
+  can_activate?: boolean
   can_archive: boolean
   can_manage_signatures: boolean
   can_share: boolean
@@ -184,7 +239,7 @@ export interface IDocument {
   unit: IDocumentUnit | null
   unit_ids?: number[]
   units?: IDocumentUnit[]
-  contexts?: IDocumentContext[]
+  contexts?: IDocumentContexts
   requires_signature: boolean
   is_signed: boolean
   signature_status: SignatureStatus
@@ -202,6 +257,7 @@ export interface IDocument {
   }>
   parties?: IDocumentParty[]
   signers?: IDocumentSigner[]
+  shares?: IDocumentShare[]
   details?: Record<string, unknown>
   files: {
     original: IDocumentFile | null
@@ -318,25 +374,39 @@ const supportingUploadSchema = z.object({
   party_visible: z.boolean(),
 })
 
+const documentPartyInputSchema = z.object({
+  contact_id: z.number().int().positive().nullable(),
+  role: z.enum(documentPartyRoleValues),
+  is_primary: z.boolean(),
+})
+
 const documentDetailsSchema = z.object({
-  provider_name: z.string(),
+  change_summary: z.string(),
+  management_fee_type: z.enum(['fixed', 'percentage']).nullable(),
+  management_fee_value: z.number().nullable(),
+  exclusive: z.boolean(),
+  commission_type: z.enum(['fixed', 'percentage']).nullable(),
+  commission_value: z.number().nullable(),
+  calculation_basis: z.string(),
+  advertising_permitted: z.boolean(),
+  creci_reference: z.string(),
+  inspection_type: z.enum(['move_in', 'move_out', 'routine']).nullable(),
+  inspected_on: z.string(),
+  outcome: z.string(),
+  provider: z.string(),
   policy_number: z.string(),
   coverage_amount: z.number().nullable(),
   premium_amount: z.number().nullable(),
+  deductible_amount: z.number().nullable(),
+  currency: z.string(),
   service_scope: z.string(),
   recurring_cost: z.number().nullable(),
-  inspection_type: z.enum(['move_in', 'move_out', 'routine']).nullable(),
-  inspection_date: z.string(),
-  inspector_contact_id: z.number().int().positive().nullable(),
+  frequency: z.enum(['one_time', 'monthly', 'quarterly', 'yearly']).nullable(),
+  issuer: z.string(),
+  certificate_number: z.string(),
   registry_office: z.string(),
-  registry_number: z.string(),
+  registration_number: z.string(),
   acquisition_date: z.string(),
-  fee_type: z.enum(['fixed', 'percentage']).nullable(),
-  fee_value: z.number().nullable(),
-  calculation_basis: z.string(),
-  exclusive: z.boolean(),
-  creci_number: z.string(),
-  advertising_allowed: z.boolean(),
 })
 
 const documentFormBaseSchema = z.object({
@@ -358,6 +428,7 @@ const documentFormBaseSchema = z.object({
   file: nullableFileSchema,
   signed_file: nullableFileSchema,
   supporting_files: z.array(supportingUploadSchema),
+  parties: z.array(documentPartyInputSchema),
   signer_contact_ids: z.array(z.number().int().positive()),
   details: documentDetailsSchema,
 })
@@ -415,7 +486,11 @@ export const createDocumentFormSchema = (
 
     const originalError = documentFileError(value.file, false, t)
     if (originalError) {
-      context.addIssue({ code: 'custom', path: ['file'], message: originalError })
+      context.addIssue({
+        code: 'custom',
+        path: ['file'],
+        message: originalError,
+      })
     }
 
     const signedError = documentFileError(value.signed_file, true, t)
@@ -469,6 +544,42 @@ export const createDocumentFormSchema = (
         message: t('kindRequired'),
       })
     }
+
+    if (['lease', 'lease_addendum'].includes(value.type) && !value.lease_id) {
+      context.addIssue({
+        code: 'custom',
+        path: ['lease_id'],
+        message: t('leaseRequired'),
+      })
+    }
+
+    if (
+      value.type === 'lease_addendum' &&
+      !value.details.change_summary.trim()
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['details', 'change_summary'],
+        message: t('fieldRequired'),
+      })
+    }
+
+    if (value.type === 'inspection_report') {
+      if (!value.details.inspection_type) {
+        context.addIssue({
+          code: 'custom',
+          path: ['details', 'inspection_type'],
+          message: t('fieldRequired'),
+        })
+      }
+      if (!value.details.inspected_on) {
+        context.addIssue({
+          code: 'custom',
+          path: ['details', 'inspected_on'],
+          message: t('fieldRequired'),
+        })
+      }
+    }
   })
 
 export interface IDocumentUpdatePayload {
@@ -484,6 +595,11 @@ export interface IDocumentUpdatePayload {
   property_id?: number | null
   unit_id?: number | null
   details?: Record<string, string | number | boolean | null>
+  parties?: Array<{
+    contact_id: number
+    role: DocumentPartyRole
+    is_primary: boolean
+  }>
 }
 
 export type TDocumentUpdateVariables = {

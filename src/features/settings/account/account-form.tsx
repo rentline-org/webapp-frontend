@@ -13,18 +13,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  invalidateUserProfile,
+  useUpdateUserLocale,
+} from '@/features/settings/profile/query'
+import { useQueryClient } from '@tanstack/react-query'
 
 export function AccountForm() {
   const { t } = useTranslation('settings')
   const [language, setLanguage] = useState<AppLocale>(getAppLocale())
-  const [isSaving, setIsSaving] = useState(false)
+  const updateLocale = useUpdateUserLocale()
+  const queryClient = useQueryClient()
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setIsSaving(true)
-    await changeAppLocale(language)
-    setIsSaving(false)
-    toast.success(t('account.saved'))
+    updateLocale.mutate(language, {
+      onSuccess: async () => {
+        await changeAppLocale(language)
+        await invalidateUserProfile(queryClient)
+        toast.success(t('account.saved'))
+      },
+    })
   }
 
   return (
@@ -49,7 +58,7 @@ export function AccountForm() {
           {t('account.languageDescription')}
         </p>
       </div>
-      <Button type='submit' disabled={isSaving}>
+      <Button type='submit' disabled={updateLocale.isPending}>
         {t('account.save')}
       </Button>
     </form>

@@ -1,38 +1,40 @@
 import type { ColumnDef } from '@tanstack/react-table'
+import { Link } from '@tanstack/react-router'
 import { Building2, CalendarClock, FileText, UserRound } from 'lucide-react'
 import { DataTableColumnHeader } from '@/components/data-table'
 import { LongText } from '@/components/long-text'
 import type { IDocument } from '../types'
 import { DocumentRowActions } from './document-row-actions'
 import { DocumentTypeBadge } from './document-type-badge'
-import { LeaseStatusBadge } from './lease-status-badge'
 import { SignatureStatusBadge } from './signature-status-badge'
 
 type DocumentColumnActions = {
   onEdit: (document: IDocument) => void
   onDelete?: (document: IDocument) => void
   onManageSignature?: (document: IDocument) => void
-}
-
-const formatDate = (value: string) => {
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) return '—'
-
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-  }).format(date)
+  formatDate: (value: string) => string
+  labels: {
+    document: string
+    type: string
+    usedFor: string
+    signature: string
+    updated: string
+    organizationWide: string
+    unit: (name: string) => string
+  }
 }
 
 export const getDocumentsColumns = ({
   onEdit,
   onDelete,
   onManageSignature,
+  formatDate,
+  labels,
 }: DocumentColumnActions): ColumnDef<IDocument>[] => [
   {
     accessorKey: 'title',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Document' />
+      <DataTableColumnHeader column={column} title={labels.document} />
     ),
     cell: ({ row }) => {
       const document = row.original
@@ -44,9 +46,15 @@ export const getDocumentsColumns = ({
           </span>
           <div className='min-w-0 space-y-1.5'>
             <div>
-              <LongText className='max-w-64 font-medium text-foreground'>
-                {document.title}
-              </LongText>
+              <Link
+                to='/documents/$documentId'
+                params={{ documentId: String(document.id) }}
+                className='block rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
+              >
+                <LongText className='max-w-64 font-medium text-foreground hover:underline'>
+                  {document.title}
+                </LongText>
+              </Link>
               <LongText className='max-w-64 text-xs text-muted-foreground'>
                 {document.purpose}
               </LongText>
@@ -54,9 +62,6 @@ export const getDocumentsColumns = ({
             <div className='flex flex-wrap gap-1.5 sm:hidden'>
               <DocumentTypeBadge type={document.type} />
               <SignatureStatusBadge status={document.signature_status} />
-              {document.lease && (
-                <LeaseStatusBadge status={document.lease.status} />
-              )}
             </div>
           </div>
         </div>
@@ -67,15 +72,13 @@ export const getDocumentsColumns = ({
   {
     accessorKey: 'type',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Type' />
+      <DataTableColumnHeader column={column} title={labels.type} />
     ),
     cell: ({ row }) => (
-      <div className='flex flex-col items-start gap-1.5'>
-        <DocumentTypeBadge type={row.original.type} />
-        {row.original.lease && (
-          <LeaseStatusBadge status={row.original.lease.status} />
-        )}
-      </div>
+      <DocumentTypeBadge
+        type={row.original.type}
+        label={row.original.kind?.label}
+      />
     ),
     filterFn: 'equalsString',
     meta: { className: 'hidden sm:table-cell sm:w-36' },
@@ -86,16 +89,17 @@ export const getDocumentsColumns = ({
       [
         document.property?.title ??
           document.lease?.property_title_snapshot ??
-          'Organization-wide',
+          document.contexts?.properties?.[0]?.title ??
+          labels.organizationWide,
         document.unit?.name ?? document.lease?.unit_name_snapshot,
-        document.lease?.tenant.name,
+        document.parties?.[0]?.name ?? document.parties?.[0]?.contact?.name,
       ]
         .filter(Boolean)
         .join(' '),
     header: () => (
       <span className='inline-flex items-center gap-2'>
         <Building2 className='size-3.5' />
-        Used for
+        {labels.usedFor}
       </span>
     ),
     cell: ({ row }) => {
@@ -103,22 +107,30 @@ export const getDocumentsColumns = ({
       const propertyName =
         document.property?.title ??
         document.lease?.property_title_snapshot ??
-        'Organization-wide'
+        document.contexts?.properties?.[0]?.title ??
+        labels.organizationWide
       const unitName =
-        document.unit?.name ?? document.lease?.unit_name_snapshot ?? null
+        document.unit?.name ??
+        document.contexts?.units?.[0]?.name ??
+        document.lease?.unit_name_snapshot ??
+        null
+      const partyName =
+        document.parties?.[0]?.name ??
+        document.parties?.[0]?.contact?.name ??
+        document.lease?.tenant?.name
 
       return (
         <div className='max-w-64 space-y-1'>
           <p className='truncate text-sm font-medium'>{propertyName}</p>
           {unitName && (
             <p className='truncate text-xs text-muted-foreground'>
-              Unit {unitName}
+              {labels.unit(unitName)}
             </p>
           )}
-          {document.lease?.tenant.name && (
+          {partyName && (
             <p className='flex items-center gap-1 truncate text-xs text-muted-foreground'>
               <UserRound className='size-3 shrink-0' />
-              {document.lease.tenant.name}
+              {partyName}
             </p>
           )}
         </div>
@@ -130,7 +142,7 @@ export const getDocumentsColumns = ({
   {
     accessorKey: 'signature_status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Signature' />
+      <DataTableColumnHeader column={column} title={labels.signature} />
     ),
     cell: ({ row }) => (
       <SignatureStatusBadge status={row.original.signature_status} />
@@ -141,7 +153,7 @@ export const getDocumentsColumns = ({
   {
     accessorKey: 'updated_at',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Updated' />
+      <DataTableColumnHeader column={column} title={labels.updated} />
     ),
     cell: ({ row }) => (
       <span className='inline-flex items-center gap-2 text-sm whitespace-nowrap text-muted-foreground'>

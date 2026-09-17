@@ -10,6 +10,10 @@ const contact: IContact = {
   email: 'maria@example.com',
   phone: null,
   type: 'owner',
+  identity_kind: 'person',
+  preferred_locale: 'pt-BR',
+  tax_id_type: 'cpf',
+  tax_id_masked: '***.***.***-1234',
   property_ids: [7],
   properties: [
     {

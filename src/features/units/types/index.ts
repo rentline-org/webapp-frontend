@@ -52,7 +52,12 @@ export interface IUnitData {
   updated_at: string
 }
 
-export type UnitTabKey = 'overview' | 'leases' | 'contacts' | 'accounting'
+export type UnitTabKey =
+  | 'overview'
+  | 'leases'
+  | 'documents'
+  | 'contacts'
+  | 'accounting'
 
 export const createUnitSchema = z
   .object({

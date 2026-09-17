@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useLayout } from '@/context/layout-provider'
 import {
   Sidebar,
@@ -16,6 +17,26 @@ import { NavUser } from './nav-user'
 export function AppSidebar() {
   const { collapsible, variant } = useLayout()
   const { data: userProfile, isLoading, isFetching } = useUserProfileQuery()
+  const navGroups = useMemo(() => {
+    if (userProfile?.organization_role !== 'tenant')
+      return sidebarData.navGroups
+
+    const tenantUrls = new Set([
+      '/',
+      '/leases',
+      '/documents',
+      '/settings',
+      '/help-center',
+    ])
+    return sidebarData.navGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter(
+          (item) => 'url' in item && tenantUrls.has(String(item.url))
+        ),
+      }))
+      .filter((group) => group.items.length > 0)
+  }, [userProfile?.organization_role])
 
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
@@ -28,7 +49,7 @@ export function AppSidebar() {
         />
       </SidebarHeader>
       <SidebarContent>
-        {sidebarData.navGroups.map((props) => (
+        {navGroups.map((props) => (
           <NavGroup key={props.title} {...props} />
         ))}
       </SidebarContent>

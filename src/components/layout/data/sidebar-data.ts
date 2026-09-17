@@ -1,15 +1,13 @@
 import {
   HelpCircle,
   Settings,
-  Wrench,
   Users,
   Home,
   Building2,
-  BookUser,
-  BadgeDollarSign,
   Clipboard,
   File,
   FileKey2,
+  UserRoundCog,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -29,29 +27,14 @@ export const sidebarData: SidebarData = {
           icon: Building2,
         },
         {
-          title: 'Accounting',
-          url: '/accounting',
-          icon: BadgeDollarSign,
-        },
-        {
           title: 'Listings',
           url: '/listings',
           icon: Clipboard,
         },
         {
-          title: 'Maintenance',
-          url: '/maintenance',
-          icon: Wrench,
-        },
-        {
           title: 'Contacts',
           url: '/contacts',
           icon: Users,
-        },
-        {
-          title: 'Reports',
-          url: '/reports',
-          icon: BookUser,
         },
         {
           title: 'Documents',
@@ -62,6 +45,11 @@ export const sidebarData: SidebarData = {
           title: 'Leases',
           url: '/leases',
           icon: FileKey2,
+        },
+        {
+          title: 'Team',
+          url: '/users',
+          icon: UserRoundCog,
         },
       ],
     },

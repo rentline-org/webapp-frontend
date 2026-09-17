@@ -1,16 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
 import {
   Loader2,
   LucideBadgeDollarSign,
   LucideChartColumn,
   LucideFilePen,
+  LucideFiles,
   LucideUsers,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Main } from '@/components/layout/main'
 import { PropertyContactsPanel } from '@/features/contacts/components/property-contacts-panel'
 import { PropertyLeasesPanel } from '@/features/documents/components/property-leases-panel'
+import { PropertyDocumentsPanel } from '@/features/documents/components/property-documents-panel'
 import ModulePlaceholder from '@/features/properties/components/module-placeholder'
 import { useGetPropertyBySlug } from '@/features/properties/query'
 import type { IProperty } from '@/features/properties/types'
@@ -26,7 +28,7 @@ const routeApi = getRouteApi(
 
 const UnitDetails = () => {
   const { propertySlug } = routeApi.useParams()
-  const { id } = routeApi.useSearch()
+  const { id, tab } = routeApi.useSearch()
   const navigate = routeApi.useNavigate()
 
   const { data: property, isLoading: isPropertyLoading } =
@@ -65,6 +67,7 @@ const UnitDetails = () => {
       property={property}
       unit={unit}
       propertySlug={propertySlug}
+      initialTab={tab}
     />
   )
 }
@@ -74,13 +77,15 @@ function UnitDetailsContent({
   property,
   unit,
   propertySlug,
+  initialTab,
 }: {
   property: IProperty
   unit: IUnitData
   propertySlug: string
+  initialTab?: UnitTabKey
 }) {
   const navigate = routeApi.useNavigate()
-  const [activeTab, setActiveTab] = useState<UnitTabKey>('overview')
+  const activeTab = initialTab ?? 'overview'
 
   const { updateField } = useUnitFieldUpdate(property, unit)
 
@@ -104,7 +109,15 @@ function UnitDetailsContent({
 
         <Tabs
           value={activeTab}
-          onValueChange={(value) => setActiveTab(value as UnitTabKey)}
+          onValueChange={(value) =>
+            navigate({
+              replace: true,
+              search: (current) => ({
+                ...current,
+                tab: value as UnitTabKey,
+              }),
+            })
+          }
         >
           <TabsList className='inline-flex h-auto gap-2 overflow-x-auto p-1'>
             <TabsTrigger value='overview'>
@@ -114,6 +127,10 @@ function UnitDetailsContent({
             <TabsTrigger value='leases'>
               <LucideFilePen />
               Leases
+            </TabsTrigger>
+            <TabsTrigger value='documents'>
+              <LucideFiles />
+              Documents
             </TabsTrigger>
             <TabsTrigger value='contacts'>
               <LucideUsers />
@@ -152,6 +169,13 @@ function UnitDetailsContent({
               title='Property contacts'
               description='These contacts are linked to the property and apply to all of its units.'
             />
+          </TabsContent>
+
+          <TabsContent
+            value='documents'
+            className='mt-6 focus-visible:outline-none'
+          >
+            <PropertyDocumentsPanel property={property} unit={unit} />
           </TabsContent>
 
           <TabsContent

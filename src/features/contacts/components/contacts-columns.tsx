@@ -1,4 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
+import { Link } from '@tanstack/react-router'
 import { Building2, Mail, Phone, UserRound } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { DataTableColumnHeader } from '@/components/data-table'
@@ -32,9 +33,15 @@ export const getContactsColumns = ({
             <UserRound className='size-4' />
           </span>
           <div className='min-w-0 space-y-1.5'>
-            <LongText className='max-w-56 font-medium text-foreground'>
-              {row.original.name}
-            </LongText>
+            <Link
+              to='/contacts/$contactId'
+              params={{ contactId: String(row.original.id) }}
+              className='block rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
+            >
+              <LongText className='max-w-56 font-medium text-foreground hover:underline'>
+                {row.original.name}
+              </LongText>
+            </Link>
             <div className='sm:hidden'>
               <ContactTypeBadge type={row.original.type} />
             </div>

@@ -1,5 +1,6 @@
-import { DotsVerticalIcon } from '@radix-ui/react-icons'
-import { Edit2, FileText, Mail, User } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { CalendarRange, FileText, Loader2, UserRound } from 'lucide-react'
+import { useAppFormatters } from '@/i18n/use-formatters'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,73 +10,88 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemTitle,
-} from '@/components/ui/item'
+import { useGetLeases } from '@/features/leases/query'
+import { getPrimaryTenantParty } from '@/features/leases/utils'
 
-const ActiveTenantsList = () => {
+const ActiveTenantsList = ({
+  propertyId,
+  unitId,
+}: {
+  propertyId: number
+  unitId?: number
+}) => {
+  const { formatDateShort } = useAppFormatters()
+  const currentLeases = useGetLeases({
+    property_id: propertyId,
+    ...(unitId ? { unit_id: unitId } : {}),
+    workflow_status: 'active',
+    per_page: 20,
+  })
+  const leases = currentLeases.data?.items ?? []
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Tenants</CardTitle>
+        <CardTitle>Occupancy</CardTitle>
         <CardDescription>
-          Tenant profiles and occupancy details.
+          Current and upcoming tenants from active lease records.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <ItemGroup>
-          <Item variant='muted'>
-            <ItemContent>
-              <ItemTitle>James Orion</ItemTitle>
-              <ItemDescription>Lease ends: 12/31/2024</ItemDescription>
-              <div>
-                <span>Lease status:</span>
-                <Badge variant='success' className='ml-2'>
-                  Active
-                </Badge>
+      <CardContent className='space-y-3'>
+        {currentLeases.isLoading ? (
+          <div className='flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground'>
+            <Loader2 className='size-4 animate-spin' />
+            Loading occupancy…
+          </div>
+        ) : leases.length === 0 ? (
+          <div className='rounded-lg border border-dashed px-4 py-8 text-center'>
+            <p className='font-medium'>Vacant</p>
+            <p className='mt-1 text-sm text-muted-foreground'>
+              There is no active or upcoming lease for this scope.
+            </p>
+          </div>
+        ) : (
+          leases.map((lease) => {
+            const tenant = getPrimaryTenantParty(lease)
+            return (
+              <div key={lease.id} className='space-y-3 rounded-lg border p-3'>
+                <div className='flex items-start justify-between gap-3'>
+                  <div className='min-w-0'>
+                    <p className='flex items-center gap-2 truncate font-medium'>
+                      <UserRound className='size-4 shrink-0 text-muted-foreground' />
+                      {tenant?.contact?.name ??
+                        tenant?.name_snapshot ??
+                        lease.primary_tenant?.name ??
+                        'Tenant'}
+                    </p>
+                    <p className='mt-1 flex items-center gap-2 text-xs text-muted-foreground'>
+                      <CalendarRange className='size-3.5' />
+                      {formatDateShort(lease.starts_on)} –{' '}
+                      {formatDateShort(lease.ends_on)}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={
+                      lease.temporal_status === 'current' ? 'success' : 'info'
+                    }
+                    className='capitalize'
+                  >
+                    {lease.temporal_status}
+                  </Badge>
+                </div>
+                <Button asChild variant='outline' size='sm' className='w-full'>
+                  <Link
+                    to='/leases/$leaseId'
+                    params={{ leaseId: String(lease.id) }}
+                  >
+                    <FileText />
+                    View lease
+                  </Link>
+                </Button>
               </div>
-            </ItemContent>
-            <ItemActions>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant='ghost' size='icon'>
-                    <span className='sr-only'>Open actions</span>
-                    <DotsVerticalIcon />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align='end'>
-                  <DropdownMenuItem>
-                    <Edit2 className='me-2 size-4' />
-                    Edit tenant
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <User className='me-2 size-4' />
-                    View profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Mail className='me-2 size-4' />
-                    Send email
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <FileText className='me-2 size-4' />
-                    Manage lease
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </ItemActions>
-          </Item>
-        </ItemGroup>
+            )
+          })
+        )}
       </CardContent>
     </Card>
   )

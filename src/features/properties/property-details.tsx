@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
 import {
   Loader2,
+  LucideFiles,
   LucideBadgeDollarSign,
   LucideChartColumn,
   LucideFilePen,
@@ -12,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Main } from '@/components/layout/main'
 import { PropertyContactsPanel } from '@/features/contacts/components/property-contacts-panel'
 import { PropertyLeasesPanel } from '@/features/documents/components/property-leases-panel'
+import { PropertyDocumentsPanel } from '@/features/documents/components/property-documents-panel'
 import DetailsHeader from './components/details-header'
 import PropertyImagesDialog from './components/images-dialog'
 import ModulePlaceholder from './components/module-placeholder'
@@ -87,6 +89,10 @@ const PropertyDetails = () => {
               <LucideFilePen />
               Leases
             </TabsTrigger>
+            <TabsTrigger value='documents'>
+              <LucideFiles />
+              Documents
+            </TabsTrigger>
             <TabsTrigger value='contacts'>
               <LucideUsers />
               Contacts
@@ -128,6 +134,13 @@ const PropertyDetails = () => {
             className='mt-6 focus-visible:outline-none'
           >
             <PropertyContactsPanel property={property} />
+          </TabsContent>
+
+          <TabsContent
+            value='documents'
+            className='mt-6 focus-visible:outline-none'
+          >
+            <PropertyDocumentsPanel property={property} />
           </TabsContent>
 
           <TabsContent

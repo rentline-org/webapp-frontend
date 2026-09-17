@@ -1,19 +1,63 @@
-import type {
-  IDocument,
-  IDocumentUpdatePayload,
-  TDocumentForm,
-} from '../types'
+import type { IDocument, IDocumentUpdatePayload, TDocumentForm } from '../types'
 
 const appendNullable = (formData: FormData, key: string, value: string) => {
   formData.append(key, value.trim())
 }
+
+const detailKeysByType: Partial<
+  Record<IDocument['type'], Array<keyof TDocumentForm['details']>>
+> = {
+  lease_addendum: ['change_summary'],
+  property_management_agreement: [
+    'management_fee_type',
+    'management_fee_value',
+  ],
+  brokerage_authorization: [
+    'exclusive',
+    'commission_type',
+    'commission_value',
+    'calculation_basis',
+    'advertising_permitted',
+    'creci_reference',
+  ],
+  inspection_report: ['inspection_type', 'inspected_on', 'outcome'],
+  insurance_policy: [
+    'provider',
+    'policy_number',
+    'coverage_amount',
+    'premium_amount',
+    'deductible_amount',
+    'currency',
+  ],
+  service_contract: [
+    'service_scope',
+    'recurring_cost',
+    'currency',
+    'frequency',
+  ],
+  compliance_certificate: ['issuer', 'certificate_number'],
+  ownership_record: [
+    'registry_office',
+    'registration_number',
+    'acquisition_date',
+  ],
+}
+
+const selectedDetails = (values: TDocumentForm) =>
+  (detailKeysByType[values.type] ?? []).reduce<
+    Record<string, string | number | boolean>
+  >((result, key) => {
+    const value = values.details[key]
+    if (value !== null && value !== '') result[key] = value
+    return result
+  }, {})
 
 export const toDocumentFormData = (values: TDocumentForm): FormData => {
   const formData = new FormData()
 
   formData.append('type', values.type)
   if (values.custom_kind_id) {
-    formData.append('custom_kind_id', String(values.custom_kind_id))
+    formData.append('document_kind_id', String(values.custom_kind_id))
   }
   formData.append('title', values.title.trim())
   formData.append('purpose', values.purpose.trim())
@@ -52,13 +96,30 @@ export const toDocumentFormData = (values: TDocumentForm): FormData => {
     )
   }
 
-  values.signer_contact_ids.forEach((contactId, index) => {
-    formData.append(`signers[${index}][contact_id]`, String(contactId))
+  const parties = values.parties.filter(
+    (party): party is typeof party & { contact_id: number } =>
+      party.contact_id !== null
+  )
+  parties.forEach((party, index) => {
+    formData.append(`parties[${index}][contact_id]`, String(party.contact_id))
+    formData.append(`parties[${index}][role]`, party.role)
+    formData.append(
+      `parties[${index}][is_primary]`,
+      party.is_primary ? '1' : '0'
+    )
   })
 
-  Object.entries(values.details).forEach(([key, value]) => {
-    if (value === null || value === '') return
-    formData.append(`details[${key}]`, typeof value === 'boolean' ? (value ? '1' : '0') : String(value))
+  values.signer_contact_ids.forEach((contactId, index) => {
+    formData.append(`signers[${index}][contact_id]`, String(contactId))
+    const party = parties.find((item) => item.contact_id === contactId)
+    formData.append(`signers[${index}][role]`, party?.role ?? 'other')
+  })
+
+  Object.entries(selectedDetails(values)).forEach(([key, value]) => {
+    formData.append(
+      `details[${key}]`,
+      typeof value === 'boolean' ? (value ? '1' : '0') : String(value)
+    )
   })
 
   return formData
@@ -76,15 +137,17 @@ export const toDocumentUpdatePayload = (
     issued_on: values.issued_on || null,
     effective_on: values.effective_on || null,
     expires_on: values.expires_on || null,
-    lifecycle: values.lifecycle,
     requires_signature:
       document.type === 'lease' ? true : values.requires_signature,
-    details: Object.fromEntries(
-      Object.entries(values.details).map(([key, value]) => [
-        key,
-        value === '' ? null : value,
-      ])
-    ),
+  }
+
+  const details = selectedDetails(values)
+  if (!document.is_signed && document.lifecycle !== 'active') {
+    payload.details = details
+    payload.parties = values.parties.filter(
+      (party): party is typeof party & { contact_id: number } =>
+        party.contact_id !== null
+    )
   }
 
   if (document.is_signed) return payload

@@ -28,14 +28,16 @@ void i18n.use(initReactI18next).init({
   ns: [
     'common',
     'navigation',
+    'dashboard',
     'documents',
     'leases',
+    'contacts',
     'invitations',
     'settings',
   ],
   interpolation: { escapeValue: false },
   returnNull: false,
-  initImmediate: false,
+  initAsync: false,
 })
 
 const applyLocale = (locale: string) => {
@@ -60,3 +62,4 @@ export const changeAppLocale = async (locale: AppLocale) => {
 }
 
 export { i18n, normalizeLocale }
+export type { AppLocale } from './resources'

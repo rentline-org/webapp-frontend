@@ -207,7 +207,7 @@ export function LeaseDetails() {
                             {party.contact?.name ?? party.name_snapshot}
                           </p>
                           <p className='text-xs text-muted-foreground'>
-                            {party.role.replaceAll('_', ' ')}
+                            {party.role.replace(/_/g, ' ')}
                           </p>
                         </div>
                       </div>
@@ -233,10 +233,10 @@ export function LeaseDetails() {
                   <div className='flex items-center justify-between gap-4 py-3'>
                     <div>
                       <p className='text-sm font-medium capitalize'>
-                        {term.type.replaceAll('_', ' ')}
+                        {term.type.replace(/_/g, ' ')}
                       </p>
                       <p className='text-xs text-muted-foreground capitalize'>
-                        {term.frequency.replaceAll('_', ' ')}
+                        {term.frequency.replace(/_/g, ' ')}
                       </p>
                     </div>
                     <p className='text-sm font-semibold'>
